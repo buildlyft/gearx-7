@@ -1,0 +1,79 @@
+entity Partner {
+  name String required,
+  email String,
+  phone String required,
+  address String,
+  preferredContactTime String,
+  gstNumber String,
+  panNumber String
+}
+
+entity Customer {
+  name String required,
+  email String,
+  phone String required,
+  address String
+}
+
+entity Machine {
+  brand String required,
+  type String required,
+  model String,
+  vinNumber String,
+  chassisNumber String,
+  description String,
+  capacityTon Integer,
+  ratePerHour BigDecimal required,
+  minimumUsageHours Integer,
+  latitude Double required,
+  longitude Double required,
+  transportationCharge BigDecimal,
+  driverBatta BigDecimal,
+  serviceabilityRangeKm Integer,
+  status MachineStatus required,
+  createdDate Instant required
+}
+
+enum MachineStatus {
+  ACTIVE,
+  INACTIVE,
+  BREAKDOWN
+}
+
+entity Booking {
+  startDateTime Instant required,
+  endDateTime Instant required,
+  status BookingStatus required,
+  additionalDetails String,
+  worksiteImageUrl String,
+  createdDate Instant
+}
+
+enum BookingStatus {
+  PENDING,
+  ACCEPTED,
+  REJECTED,
+  CANCELLED,
+  COMPLETED
+}
+
+entity Attachment {
+  fileName String ,
+  fileType String ,
+  fileUrl String ,
+  uploadedDate Instant 
+}
+
+relationship OneToMany {
+  Partner{machine} to Machine{partner}
+  Machine{attachment} to Attachment{machine}
+}
+
+relationship ManyToOne {
+  Booking{machine} to Machine,
+  Booking{customer} to Customer,
+  Attachment{partner} to Partner
+}
+
+paginate Machine, Booking with pagination
+service Machine, Booking with serviceClass
