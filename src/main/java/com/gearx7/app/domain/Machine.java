@@ -85,13 +85,16 @@ public class Machine implements Serializable {
     @Column(name = "created_date", nullable = false)
     private Instant createdDate;
 
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "machine")
-    @JsonIgnoreProperties(value = { "partner", "machine" }, allowSetters = true)
-    private Set<Attachment> attachments = new HashSet<>();
+    @ManyToOne(fetch = FetchType.LAZY)
+    private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JsonIgnoreProperties(value = { "machines" }, allowSetters = true)
     private Partner partner;
+
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "machine")
+    @JsonIgnoreProperties(value = { "partner", "machine" }, allowSetters = true)
+    private Set<Attachment> attachments = new HashSet<>();
 
     // jhipster-needle-entity-add-field - JHipster will add fields here
 
@@ -329,6 +332,32 @@ public class Machine implements Serializable {
         this.createdDate = createdDate;
     }
 
+    public User getUser() {
+        return this.user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    public Machine user(User user) {
+        this.setUser(user);
+        return this;
+    }
+
+    public Partner getPartner() {
+        return this.partner;
+    }
+
+    public void setPartner(Partner partner) {
+        this.partner = partner;
+    }
+
+    public Machine partner(Partner partner) {
+        this.setPartner(partner);
+        return this;
+    }
+
     public Set<Attachment> getAttachments() {
         return this.attachments;
     }
@@ -357,19 +386,6 @@ public class Machine implements Serializable {
     public Machine removeAttachment(Attachment attachment) {
         this.attachments.remove(attachment);
         attachment.setMachine(null);
-        return this;
-    }
-
-    public Partner getPartner() {
-        return this.partner;
-    }
-
-    public void setPartner(Partner partner) {
-        this.partner = partner;
-    }
-
-    public Machine partner(Partner partner) {
-        this.setPartner(partner);
         return this;
     }
 

@@ -1,0 +1,191 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="santosh (generated)" id="1752768542182-1">
+        <createSequence incrementBy="50" sequenceName="sequence_generator" startValue="1"/>
+    </changeSet>
+    <changeSet author="santosh (generated)" id="1752768542182-2">
+        <createTable tableName="attachment">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="attachmentPK"/>
+            </column>
+            <column name="file_name" type="VARCHAR(255)"/>
+            <column name="file_type" type="VARCHAR(255)"/>
+            <column name="file_url" type="VARCHAR(255)"/>
+            <column name="uploaded_date" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="machine_id" type="BIGINT"/>
+            <column name="partner_id" type="BIGINT"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="santosh (generated)" id="1752768542182-3">
+        <createTable tableName="booking">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="bookingPK"/>
+            </column>
+            <column name="additional_details" type="VARCHAR(255)"/>
+            <column name="created_date" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="customer_lat" type="FLOAT(53)"/>
+            <column name="customer_long" type="FLOAT(53)"/>
+            <column name="end_date_time" type="TIMESTAMP(6) WITHOUT TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="start_date_time" type="TIMESTAMP(6) WITHOUT TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="worksite_image_url" type="VARCHAR(255)"/>
+            <column name="customer_id" type="BIGINT"/>
+            <column name="machine_id" type="BIGINT"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="santosh (generated)" id="1752768542182-4">
+        <createTable tableName="customer">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="customerPK"/>
+            </column>
+            <column name="address" type="VARCHAR(255)"/>
+            <column name="email" type="VARCHAR(255)"/>
+            <column name="location" type="VARCHAR(255)"/>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="phone" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="pincode" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="santosh (generated)" id="1752768542182-5">
+        <createTable tableName="jhi_authority">
+            <column name="name" type="VARCHAR(50)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="jhi_authorityPK"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="santosh (generated)" id="1752768542182-6">
+        <createTable tableName="jhi_user">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="jhi_userPK"/>
+            </column>
+            <column name="created_by" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_date" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="last_modified_by" type="VARCHAR(50)"/>
+            <column name="last_modified_date" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="activated" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="activation_key" type="VARCHAR(20)"/>
+            <column name="email" type="VARCHAR(254)"/>
+            <column name="first_name" type="VARCHAR(50)"/>
+            <column name="image_url" type="VARCHAR(256)"/>
+            <column name="lang_key" type="VARCHAR(10)"/>
+            <column name="last_name" type="VARCHAR(50)"/>
+            <column name="login" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="password_hash" type="VARCHAR(60)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="reset_date" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="reset_key" type="VARCHAR(20)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="santosh (generated)" id="1752768542182-7">
+        <createTable tableName="jhi_user_authority">
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="jhi_user_authorityPK"/>
+            </column>
+            <column name="authority_name" type="VARCHAR(50)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="jhi_user_authorityPK"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="santosh (generated)" id="1752768542182-8">
+        <createTable tableName="machine">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="machinePK"/>
+            </column>
+            <column name="brand" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="capacity_ton" type="INTEGER"/>
+            <column name="chassis_number" type="VARCHAR(255)"/>
+            <column name="created_date" type="TIMESTAMP(6) WITHOUT TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="VARCHAR(255)"/>
+            <column name="driver_batta" type="numeric(21, 2)"/>
+            <column name="latitude" type="FLOAT(53)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="longitude" type="FLOAT(53)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="minimum_usage_hours" type="INTEGER"/>
+            <column name="model" type="VARCHAR(255)"/>
+            <column name="rate_per_hour" type="numeric(21, 2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="serviceability_range_km" type="INTEGER"/>
+            <column name="status" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tag" type="VARCHAR(255)"/>
+            <column name="transportation_charge" type="numeric(21, 2)"/>
+            <column name="type" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="vin_number" type="VARCHAR(255)"/>
+            <column name="partner_id" type="BIGINT"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="santosh (generated)" id="1752768542182-9">
+        <createTable tableName="partner">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="partnerPK"/>
+            </column>
+            <column name="address" type="VARCHAR(255)"/>
+            <column name="company_name" type="VARCHAR(255)"/>
+            <column name="email" type="VARCHAR(255)"/>
+            <column name="gst_number" type="VARCHAR(255)"/>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="pan_number" type="VARCHAR(255)"/>
+            <column name="phone" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="preferred_contact_time" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="santosh (generated)" id="1752768542182-10">
+        <addUniqueConstraint columnNames="email" constraintName="UC_JHI_USEREMAIL_COL" tableName="jhi_user"/>
+    </changeSet>
+    <changeSet author="santosh (generated)" id="1752768542182-11">
+        <addUniqueConstraint columnNames="login" constraintName="UC_JHI_USERLOGIN_COL" tableName="jhi_user"/>
+    </changeSet>
+    <changeSet author="santosh (generated)" id="1752768542182-12">
+        <addForeignKeyConstraint baseColumnNames="user_id" baseTableName="jhi_user_authority" constraintName="FK290okww5jujghp4el5i7mgwu0" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="jhi_user" validate="true"/>
+    </changeSet>
+    <changeSet author="santosh (generated)" id="1752768542182-13">
+        <addForeignKeyConstraint baseColumnNames="authority_name" baseTableName="jhi_user_authority" constraintName="FK4psxl0jtx6nr7rhqbynr6itoc" deferrable="false" initiallyDeferred="false" referencedColumnNames="name" referencedTableName="jhi_authority" validate="true"/>
+    </changeSet>
+    <changeSet author="santosh (generated)" id="1752768542182-14">
+        <addForeignKeyConstraint baseColumnNames="machine_id" baseTableName="attachment" constraintName="FKeeg62lu75k3ufgil7qp58h5xn" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="machine" validate="true"/>
+    </changeSet>
+    <changeSet author="santosh (generated)" id="1752768542182-15">
+        <addForeignKeyConstraint baseColumnNames="partner_id" baseTableName="machine" constraintName="FKk0xagmhof4qqeohcwwmv1l5ul" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="partner" validate="true"/>
+    </changeSet>
+    <changeSet author="santosh (generated)" id="1752768542182-16">
+        <addForeignKeyConstraint baseColumnNames="customer_id" baseTableName="booking" constraintName="FKlnnelfsha11xmo2ndjq66fvro" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="customer" validate="true"/>
+    </changeSet>
+    <changeSet author="santosh (generated)" id="1752768542182-17">
+        <addForeignKeyConstraint baseColumnNames="machine_id" baseTableName="booking" constraintName="FKm9htanw94hinqam8cj6hsi8m0" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="machine" validate="true"/>
+    </changeSet>
+    <changeSet author="santosh (generated)" id="1752768542182-18">
+        <addForeignKeyConstraint baseColumnNames="partner_id" baseTableName="attachment" constraintName="FKoqs1jdmy0vqdkboji7874ich1" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="partner" validate="true"/>
+    </changeSet>
+</databaseChangeLog>

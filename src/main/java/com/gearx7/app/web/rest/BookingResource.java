@@ -141,12 +141,21 @@ public class BookingResource {
      * {@code GET  /bookings} : get all the bookings.
      *
      * @param pageable the pagination information.
+     * @param eagerload flag to eager load entities from relationships (This is applicable for many-to-many).
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of bookings in body.
      */
     @GetMapping("")
-    public ResponseEntity<List<Booking>> getAllBookings(@org.springdoc.core.annotations.ParameterObject Pageable pageable) {
+    public ResponseEntity<List<Booking>> getAllBookings(
+        @org.springdoc.core.annotations.ParameterObject Pageable pageable,
+        @RequestParam(name = "eagerload", required = false, defaultValue = "true") boolean eagerload
+    ) {
         log.debug("REST request to get a page of Bookings");
-        Page<Booking> page = bookingService.findAll(pageable);
+        Page<Booking> page;
+        if (eagerload) {
+            page = bookingService.findAllWithEagerRelationships(pageable);
+        } else {
+            page = bookingService.findAll(pageable);
+        }
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
         return ResponseEntity.ok().headers(headers).body(page.getContent());
     }

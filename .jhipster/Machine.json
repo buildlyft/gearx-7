@@ -86,18 +86,12 @@
   "pagination": "pagination",
   "relationships": [
     {
-      "otherEntityName": "attachment",
-      "otherEntityRelationshipName": "machine",
-      "relationshipName": "attachment",
+      "otherEntityField": "login",
+      "otherEntityName": "user",
+      "relationshipName": "user",
       "relationshipSide": "left",
-      "relationshipType": "one-to-many"
-    },
-    {
-      "otherEntityName": "partner",
-      "otherEntityRelationshipName": "machine",
-      "relationshipName": "partner",
-      "relationshipSide": "right",
-      "relationshipType": "many-to-one"
+      "relationshipType": "many-to-one",
+      "relationshipWithBuiltInEntity": true
     }
   ],
   "searchEngine": "no",

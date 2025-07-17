@@ -102,6 +102,15 @@ public class BookingService {
     }
 
     /**
+     * Get all the bookings with eager load of many-to-many relationships.
+     *
+     * @return the list of entities.
+     */
+    public Page<Booking> findAllWithEagerRelationships(Pageable pageable) {
+        return bookingRepository.findAllWithEagerRelationships(pageable);
+    }
+
+    /**
      * Get one booking by id.
      *
      * @param id the id of the entity.
@@ -110,7 +119,7 @@ public class BookingService {
     @Transactional(readOnly = true)
     public Optional<Booking> findOne(Long id) {
         log.debug("Request to get Booking : {}", id);
-        return bookingRepository.findById(id);
+        return bookingRepository.findOneWithEagerRelationships(id);
     }
 
     /**

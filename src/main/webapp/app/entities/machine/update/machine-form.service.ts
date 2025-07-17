@@ -48,6 +48,7 @@ type MachineFormGroupContent = {
   serviceabilityRangeKm: FormControl<MachineFormRawValue['serviceabilityRangeKm']>;
   status: FormControl<MachineFormRawValue['status']>;
   createdDate: FormControl<MachineFormRawValue['createdDate']>;
+  user: FormControl<MachineFormRawValue['user']>;
   partner: FormControl<MachineFormRawValue['partner']>;
 };
 
@@ -99,6 +100,7 @@ export class MachineFormService {
       createdDate: new FormControl(machineRawValue.createdDate, {
         validators: [Validators.required],
       }),
+      user: new FormControl(machineRawValue.user),
       partner: new FormControl(machineRawValue.partner),
     });
   }

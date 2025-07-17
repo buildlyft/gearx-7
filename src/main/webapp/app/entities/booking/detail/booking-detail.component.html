@@ -47,21 +47,9 @@
           <dd>
             <span>{{ booking.createdDate | formatMediumDatetime }}</span>
           </dd>
-          <dt><span>Machine</span></dt>
+          <dt><span>User</span></dt>
           <dd>
-            @if (booking.machine) {
-              <div>
-                <a [routerLink]="['/machine', booking.machine.id, 'view']">{{ booking.machine.id }}</a>
-              </div>
-            }
-          </dd>
-          <dt><span>Customer</span></dt>
-          <dd>
-            @if (booking.customer) {
-              <div>
-                <a [routerLink]="['/customer', booking.customer.id, 'view']">{{ booking.customer.id }}</a>
-              </div>
-            }
+            <span>{{ booking.user?.login }}</span>
           </dd>
         </dl>
 

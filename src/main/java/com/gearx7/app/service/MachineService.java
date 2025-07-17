@@ -129,6 +129,15 @@ public class MachineService {
     }
 
     /**
+     * Get all the machines with eager load of many-to-many relationships.
+     *
+     * @return the list of entities.
+     */
+    public Page<Machine> findAllWithEagerRelationships(Pageable pageable) {
+        return machineRepository.findAllWithEagerRelationships(pageable);
+    }
+
+    /**
      * Get one machine by id.
      *
      * @param id the id of the entity.
@@ -137,7 +146,7 @@ public class MachineService {
     @Transactional(readOnly = true)
     public Optional<Machine> findOne(Long id) {
         log.debug("Request to get Machine : {}", id);
-        return machineRepository.findById(id);
+        return machineRepository.findOneWithEagerRelationships(id);
     }
 
     /**

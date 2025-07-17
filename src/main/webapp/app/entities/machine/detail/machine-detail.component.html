@@ -83,6 +83,10 @@
           <dd>
             <span>{{ machine.createdDate | formatMediumDatetime }}</span>
           </dd>
+          <dt><span>User</span></dt>
+          <dd>
+            <span>{{ machine.user?.login }}</span>
+          </dd>
           <dt><span>Partner</span></dt>
           <dd>
             @if (machine.partner) {

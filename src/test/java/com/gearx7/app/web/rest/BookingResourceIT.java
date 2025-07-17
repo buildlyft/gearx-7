@@ -2,6 +2,7 @@ package com.gearx7.app.web.rest;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasItem;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -9,16 +10,23 @@ import com.gearx7.app.IntegrationTest;
 import com.gearx7.app.domain.Booking;
 import com.gearx7.app.domain.enumeration.BookingStatus;
 import com.gearx7.app.repository.BookingRepository;
+import com.gearx7.app.service.BookingService;
 import jakarta.persistence.EntityManager;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
@@ -28,6 +36,7 @@ import org.springframework.transaction.annotation.Transactional;
  * Integration tests for the {@link BookingResource} REST controller.
  */
 @IntegrationTest
+@ExtendWith(MockitoExtension.class)
 @AutoConfigureMockMvc
 @WithMockUser
 class BookingResourceIT {
@@ -64,6 +73,12 @@ class BookingResourceIT {
 
     @Autowired
     private BookingRepository bookingRepository;
+
+    @Mock
+    private BookingRepository bookingRepositoryMock;
+
+    @Mock
+    private BookingService bookingServiceMock;
 
     @Autowired
     private EntityManager em;
@@ -230,6 +245,23 @@ class BookingResourceIT {
             .andExpect(jsonPath("$.[*].createdDate").value(hasItem(DEFAULT_CREATED_DATE.toString())));
     }
 
+    @SuppressWarnings({ "unchecked" })
+    void getAllBookingsWithEagerRelationshipsIsEnabled() throws Exception {
+        when(bookingServiceMock.findAllWithEagerRelationships(any())).thenReturn(new PageImpl(new ArrayList<>()));
+
+        restBookingMockMvc.perform(get(ENTITY_API_URL + "?eagerload=true")).andExpect(status().isOk());
+
+        verify(bookingServiceMock, times(1)).findAllWithEagerRelationships(any());
+    }
+
+    @SuppressWarnings({ "unchecked" })
+    void getAllBookingsWithEagerRelationshipsIsNotEnabled() throws Exception {
+        when(bookingServiceMock.findAllWithEagerRelationships(any())).thenReturn(new PageImpl(new ArrayList<>()));
+
+        restBookingMockMvc.perform(get(ENTITY_API_URL + "?eagerload=false")).andExpect(status().isOk());
+        verify(bookingRepositoryMock, times(1)).findAll(any(Pageable.class));
+    }
+
     @Test
     @Transactional
     void getBooking() throws Exception {
@@ -371,11 +403,7 @@ class BookingResourceIT {
         Booking partialUpdatedBooking = new Booking();
         partialUpdatedBooking.setId(booking.getId());
 
-        partialUpdatedBooking
-            .startDateTime(UPDATED_START_DATE_TIME)
-            .endDateTime(UPDATED_END_DATE_TIME)
-            .additionalDetails(UPDATED_ADDITIONAL_DETAILS)
-            .customerLat(UPDATED_CUSTOMER_LAT);
+        partialUpdatedBooking.endDateTime(UPDATED_END_DATE_TIME).customerLat(UPDATED_CUSTOMER_LAT);
 
         restBookingMockMvc
             .perform(
@@ -389,10 +417,10 @@ class BookingResourceIT {
         List<Booking> bookingList = bookingRepository.findAll();
         assertThat(bookingList).hasSize(databaseSizeBeforeUpdate);
         Booking testBooking = bookingList.get(bookingList.size() - 1);
-        assertThat(testBooking.getStartDateTime()).isEqualTo(UPDATED_START_DATE_TIME);
+        assertThat(testBooking.getStartDateTime()).isEqualTo(DEFAULT_START_DATE_TIME);
         assertThat(testBooking.getEndDateTime()).isEqualTo(UPDATED_END_DATE_TIME);
         assertThat(testBooking.getStatus()).isEqualTo(DEFAULT_STATUS);
-        assertThat(testBooking.getAdditionalDetails()).isEqualTo(UPDATED_ADDITIONAL_DETAILS);
+        assertThat(testBooking.getAdditionalDetails()).isEqualTo(DEFAULT_ADDITIONAL_DETAILS);
         assertThat(testBooking.getWorksiteImageUrl()).isEqualTo(DEFAULT_WORKSITE_IMAGE_URL);
         assertThat(testBooking.getCustomerLat()).isEqualTo(UPDATED_CUSTOMER_LAT);
         assertThat(testBooking.getCustomerLong()).isEqualTo(DEFAULT_CUSTOMER_LONG);

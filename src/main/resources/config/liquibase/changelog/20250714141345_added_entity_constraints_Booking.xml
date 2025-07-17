@@ -8,18 +8,11 @@
     -->
     <changeSet id="20250714141345-2" author="jhipster">
 
-        <addForeignKeyConstraint baseColumnNames="machine_id"
+        <addForeignKeyConstraint baseColumnNames="user_id"
                                  baseTableName="booking"
-                                 constraintName="fk_booking__machine_id"
+                                 constraintName="fk_booking__user_id"
                                  referencedColumnNames="id"
-                                 referencedTableName="machine"
-                                 />
-
-        <addForeignKeyConstraint baseColumnNames="customer_id"
-                                 baseTableName="booking"
-                                 constraintName="fk_booking__customer_id"
-                                 referencedColumnNames="id"
-                                 referencedTableName="customer"
+                                 referencedTableName="jhi_user"
                                  />
     </changeSet>
 </databaseChangeLog>

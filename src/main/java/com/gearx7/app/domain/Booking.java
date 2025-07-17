@@ -1,6 +1,5 @@
 package com.gearx7.app.domain;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.gearx7.app.domain.enumeration.BookingStatus;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
@@ -52,11 +51,7 @@ public class Booking implements Serializable {
     private Instant createdDate;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JsonIgnoreProperties(value = { "attachments", "partner" }, allowSetters = true)
-    private Machine machine;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    private Customer customer;
+    private User user;
 
     // jhipster-needle-entity-add-field - JHipster will add fields here
 
@@ -177,29 +172,16 @@ public class Booking implements Serializable {
         this.createdDate = createdDate;
     }
 
-    public Machine getMachine() {
-        return this.machine;
+    public User getUser() {
+        return this.user;
     }
 
-    public void setMachine(Machine machine) {
-        this.machine = machine;
+    public void setUser(User user) {
+        this.user = user;
     }
 
-    public Booking machine(Machine machine) {
-        this.setMachine(machine);
-        return this;
-    }
-
-    public Customer getCustomer() {
-        return this.customer;
-    }
-
-    public void setCustomer(Customer customer) {
-        this.customer = customer;
-    }
-
-    public Booking customer(Customer customer) {
-        this.setCustomer(customer);
+    public Booking user(User user) {
+        this.setUser(user);
         return this;
     }
 

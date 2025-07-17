@@ -144,35 +144,11 @@
         </div>
 
         <div class="mb-3">
-          <label class="form-label" for="field_machine">Machine</label>
-          <select
-            class="form-control"
-            id="field_machine"
-            data-cy="machine"
-            name="machine"
-            formControlName="machine"
-            [compareWith]="compareMachine"
-          >
+          <label class="form-label" for="field_user">User</label>
+          <select class="form-control" id="field_user" data-cy="user" name="user" formControlName="user" [compareWith]="compareUser">
             <option [ngValue]="null"></option>
-            @for (machineOption of machinesSharedCollection; track $index) {
-              <option [ngValue]="machineOption">{{ machineOption.id }}</option>
-            }
-          </select>
-        </div>
-
-        <div class="mb-3">
-          <label class="form-label" for="field_customer">Customer</label>
-          <select
-            class="form-control"
-            id="field_customer"
-            data-cy="customer"
-            name="customer"
-            formControlName="customer"
-            [compareWith]="compareCustomer"
-          >
-            <option [ngValue]="null"></option>
-            @for (customerOption of customersSharedCollection; track $index) {
-              <option [ngValue]="customerOption">{{ customerOption.id }}</option>
+            @for (userOption of usersSharedCollection; track $index) {
+              <option [ngValue]="userOption">{{ userOption.login }}</option>
             }
           </select>
         </div>

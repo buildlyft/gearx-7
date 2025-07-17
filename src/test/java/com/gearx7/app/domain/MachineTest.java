@@ -27,6 +27,18 @@ class MachineTest {
     }
 
     @Test
+    void partnerTest() throws Exception {
+        Machine machine = getMachineRandomSampleGenerator();
+        Partner partnerBack = getPartnerRandomSampleGenerator();
+
+        machine.setPartner(partnerBack);
+        assertThat(machine.getPartner()).isEqualTo(partnerBack);
+
+        machine.partner(null);
+        assertThat(machine.getPartner()).isNull();
+    }
+
+    @Test
     void attachmentTest() throws Exception {
         Machine machine = getMachineRandomSampleGenerator();
         Attachment attachmentBack = getAttachmentRandomSampleGenerator();
@@ -46,17 +58,5 @@ class MachineTest {
         machine.setAttachments(new HashSet<>());
         assertThat(machine.getAttachments()).doesNotContain(attachmentBack);
         assertThat(attachmentBack.getMachine()).isNull();
-    }
-
-    @Test
-    void partnerTest() throws Exception {
-        Machine machine = getMachineRandomSampleGenerator();
-        Partner partnerBack = getPartnerRandomSampleGenerator();
-
-        machine.setPartner(partnerBack);
-        assertThat(machine.getPartner()).isEqualTo(partnerBack);
-
-        machine.partner(null);
-        assertThat(machine.getPartner()).isNull();
     }
 }

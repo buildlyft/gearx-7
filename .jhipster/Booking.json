@@ -46,16 +46,12 @@
   "pagination": "pagination",
   "relationships": [
     {
-      "otherEntityName": "machine",
-      "relationshipName": "machine",
+      "otherEntityField": "login",
+      "otherEntityName": "user",
+      "relationshipName": "user",
       "relationshipSide": "left",
-      "relationshipType": "many-to-one"
-    },
-    {
-      "otherEntityName": "customer",
-      "relationshipName": "customer",
-      "relationshipSide": "left",
-      "relationshipType": "many-to-one"
+      "relationshipType": "many-to-one",
+      "relationshipWithBuiltInEntity": true
     }
   ],
   "searchEngine": "no",

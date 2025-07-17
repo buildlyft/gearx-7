@@ -6,12 +6,11 @@ import { ActivatedRoute } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
 import { of, Subject, from } from 'rxjs';
 
-import { IMachine } from 'app/entities/machine/machine.model';
-import { MachineService } from 'app/entities/machine/service/machine.service';
-import { ICustomer } from 'app/entities/customer/customer.model';
-import { CustomerService } from 'app/entities/customer/service/customer.service';
-import { IBooking } from '../booking.model';
+import { IUser } from 'app/entities/user/user.model';
+import { UserService } from 'app/entities/user/user.service';
 import { BookingService } from '../service/booking.service';
+import { IBooking } from '../booking.model';
+
 import { BookingFormService } from './booking-form.service';
 
 import { BookingUpdateComponent } from './booking-update.component';
@@ -22,8 +21,7 @@ describe('Booking Management Update Component', () => {
   let activatedRoute: ActivatedRoute;
   let bookingFormService: BookingFormService;
   let bookingService: BookingService;
-  let machineService: MachineService;
-  let customerService: CustomerService;
+  let userService: UserService;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -45,69 +43,43 @@ describe('Booking Management Update Component', () => {
     activatedRoute = TestBed.inject(ActivatedRoute);
     bookingFormService = TestBed.inject(BookingFormService);
     bookingService = TestBed.inject(BookingService);
-    machineService = TestBed.inject(MachineService);
-    customerService = TestBed.inject(CustomerService);
+    userService = TestBed.inject(UserService);
 
     comp = fixture.componentInstance;
   });
 
   describe('ngOnInit', () => {
-    it('Should call Machine query and add missing value', () => {
+    it('Should call User query and add missing value', () => {
       const booking: IBooking = { id: 456 };
-      const machine: IMachine = { id: 24792 };
-      booking.machine = machine;
+      const user: IUser = { id: 9945 };
+      booking.user = user;
 
-      const machineCollection: IMachine[] = [{ id: 9755 }];
-      jest.spyOn(machineService, 'query').mockReturnValue(of(new HttpResponse({ body: machineCollection })));
-      const additionalMachines = [machine];
-      const expectedCollection: IMachine[] = [...additionalMachines, ...machineCollection];
-      jest.spyOn(machineService, 'addMachineToCollectionIfMissing').mockReturnValue(expectedCollection);
+      const userCollection: IUser[] = [{ id: 29384 }];
+      jest.spyOn(userService, 'query').mockReturnValue(of(new HttpResponse({ body: userCollection })));
+      const additionalUsers = [user];
+      const expectedCollection: IUser[] = [...additionalUsers, ...userCollection];
+      jest.spyOn(userService, 'addUserToCollectionIfMissing').mockReturnValue(expectedCollection);
 
       activatedRoute.data = of({ booking });
       comp.ngOnInit();
 
-      expect(machineService.query).toHaveBeenCalled();
-      expect(machineService.addMachineToCollectionIfMissing).toHaveBeenCalledWith(
-        machineCollection,
-        ...additionalMachines.map(expect.objectContaining),
+      expect(userService.query).toHaveBeenCalled();
+      expect(userService.addUserToCollectionIfMissing).toHaveBeenCalledWith(
+        userCollection,
+        ...additionalUsers.map(expect.objectContaining),
       );
-      expect(comp.machinesSharedCollection).toEqual(expectedCollection);
-    });
-
-    it('Should call Customer query and add missing value', () => {
-      const booking: IBooking = { id: 456 };
-      const customer: ICustomer = { id: 28675 };
-      booking.customer = customer;
-
-      const customerCollection: ICustomer[] = [{ id: 25591 }];
-      jest.spyOn(customerService, 'query').mockReturnValue(of(new HttpResponse({ body: customerCollection })));
-      const additionalCustomers = [customer];
-      const expectedCollection: ICustomer[] = [...additionalCustomers, ...customerCollection];
-      jest.spyOn(customerService, 'addCustomerToCollectionIfMissing').mockReturnValue(expectedCollection);
-
-      activatedRoute.data = of({ booking });
-      comp.ngOnInit();
-
-      expect(customerService.query).toHaveBeenCalled();
-      expect(customerService.addCustomerToCollectionIfMissing).toHaveBeenCalledWith(
-        customerCollection,
-        ...additionalCustomers.map(expect.objectContaining),
-      );
-      expect(comp.customersSharedCollection).toEqual(expectedCollection);
+      expect(comp.usersSharedCollection).toEqual(expectedCollection);
     });
 
     it('Should update editForm', () => {
       const booking: IBooking = { id: 456 };
-      const machine: IMachine = { id: 18833 };
-      booking.machine = machine;
-      const customer: ICustomer = { id: 18315 };
-      booking.customer = customer;
+      const user: IUser = { id: 28625 };
+      booking.user = user;
 
       activatedRoute.data = of({ booking });
       comp.ngOnInit();
 
-      expect(comp.machinesSharedCollection).toContain(machine);
-      expect(comp.customersSharedCollection).toContain(customer);
+      expect(comp.usersSharedCollection).toContain(user);
       expect(comp.booking).toEqual(booking);
     });
   });
@@ -181,23 +153,13 @@ describe('Booking Management Update Component', () => {
   });
 
   describe('Compare relationships', () => {
-    describe('compareMachine', () => {
-      it('Should forward to machineService', () => {
+    describe('compareUser', () => {
+      it('Should forward to userService', () => {
         const entity = { id: 123 };
         const entity2 = { id: 456 };
-        jest.spyOn(machineService, 'compareMachine');
-        comp.compareMachine(entity, entity2);
-        expect(machineService.compareMachine).toHaveBeenCalledWith(entity, entity2);
-      });
-    });
-
-    describe('compareCustomer', () => {
-      it('Should forward to customerService', () => {
-        const entity = { id: 123 };
-        const entity2 = { id: 456 };
-        jest.spyOn(customerService, 'compareCustomer');
-        comp.compareCustomer(entity, entity2);
-        expect(customerService.compareCustomer).toHaveBeenCalledWith(entity, entity2);
+        jest.spyOn(userService, 'compareUser');
+        comp.compareUser(entity, entity2);
+        expect(userService.compareUser).toHaveBeenCalledWith(entity, entity2);
       });
     });
   });

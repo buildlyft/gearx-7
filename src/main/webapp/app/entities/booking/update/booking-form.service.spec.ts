@@ -28,8 +28,7 @@ describe('Booking Form Service', () => {
             customerLat: expect.any(Object),
             customerLong: expect.any(Object),
             createdDate: expect.any(Object),
-            machine: expect.any(Object),
-            customer: expect.any(Object),
+            user: expect.any(Object),
           }),
         );
       });
@@ -48,8 +47,7 @@ describe('Booking Form Service', () => {
             customerLat: expect.any(Object),
             customerLong: expect.any(Object),
             createdDate: expect.any(Object),
-            machine: expect.any(Object),
-            customer: expect.any(Object),
+            user: expect.any(Object),
           }),
         );
       });

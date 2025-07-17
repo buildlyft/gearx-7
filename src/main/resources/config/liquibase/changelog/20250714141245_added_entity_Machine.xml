@@ -65,6 +65,9 @@
             <column name="created_date" type="${datetimeType}">
                 <constraints nullable="false" />
             </column>
+            <column name="user_id" type="bigint">
+                <constraints nullable="true" />
+            </column>
             <column name="partner_id" type="bigint">
                 <constraints nullable="true" />
             </column>

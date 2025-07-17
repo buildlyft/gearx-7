@@ -1,8 +1,6 @@
 package com.gearx7.app.domain;
 
 import static com.gearx7.app.domain.BookingTestSamples.*;
-import static com.gearx7.app.domain.CustomerTestSamples.*;
-import static com.gearx7.app.domain.MachineTestSamples.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.gearx7.app.web.rest.TestUtil;
@@ -22,29 +20,5 @@ class BookingTest {
 
         booking2 = getBookingSample2();
         assertThat(booking1).isNotEqualTo(booking2);
-    }
-
-    @Test
-    void machineTest() throws Exception {
-        Booking booking = getBookingRandomSampleGenerator();
-        Machine machineBack = getMachineRandomSampleGenerator();
-
-        booking.setMachine(machineBack);
-        assertThat(booking.getMachine()).isEqualTo(machineBack);
-
-        booking.machine(null);
-        assertThat(booking.getMachine()).isNull();
-    }
-
-    @Test
-    void customerTest() throws Exception {
-        Booking booking = getBookingRandomSampleGenerator();
-        Customer customerBack = getCustomerRandomSampleGenerator();
-
-        booking.setCustomer(customerBack);
-        assertThat(booking.getCustomer()).isEqualTo(customerBack);
-
-        booking.customer(null);
-        assertThat(booking.getCustomer()).isNull();
     }
 }

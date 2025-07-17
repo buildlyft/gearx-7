@@ -6,10 +6,12 @@ import { ActivatedRoute } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
 import { of, Subject, from } from 'rxjs';
 
+import { IUser } from 'app/entities/user/user.model';
+import { UserService } from 'app/entities/user/user.service';
 import { IPartner } from 'app/entities/partner/partner.model';
 import { PartnerService } from 'app/entities/partner/service/partner.service';
-import { MachineService } from '../service/machine.service';
 import { IMachine } from '../machine.model';
+import { MachineService } from '../service/machine.service';
 import { MachineFormService } from './machine-form.service';
 
 import { MachineUpdateComponent } from './machine-update.component';
@@ -20,6 +22,7 @@ describe('Machine Management Update Component', () => {
   let activatedRoute: ActivatedRoute;
   let machineFormService: MachineFormService;
   let machineService: MachineService;
+  let userService: UserService;
   let partnerService: PartnerService;
 
   beforeEach(() => {
@@ -42,18 +45,41 @@ describe('Machine Management Update Component', () => {
     activatedRoute = TestBed.inject(ActivatedRoute);
     machineFormService = TestBed.inject(MachineFormService);
     machineService = TestBed.inject(MachineService);
+    userService = TestBed.inject(UserService);
     partnerService = TestBed.inject(PartnerService);
 
     comp = fixture.componentInstance;
   });
 
   describe('ngOnInit', () => {
+    it('Should call User query and add missing value', () => {
+      const machine: IMachine = { id: 456 };
+      const user: IUser = { id: 15004 };
+      machine.user = user;
+
+      const userCollection: IUser[] = [{ id: 24504 }];
+      jest.spyOn(userService, 'query').mockReturnValue(of(new HttpResponse({ body: userCollection })));
+      const additionalUsers = [user];
+      const expectedCollection: IUser[] = [...additionalUsers, ...userCollection];
+      jest.spyOn(userService, 'addUserToCollectionIfMissing').mockReturnValue(expectedCollection);
+
+      activatedRoute.data = of({ machine });
+      comp.ngOnInit();
+
+      expect(userService.query).toHaveBeenCalled();
+      expect(userService.addUserToCollectionIfMissing).toHaveBeenCalledWith(
+        userCollection,
+        ...additionalUsers.map(expect.objectContaining),
+      );
+      expect(comp.usersSharedCollection).toEqual(expectedCollection);
+    });
+
     it('Should call Partner query and add missing value', () => {
       const machine: IMachine = { id: 456 };
-      const partner: IPartner = { id: 6683 };
+      const partner: IPartner = { id: 18649 };
       machine.partner = partner;
 
-      const partnerCollection: IPartner[] = [{ id: 11522 }];
+      const partnerCollection: IPartner[] = [{ id: 13655 }];
       jest.spyOn(partnerService, 'query').mockReturnValue(of(new HttpResponse({ body: partnerCollection })));
       const additionalPartners = [partner];
       const expectedCollection: IPartner[] = [...additionalPartners, ...partnerCollection];
@@ -72,12 +98,15 @@ describe('Machine Management Update Component', () => {
 
     it('Should update editForm', () => {
       const machine: IMachine = { id: 456 };
-      const partner: IPartner = { id: 11834 };
+      const user: IUser = { id: 26084 };
+      machine.user = user;
+      const partner: IPartner = { id: 15816 };
       machine.partner = partner;
 
       activatedRoute.data = of({ machine });
       comp.ngOnInit();
 
+      expect(comp.usersSharedCollection).toContain(user);
       expect(comp.partnersSharedCollection).toContain(partner);
       expect(comp.machine).toEqual(machine);
     });
@@ -152,6 +181,16 @@ describe('Machine Management Update Component', () => {
   });
 
   describe('Compare relationships', () => {
+    describe('compareUser', () => {
+      it('Should forward to userService', () => {
+        const entity = { id: 123 };
+        const entity2 = { id: 456 };
+        jest.spyOn(userService, 'compareUser');
+        comp.compareUser(entity, entity2);
+        expect(userService.compareUser).toHaveBeenCalledWith(entity, entity2);
+      });
+    });
+
     describe('comparePartner', () => {
       it('Should forward to partnerService', () => {
         const entity = { id: 123 };

@@ -3,6 +3,7 @@ package com.gearx7.app.web.rest;
 import static com.gearx7.app.web.rest.TestUtil.sameNumber;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasItem;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -10,17 +11,24 @@ import com.gearx7.app.IntegrationTest;
 import com.gearx7.app.domain.Machine;
 import com.gearx7.app.domain.enumeration.MachineStatus;
 import com.gearx7.app.repository.MachineRepository;
+import com.gearx7.app.service.MachineService;
 import jakarta.persistence.EntityManager;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
@@ -30,6 +38,7 @@ import org.springframework.transaction.annotation.Transactional;
  * Integration tests for the {@link MachineResource} REST controller.
  */
 @IntegrationTest
+@ExtendWith(MockitoExtension.class)
 @AutoConfigureMockMvc
 @WithMockUser
 class MachineResourceIT {
@@ -93,6 +102,12 @@ class MachineResourceIT {
 
     @Autowired
     private MachineRepository machineRepository;
+
+    @Mock
+    private MachineRepository machineRepositoryMock;
+
+    @Mock
+    private MachineService machineServiceMock;
 
     @Autowired
     private EntityManager em;
@@ -363,6 +378,23 @@ class MachineResourceIT {
             .andExpect(jsonPath("$.[*].createdDate").value(hasItem(DEFAULT_CREATED_DATE.toString())));
     }
 
+    @SuppressWarnings({ "unchecked" })
+    void getAllMachinesWithEagerRelationshipsIsEnabled() throws Exception {
+        when(machineServiceMock.findAllWithEagerRelationships(any())).thenReturn(new PageImpl(new ArrayList<>()));
+
+        restMachineMockMvc.perform(get(ENTITY_API_URL + "?eagerload=true")).andExpect(status().isOk());
+
+        verify(machineServiceMock, times(1)).findAllWithEagerRelationships(any());
+    }
+
+    @SuppressWarnings({ "unchecked" })
+    void getAllMachinesWithEagerRelationshipsIsNotEnabled() throws Exception {
+        when(machineServiceMock.findAllWithEagerRelationships(any())).thenReturn(new PageImpl(new ArrayList<>()));
+
+        restMachineMockMvc.perform(get(ENTITY_API_URL + "?eagerload=false")).andExpect(status().isOk());
+        verify(machineRepositoryMock, times(1)).findAll(any(Pageable.class));
+    }
+
     @Test
     @Transactional
     void getMachine() throws Exception {
@@ -533,12 +565,16 @@ class MachineResourceIT {
 
         partialUpdatedMachine
             .brand(UPDATED_BRAND)
-            .type(UPDATED_TYPE)
             .tag(UPDATED_TAG)
+            .model(UPDATED_MODEL)
+            .vinNumber(UPDATED_VIN_NUMBER)
+            .chassisNumber(UPDATED_CHASSIS_NUMBER)
+            .description(UPDATED_DESCRIPTION)
+            .ratePerHour(UPDATED_RATE_PER_HOUR)
             .minimumUsageHours(UPDATED_MINIMUM_USAGE_HOURS)
-            .latitude(UPDATED_LATITUDE)
             .longitude(UPDATED_LONGITUDE)
             .transportationCharge(UPDATED_TRANSPORTATION_CHARGE)
+            .serviceabilityRangeKm(UPDATED_SERVICEABILITY_RANGE_KM)
             .status(UPDATED_STATUS)
             .createdDate(UPDATED_CREATED_DATE);
 
@@ -555,20 +591,20 @@ class MachineResourceIT {
         assertThat(machineList).hasSize(databaseSizeBeforeUpdate);
         Machine testMachine = machineList.get(machineList.size() - 1);
         assertThat(testMachine.getBrand()).isEqualTo(UPDATED_BRAND);
-        assertThat(testMachine.getType()).isEqualTo(UPDATED_TYPE);
+        assertThat(testMachine.getType()).isEqualTo(DEFAULT_TYPE);
         assertThat(testMachine.getTag()).isEqualTo(UPDATED_TAG);
-        assertThat(testMachine.getModel()).isEqualTo(DEFAULT_MODEL);
-        assertThat(testMachine.getVinNumber()).isEqualTo(DEFAULT_VIN_NUMBER);
-        assertThat(testMachine.getChassisNumber()).isEqualTo(DEFAULT_CHASSIS_NUMBER);
-        assertThat(testMachine.getDescription()).isEqualTo(DEFAULT_DESCRIPTION);
+        assertThat(testMachine.getModel()).isEqualTo(UPDATED_MODEL);
+        assertThat(testMachine.getVinNumber()).isEqualTo(UPDATED_VIN_NUMBER);
+        assertThat(testMachine.getChassisNumber()).isEqualTo(UPDATED_CHASSIS_NUMBER);
+        assertThat(testMachine.getDescription()).isEqualTo(UPDATED_DESCRIPTION);
         assertThat(testMachine.getCapacityTon()).isEqualTo(DEFAULT_CAPACITY_TON);
-        assertThat(testMachine.getRatePerHour()).isEqualByComparingTo(DEFAULT_RATE_PER_HOUR);
+        assertThat(testMachine.getRatePerHour()).isEqualByComparingTo(UPDATED_RATE_PER_HOUR);
         assertThat(testMachine.getMinimumUsageHours()).isEqualTo(UPDATED_MINIMUM_USAGE_HOURS);
-        assertThat(testMachine.getLatitude()).isEqualTo(UPDATED_LATITUDE);
+        assertThat(testMachine.getLatitude()).isEqualTo(DEFAULT_LATITUDE);
         assertThat(testMachine.getLongitude()).isEqualTo(UPDATED_LONGITUDE);
         assertThat(testMachine.getTransportationCharge()).isEqualByComparingTo(UPDATED_TRANSPORTATION_CHARGE);
         assertThat(testMachine.getDriverBatta()).isEqualByComparingTo(DEFAULT_DRIVER_BATTA);
-        assertThat(testMachine.getServiceabilityRangeKm()).isEqualTo(DEFAULT_SERVICEABILITY_RANGE_KM);
+        assertThat(testMachine.getServiceabilityRangeKm()).isEqualTo(UPDATED_SERVICEABILITY_RANGE_KM);
         assertThat(testMachine.getStatus()).isEqualTo(UPDATED_STATUS);
         assertThat(testMachine.getCreatedDate()).isEqualTo(UPDATED_CREATED_DATE);
     }

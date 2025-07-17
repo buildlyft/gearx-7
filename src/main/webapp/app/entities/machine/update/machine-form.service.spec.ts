@@ -37,6 +37,7 @@ describe('Machine Form Service', () => {
             serviceabilityRangeKm: expect.any(Object),
             status: expect.any(Object),
             createdDate: expect.any(Object),
+            user: expect.any(Object),
             partner: expect.any(Object),
           }),
         );
@@ -65,6 +66,7 @@ describe('Machine Form Service', () => {
             serviceabilityRangeKm: expect.any(Object),
             status: expect.any(Object),
             createdDate: expect.any(Object),
+            user: expect.any(Object),
             partner: expect.any(Object),
           }),
         );
