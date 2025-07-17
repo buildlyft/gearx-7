@@ -1,0 +1,54 @@
+{
+  "annotations": {
+    "changelogDate": "20250714141045"
+  },
+  "applications": "*",
+  "entityTableName": "partner",
+  "fields": [
+    {
+      "fieldName": "name",
+      "fieldType": "String",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "companyName",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "email",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "phone",
+      "fieldType": "String",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "address",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "preferredContactTime",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "gstNumber",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "panNumber",
+      "fieldType": "String"
+    }
+  ],
+  "name": "Partner",
+  "relationships": [
+    {
+      "otherEntityName": "machine",
+      "otherEntityRelationshipName": "partner",
+      "relationshipName": "machine",
+      "relationshipSide": "left",
+      "relationshipType": "one-to-many"
+    }
+  ],
+  "searchEngine": "no"
+}

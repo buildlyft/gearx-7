@@ -1,0 +1,63 @@
+{
+  "annotations": {
+    "changelogDate": "20250714141345"
+  },
+  "applications": "*",
+  "entityTableName": "booking",
+  "fields": [
+    {
+      "fieldName": "startDateTime",
+      "fieldType": "Instant",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "endDateTime",
+      "fieldType": "Instant",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "status",
+      "fieldType": "BookingStatus",
+      "fieldValidateRules": ["required"],
+      "fieldValues": "PENDING,ACCEPTED,REJECTED,CANCELLED,COMPLETED"
+    },
+    {
+      "fieldName": "additionalDetails",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "worksiteImageUrl",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "customerLat",
+      "fieldType": "Double"
+    },
+    {
+      "fieldName": "customerLong",
+      "fieldType": "Double"
+    },
+    {
+      "fieldName": "createdDate",
+      "fieldType": "Instant"
+    }
+  ],
+  "name": "Booking",
+  "pagination": "pagination",
+  "relationships": [
+    {
+      "otherEntityName": "machine",
+      "relationshipName": "machine",
+      "relationshipSide": "left",
+      "relationshipType": "many-to-one"
+    },
+    {
+      "otherEntityName": "customer",
+      "relationshipName": "customer",
+      "relationshipSide": "left",
+      "relationshipType": "many-to-one"
+    }
+  ],
+  "searchEngine": "no",
+  "service": "serviceClass"
+}

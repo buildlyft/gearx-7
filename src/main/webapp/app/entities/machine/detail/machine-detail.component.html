@@ -1,0 +1,106 @@
+<div class="d-flex justify-content-center">
+  <div class="col-8">
+    @if (machine) {
+      <div>
+        <h2 data-cy="machineDetailsHeading"><span>Machine</span></h2>
+
+        <hr />
+
+        <jhi-alert-error></jhi-alert-error>
+
+        <jhi-alert></jhi-alert>
+
+        <dl class="row-md jh-entity-details">
+          <dt><span>ID</span></dt>
+          <dd>
+            <span>{{ machine.id }}</span>
+          </dd>
+          <dt><span>Brand</span></dt>
+          <dd>
+            <span>{{ machine.brand }}</span>
+          </dd>
+          <dt><span>Type</span></dt>
+          <dd>
+            <span>{{ machine.type }}</span>
+          </dd>
+          <dt><span>Tag</span></dt>
+          <dd>
+            <span>{{ machine.tag }}</span>
+          </dd>
+          <dt><span>Model</span></dt>
+          <dd>
+            <span>{{ machine.model }}</span>
+          </dd>
+          <dt><span>Vin Number</span></dt>
+          <dd>
+            <span>{{ machine.vinNumber }}</span>
+          </dd>
+          <dt><span>Chassis Number</span></dt>
+          <dd>
+            <span>{{ machine.chassisNumber }}</span>
+          </dd>
+          <dt><span>Description</span></dt>
+          <dd>
+            <span>{{ machine.description }}</span>
+          </dd>
+          <dt><span>Capacity Ton</span></dt>
+          <dd>
+            <span>{{ machine.capacityTon }}</span>
+          </dd>
+          <dt><span>Rate Per Hour</span></dt>
+          <dd>
+            <span>{{ machine.ratePerHour }}</span>
+          </dd>
+          <dt><span>Minimum Usage Hours</span></dt>
+          <dd>
+            <span>{{ machine.minimumUsageHours }}</span>
+          </dd>
+          <dt><span>Latitude</span></dt>
+          <dd>
+            <span>{{ machine.latitude }}</span>
+          </dd>
+          <dt><span>Longitude</span></dt>
+          <dd>
+            <span>{{ machine.longitude }}</span>
+          </dd>
+          <dt><span>Transportation Charge</span></dt>
+          <dd>
+            <span>{{ machine.transportationCharge }}</span>
+          </dd>
+          <dt><span>Driver Batta</span></dt>
+          <dd>
+            <span>{{ machine.driverBatta }}</span>
+          </dd>
+          <dt><span>Serviceability Range Km</span></dt>
+          <dd>
+            <span>{{ machine.serviceabilityRangeKm }}</span>
+          </dd>
+          <dt><span>Status</span></dt>
+          <dd>
+            <span>{{ machine.status }}</span>
+          </dd>
+          <dt><span>Created Date</span></dt>
+          <dd>
+            <span>{{ machine.createdDate | formatMediumDatetime }}</span>
+          </dd>
+          <dt><span>Partner</span></dt>
+          <dd>
+            @if (machine.partner) {
+              <div>
+                <a [routerLink]="['/partner', machine.partner.id, 'view']">{{ machine.partner.id }}</a>
+              </div>
+            }
+          </dd>
+        </dl>
+
+        <button type="submit" (click)="previousState()" class="btn btn-info" data-cy="entityDetailsBackButton">
+          <fa-icon icon="arrow-left"></fa-icon>&nbsp;<span>Back</span>
+        </button>
+
+        <button type="button" [routerLink]="['/machine', machine.id, 'edit']" class="btn btn-primary">
+          <fa-icon icon="pencil-alt"></fa-icon>&nbsp;<span>Edit</span>
+        </button>
+      </div>
+    }
+  </div>
+</div>

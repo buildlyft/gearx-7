@@ -1,0 +1,62 @@
+<div class="d-flex justify-content-center">
+  <div class="col-8">
+    @if (partner) {
+      <div>
+        <h2 data-cy="partnerDetailsHeading"><span>Partner</span></h2>
+
+        <hr />
+
+        <jhi-alert-error></jhi-alert-error>
+
+        <jhi-alert></jhi-alert>
+
+        <dl class="row-md jh-entity-details">
+          <dt><span>ID</span></dt>
+          <dd>
+            <span>{{ partner.id }}</span>
+          </dd>
+          <dt><span>Name</span></dt>
+          <dd>
+            <span>{{ partner.name }}</span>
+          </dd>
+          <dt><span>Company Name</span></dt>
+          <dd>
+            <span>{{ partner.companyName }}</span>
+          </dd>
+          <dt><span>Email</span></dt>
+          <dd>
+            <span>{{ partner.email }}</span>
+          </dd>
+          <dt><span>Phone</span></dt>
+          <dd>
+            <span>{{ partner.phone }}</span>
+          </dd>
+          <dt><span>Address</span></dt>
+          <dd>
+            <span>{{ partner.address }}</span>
+          </dd>
+          <dt><span>Preferred Contact Time</span></dt>
+          <dd>
+            <span>{{ partner.preferredContactTime }}</span>
+          </dd>
+          <dt><span>Gst Number</span></dt>
+          <dd>
+            <span>{{ partner.gstNumber }}</span>
+          </dd>
+          <dt><span>Pan Number</span></dt>
+          <dd>
+            <span>{{ partner.panNumber }}</span>
+          </dd>
+        </dl>
+
+        <button type="submit" (click)="previousState()" class="btn btn-info" data-cy="entityDetailsBackButton">
+          <fa-icon icon="arrow-left"></fa-icon>&nbsp;<span>Back</span>
+        </button>
+
+        <button type="button" [routerLink]="['/partner', partner.id, 'edit']" class="btn btn-primary">
+          <fa-icon icon="pencil-alt"></fa-icon>&nbsp;<span>Edit</span>
+        </button>
+      </div>
+    }
+  </div>
+</div>

@@ -1,0 +1,78 @@
+<div class="d-flex justify-content-center">
+  <div class="col-8">
+    @if (booking) {
+      <div>
+        <h2 data-cy="bookingDetailsHeading"><span>Booking</span></h2>
+
+        <hr />
+
+        <jhi-alert-error></jhi-alert-error>
+
+        <jhi-alert></jhi-alert>
+
+        <dl class="row-md jh-entity-details">
+          <dt><span>ID</span></dt>
+          <dd>
+            <span>{{ booking.id }}</span>
+          </dd>
+          <dt><span>Start Date Time</span></dt>
+          <dd>
+            <span>{{ booking.startDateTime | formatMediumDatetime }}</span>
+          </dd>
+          <dt><span>End Date Time</span></dt>
+          <dd>
+            <span>{{ booking.endDateTime | formatMediumDatetime }}</span>
+          </dd>
+          <dt><span>Status</span></dt>
+          <dd>
+            <span>{{ booking.status }}</span>
+          </dd>
+          <dt><span>Additional Details</span></dt>
+          <dd>
+            <span>{{ booking.additionalDetails }}</span>
+          </dd>
+          <dt><span>Worksite Image Url</span></dt>
+          <dd>
+            <span>{{ booking.worksiteImageUrl }}</span>
+          </dd>
+          <dt><span>Customer Lat</span></dt>
+          <dd>
+            <span>{{ booking.customerLat }}</span>
+          </dd>
+          <dt><span>Customer Long</span></dt>
+          <dd>
+            <span>{{ booking.customerLong }}</span>
+          </dd>
+          <dt><span>Created Date</span></dt>
+          <dd>
+            <span>{{ booking.createdDate | formatMediumDatetime }}</span>
+          </dd>
+          <dt><span>Machine</span></dt>
+          <dd>
+            @if (booking.machine) {
+              <div>
+                <a [routerLink]="['/machine', booking.machine.id, 'view']">{{ booking.machine.id }}</a>
+              </div>
+            }
+          </dd>
+          <dt><span>Customer</span></dt>
+          <dd>
+            @if (booking.customer) {
+              <div>
+                <a [routerLink]="['/customer', booking.customer.id, 'view']">{{ booking.customer.id }}</a>
+              </div>
+            }
+          </dd>
+        </dl>
+
+        <button type="submit" (click)="previousState()" class="btn btn-info" data-cy="entityDetailsBackButton">
+          <fa-icon icon="arrow-left"></fa-icon>&nbsp;<span>Back</span>
+        </button>
+
+        <button type="button" [routerLink]="['/booking', booking.id, 'edit']" class="btn btn-primary">
+          <fa-icon icon="pencil-alt"></fa-icon>&nbsp;<span>Edit</span>
+        </button>
+      </div>
+    }
+  </div>
+</div>

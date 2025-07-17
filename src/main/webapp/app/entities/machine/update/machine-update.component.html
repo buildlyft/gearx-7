@@ -1,0 +1,268 @@
+<div class="d-flex justify-content-center">
+  <div class="col-8">
+    <form name="editForm" role="form" novalidate (ngSubmit)="save()" [formGroup]="editForm">
+      <h2 id="jhi-machine-heading" data-cy="MachineCreateUpdateHeading">Create or edit a Machine</h2>
+
+      <div>
+        <jhi-alert-error></jhi-alert-error>
+
+        @if (editForm.controls.id.value !== null) {
+          <div class="mb-3">
+            <label class="form-label" for="field_id">ID</label>
+            <input type="number" class="form-control" name="id" id="field_id" data-cy="id" formControlName="id" [readonly]="true" />
+          </div>
+        }
+
+        <div class="mb-3">
+          <label class="form-label" for="field_brand">Brand</label>
+          <input type="text" class="form-control" name="brand" id="field_brand" data-cy="brand" formControlName="brand" />
+          @if (editForm.get('brand')!.invalid && (editForm.get('brand')!.dirty || editForm.get('brand')!.touched)) {
+            <div>
+              @if (editForm.get('brand')?.errors?.required) {
+                <small class="form-text text-danger">This field is required.</small>
+              }
+            </div>
+          }
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="field_type">Type</label>
+          <input type="text" class="form-control" name="type" id="field_type" data-cy="type" formControlName="type" />
+          @if (editForm.get('type')!.invalid && (editForm.get('type')!.dirty || editForm.get('type')!.touched)) {
+            <div>
+              @if (editForm.get('type')?.errors?.required) {
+                <small class="form-text text-danger">This field is required.</small>
+              }
+            </div>
+          }
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="field_tag">Tag</label>
+          <input type="text" class="form-control" name="tag" id="field_tag" data-cy="tag" formControlName="tag" />
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="field_model">Model</label>
+          <input type="text" class="form-control" name="model" id="field_model" data-cy="model" formControlName="model" />
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="field_vinNumber">Vin Number</label>
+          <input type="text" class="form-control" name="vinNumber" id="field_vinNumber" data-cy="vinNumber" formControlName="vinNumber" />
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="field_chassisNumber">Chassis Number</label>
+          <input
+            type="text"
+            class="form-control"
+            name="chassisNumber"
+            id="field_chassisNumber"
+            data-cy="chassisNumber"
+            formControlName="chassisNumber"
+          />
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="field_description">Description</label>
+          <input
+            type="text"
+            class="form-control"
+            name="description"
+            id="field_description"
+            data-cy="description"
+            formControlName="description"
+          />
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="field_capacityTon">Capacity Ton</label>
+          <input
+            type="number"
+            class="form-control"
+            name="capacityTon"
+            id="field_capacityTon"
+            data-cy="capacityTon"
+            formControlName="capacityTon"
+          />
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="field_ratePerHour">Rate Per Hour</label>
+          <input
+            type="number"
+            class="form-control"
+            name="ratePerHour"
+            id="field_ratePerHour"
+            data-cy="ratePerHour"
+            formControlName="ratePerHour"
+          />
+          @if (editForm.get('ratePerHour')!.invalid && (editForm.get('ratePerHour')!.dirty || editForm.get('ratePerHour')!.touched)) {
+            <div>
+              @if (editForm.get('ratePerHour')?.errors?.required) {
+                <small class="form-text text-danger">This field is required.</small>
+              }
+              <small class="form-text text-danger" [hidden]="!editForm.get('ratePerHour')?.errors?.number"
+                >This field should be a number.</small
+              >
+            </div>
+          }
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="field_minimumUsageHours">Minimum Usage Hours</label>
+          <input
+            type="number"
+            class="form-control"
+            name="minimumUsageHours"
+            id="field_minimumUsageHours"
+            data-cy="minimumUsageHours"
+            formControlName="minimumUsageHours"
+          />
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="field_latitude">Latitude</label>
+          <input type="number" class="form-control" name="latitude" id="field_latitude" data-cy="latitude" formControlName="latitude" />
+          @if (editForm.get('latitude')!.invalid && (editForm.get('latitude')!.dirty || editForm.get('latitude')!.touched)) {
+            <div>
+              @if (editForm.get('latitude')?.errors?.required) {
+                <small class="form-text text-danger">This field is required.</small>
+              }
+              <small class="form-text text-danger" [hidden]="!editForm.get('latitude')?.errors?.number"
+                >This field should be a number.</small
+              >
+            </div>
+          }
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="field_longitude">Longitude</label>
+          <input type="number" class="form-control" name="longitude" id="field_longitude" data-cy="longitude" formControlName="longitude" />
+          @if (editForm.get('longitude')!.invalid && (editForm.get('longitude')!.dirty || editForm.get('longitude')!.touched)) {
+            <div>
+              @if (editForm.get('longitude')?.errors?.required) {
+                <small class="form-text text-danger">This field is required.</small>
+              }
+              <small class="form-text text-danger" [hidden]="!editForm.get('longitude')?.errors?.number"
+                >This field should be a number.</small
+              >
+            </div>
+          }
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="field_transportationCharge">Transportation Charge</label>
+          <input
+            type="number"
+            class="form-control"
+            name="transportationCharge"
+            id="field_transportationCharge"
+            data-cy="transportationCharge"
+            formControlName="transportationCharge"
+          />
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="field_driverBatta">Driver Batta</label>
+          <input
+            type="number"
+            class="form-control"
+            name="driverBatta"
+            id="field_driverBatta"
+            data-cy="driverBatta"
+            formControlName="driverBatta"
+          />
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="field_serviceabilityRangeKm">Serviceability Range Km</label>
+          <input
+            type="number"
+            class="form-control"
+            name="serviceabilityRangeKm"
+            id="field_serviceabilityRangeKm"
+            data-cy="serviceabilityRangeKm"
+            formControlName="serviceabilityRangeKm"
+          />
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="field_status">Status</label>
+          <select class="form-control" name="status" formControlName="status" id="field_status" data-cy="status">
+            <option [ngValue]="null"></option>
+            @for (machineStatus of machineStatusValues; track $index) {
+              <option [value]="machineStatus">{{ machineStatus }}</option>
+            }
+          </select>
+          @if (editForm.get('status')!.invalid && (editForm.get('status')!.dirty || editForm.get('status')!.touched)) {
+            <div>
+              @if (editForm.get('status')?.errors?.required) {
+                <small class="form-text text-danger">This field is required.</small>
+              }
+            </div>
+          }
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="field_createdDate">Created Date</label>
+          <div class="d-flex">
+            <input
+              id="field_createdDate"
+              data-cy="createdDate"
+              type="datetime-local"
+              class="form-control"
+              name="createdDate"
+              formControlName="createdDate"
+              placeholder="YYYY-MM-DD HH:mm"
+            />
+          </div>
+          @if (editForm.get('createdDate')!.invalid && (editForm.get('createdDate')!.dirty || editForm.get('createdDate')!.touched)) {
+            <div>
+              @if (editForm.get('createdDate')?.errors?.required) {
+                <small class="form-text text-danger">This field is required.</small>
+              }
+              <small class="form-text text-danger" [hidden]="!editForm.get('createdDate')?.errors?.datetimelocal"
+                >This field should be a date and time.</small
+              >
+            </div>
+          }
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="field_partner">Partner</label>
+          <select
+            class="form-control"
+            id="field_partner"
+            data-cy="partner"
+            name="partner"
+            formControlName="partner"
+            [compareWith]="comparePartner"
+          >
+            <option [ngValue]="null"></option>
+            @for (partnerOption of partnersSharedCollection; track $index) {
+              <option [ngValue]="partnerOption">{{ partnerOption.id }}</option>
+            }
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <button type="button" id="cancel-save" data-cy="entityCreateCancelButton" class="btn btn-secondary" (click)="previousState()">
+          <fa-icon icon="ban"></fa-icon>&nbsp;<span>Cancel</span>
+        </button>
+
+        <button
+          type="submit"
+          id="save-entity"
+          data-cy="entityCreateSaveButton"
+          [disabled]="editForm.invalid || isSaving"
+          class="btn btn-primary"
+        >
+          <fa-icon icon="save"></fa-icon>&nbsp;<span>Save</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

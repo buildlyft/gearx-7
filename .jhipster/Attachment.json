@@ -1,0 +1,42 @@
+{
+  "annotations": {
+    "changelogDate": "20250714141445"
+  },
+  "applications": "*",
+  "entityTableName": "attachment",
+  "fields": [
+    {
+      "fieldName": "fileName",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "fileType",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "fileUrl",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "uploadedDate",
+      "fieldType": "Instant"
+    }
+  ],
+  "name": "Attachment",
+  "relationships": [
+    {
+      "otherEntityName": "partner",
+      "relationshipName": "partner",
+      "relationshipSide": "left",
+      "relationshipType": "many-to-one"
+    },
+    {
+      "otherEntityName": "machine",
+      "otherEntityRelationshipName": "attachment",
+      "relationshipName": "machine",
+      "relationshipSide": "right",
+      "relationshipType": "many-to-one"
+    }
+  ],
+  "searchEngine": "no"
+}

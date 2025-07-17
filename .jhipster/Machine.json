@@ -1,0 +1,105 @@
+{
+  "annotations": {
+    "changelogDate": "20250714141245"
+  },
+  "applications": "*",
+  "entityTableName": "machine",
+  "fields": [
+    {
+      "fieldName": "brand",
+      "fieldType": "String",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "type",
+      "fieldType": "String",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "tag",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "model",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "vinNumber",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "chassisNumber",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "description",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "capacityTon",
+      "fieldType": "Integer"
+    },
+    {
+      "fieldName": "ratePerHour",
+      "fieldType": "BigDecimal",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "minimumUsageHours",
+      "fieldType": "Integer"
+    },
+    {
+      "fieldName": "latitude",
+      "fieldType": "Double",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "longitude",
+      "fieldType": "Double",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "transportationCharge",
+      "fieldType": "BigDecimal"
+    },
+    {
+      "fieldName": "driverBatta",
+      "fieldType": "BigDecimal"
+    },
+    {
+      "fieldName": "serviceabilityRangeKm",
+      "fieldType": "Integer"
+    },
+    {
+      "fieldName": "status",
+      "fieldType": "MachineStatus",
+      "fieldValidateRules": ["required"],
+      "fieldValues": "AVAILABLE,NOT_AVAILABLE"
+    },
+    {
+      "fieldName": "createdDate",
+      "fieldType": "Instant",
+      "fieldValidateRules": ["required"]
+    }
+  ],
+  "name": "Machine",
+  "pagination": "pagination",
+  "relationships": [
+    {
+      "otherEntityName": "attachment",
+      "otherEntityRelationshipName": "machine",
+      "relationshipName": "attachment",
+      "relationshipSide": "left",
+      "relationshipType": "one-to-many"
+    },
+    {
+      "otherEntityName": "partner",
+      "otherEntityRelationshipName": "machine",
+      "relationshipName": "partner",
+      "relationshipSide": "right",
+      "relationshipType": "many-to-one"
+    }
+  ],
+  "searchEngine": "no",
+  "service": "serviceClass"
+}

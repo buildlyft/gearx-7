@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <!--
+        Added the constraints for entity Machine.
+    -->
+    <changeSet id="20250714141245-2" author="jhipster">
+
+        <addForeignKeyConstraint baseColumnNames="partner_id"
+                                 baseTableName="machine"
+                                 constraintName="fk_machine__partner_id"
+                                 referencedColumnNames="id"
+                                 referencedTableName="partner"
+                                 />
+    </changeSet>
+</databaseChangeLog>
