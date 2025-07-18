@@ -15,7 +15,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface MachineRepository extends JpaRepository<Machine, Long> {
     @Query("select machine from Machine machine where machine.user.login = ?#{authentication.name}")
-    List<Machine> findByUserIsCurrentUser();
+    Page<Machine> findByUserIsCurrentUser(Pageable pageable);
 
     default Optional<Machine> findOneWithEagerRelationships(Long id) {
         return this.findOneWithToOneRelationships(id);

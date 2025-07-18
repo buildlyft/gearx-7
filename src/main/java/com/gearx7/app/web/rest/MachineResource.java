@@ -2,6 +2,9 @@ package com.gearx7.app.web.rest;
 
 import com.gearx7.app.domain.Machine;
 import com.gearx7.app.repository.MachineRepository;
+import com.gearx7.app.repository.UserRepository;
+import com.gearx7.app.security.AuthoritiesConstants;
+import com.gearx7.app.security.SecurityUtils;
 import com.gearx7.app.service.MachineService;
 import com.gearx7.app.web.rest.errors.BadRequestAlertException;
 import jakarta.validation.Valid;
@@ -42,9 +45,12 @@ public class MachineResource {
 
     private final MachineRepository machineRepository;
 
-    public MachineResource(MachineService machineService, MachineRepository machineRepository) {
+    private final UserRepository userRepository;
+
+    public MachineResource(MachineService machineService, MachineRepository machineRepository, UserRepository userRepository) {
         this.machineService = machineService;
         this.machineRepository = machineRepository;
+        this.userRepository = userRepository;
     }
 
     /**
@@ -60,6 +66,13 @@ public class MachineResource {
         if (machine.getId() != null) {
             throw new BadRequestAlertException("A new machine cannot already have an ID", ENTITY_NAME, "idexists");
         }
+
+        if (!SecurityUtils.hasCurrentUserThisAuthority(AuthoritiesConstants.ADMIN)) {
+            log.debug("No user passed in, using current user: {}", SecurityUtils.getCurrentUserLogin().orElseThrow());
+            String username = SecurityUtils.getCurrentUserLogin().orElseThrow();
+            machine.setUser(userRepository.findOneByLogin(username).orElseThrow());
+        }
+
         Machine result = machineService.save(machine);
         return ResponseEntity
             .created(new URI("/api/machines/" + result.getId()))
@@ -151,11 +164,16 @@ public class MachineResource {
     ) {
         log.debug("REST request to get a page of Machines");
         Page<Machine> page;
-        if (eagerload) {
-            page = machineService.findAllWithEagerRelationships(pageable);
+        if (SecurityUtils.hasCurrentUserThisAuthority(AuthoritiesConstants.ADMIN)) {
+            if (eagerload) {
+                page = machineService.findAllWithEagerRelationships(pageable);
+            } else {
+                page = machineService.findAll(pageable);
+            }
         } else {
-            page = machineService.findAll(pageable);
+            page = machineRepository.findByUserIsCurrentUser(pageable);
         }
+
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
         return ResponseEntity.ok().headers(headers).body(page.getContent());
     }
