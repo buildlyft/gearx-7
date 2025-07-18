@@ -2,6 +2,9 @@ package com.gearx7.app.web.rest;
 
 import com.gearx7.app.domain.Booking;
 import com.gearx7.app.repository.BookingRepository;
+import com.gearx7.app.repository.UserRepository;
+import com.gearx7.app.security.AuthoritiesConstants;
+import com.gearx7.app.security.SecurityUtils;
 import com.gearx7.app.service.BookingService;
 import com.gearx7.app.web.rest.errors.BadRequestAlertException;
 import jakarta.validation.Valid;
@@ -42,9 +45,12 @@ public class BookingResource {
 
     private final BookingRepository bookingRepository;
 
-    public BookingResource(BookingService bookingService, BookingRepository bookingRepository) {
+    private final UserRepository userRepository;
+
+    public BookingResource(BookingService bookingService, BookingRepository bookingRepository, UserRepository userRepository) {
         this.bookingService = bookingService;
         this.bookingRepository = bookingRepository;
+        this.userRepository = userRepository;
     }
 
     /**
@@ -60,6 +66,13 @@ public class BookingResource {
         if (booking.getId() != null) {
             throw new BadRequestAlertException("A new booking cannot already have an ID", ENTITY_NAME, "idexists");
         }
+
+        if (!SecurityUtils.hasCurrentUserThisAuthority(AuthoritiesConstants.ADMIN)) {
+            log.debug("No user passed in, using current user: {}", SecurityUtils.getCurrentUserLogin().orElseThrow());
+            String username = SecurityUtils.getCurrentUserLogin().orElseThrow();
+            booking.setUser(userRepository.findOneByLogin(username).orElseThrow());
+        }
+
         Booking result = bookingService.save(booking);
         return ResponseEntity
             .created(new URI("/api/bookings/" + result.getId()))
@@ -151,10 +164,14 @@ public class BookingResource {
     ) {
         log.debug("REST request to get a page of Bookings");
         Page<Booking> page;
-        if (eagerload) {
-            page = bookingService.findAllWithEagerRelationships(pageable);
+        if (SecurityUtils.hasCurrentUserThisAuthority(AuthoritiesConstants.ADMIN)) {
+            if (eagerload) {
+                page = bookingService.findAllWithEagerRelationships(pageable);
+            } else {
+                page = bookingService.findAll(pageable);
+            }
         } else {
-            page = bookingService.findAll(pageable);
+            page = bookingRepository.findByUserIsCurrentUser(pageable);
         }
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
         return ResponseEntity.ok().headers(headers).body(page.getContent());

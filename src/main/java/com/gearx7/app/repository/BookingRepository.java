@@ -15,7 +15,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface BookingRepository extends JpaRepository<Booking, Long> {
     @Query("select booking from Booking booking where booking.user.login = ?#{authentication.name}")
-    List<Booking> findByUserIsCurrentUser();
+    Page<Booking> findByUserIsCurrentUser(Pageable pageable);
 
     default Optional<Booking> findOneWithEagerRelationships(Long id) {
         return this.findOneWithToOneRelationships(id);
