@@ -164,7 +164,7 @@ public class MachineResource {
     ) {
         log.debug("REST request to get a page of Machines");
         Page<Machine> page;
-        if (SecurityUtils.hasCurrentUserThisAuthority(AuthoritiesConstants.ADMIN)) {
+        if (SecurityUtils.hasCurrentUserAnyOfAuthorities(AuthoritiesConstants.ADMIN, AuthoritiesConstants.USER)) {
             if (eagerload) {
                 page = machineService.findAllWithEagerRelationships(pageable);
             } else {
