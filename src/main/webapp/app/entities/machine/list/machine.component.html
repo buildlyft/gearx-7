@@ -167,6 +167,12 @@
                 <fa-icon class="p-1" icon="sort"></fa-icon>
               </div>
             </th>
+            <th scope="col" jhiSortBy="partner.id">
+              <div class="d-flex">
+                <span>Partner</span>
+                <fa-icon class="p-1" icon="sort"></fa-icon>
+              </div>
+            </th>
             <th scope="col"></th>
           </tr>
         </thead>
@@ -195,6 +201,13 @@
               <td>{{ machine.createdDate | formatMediumDatetime }}</td>
               <td>
                 {{ machine.user?.login }}
+              </td>
+              <td>
+                @if (machine.partner) {
+                  <div>
+                    <a [routerLink]="['/partner', machine.partner.id, 'view']">{{ machine.partner.id }}</a>
+                  </div>
+                }
               </td>
               <td class="text-end">
                 <div class="btn-group">

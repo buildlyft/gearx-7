@@ -42,6 +42,7 @@ type BookingFormGroupContent = {
   customerLong: FormControl<BookingFormRawValue['customerLong']>;
   createdDate: FormControl<BookingFormRawValue['createdDate']>;
   user: FormControl<BookingFormRawValue['user']>;
+  machine: FormControl<BookingFormRawValue['machine']>;
 };
 
 export type BookingFormGroup = FormGroup<BookingFormGroupContent>;
@@ -76,6 +77,7 @@ export class BookingFormService {
       customerLong: new FormControl(bookingRawValue.customerLong),
       createdDate: new FormControl(bookingRawValue.createdDate),
       user: new FormControl(bookingRawValue.user),
+      machine: new FormControl(bookingRawValue.machine),
     });
   }
 

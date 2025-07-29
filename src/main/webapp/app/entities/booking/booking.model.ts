@@ -1,5 +1,6 @@
 import dayjs from 'dayjs/esm';
 import { IUser } from 'app/entities/user/user.model';
+import { IMachine } from 'app/entities/machine/machine.model';
 import { BookingStatus } from 'app/entities/enumerations/booking-status.model';
 
 export interface IBooking {
@@ -13,6 +14,7 @@ export interface IBooking {
   customerLong?: number | null;
   createdDate?: dayjs.Dayjs | null;
   user?: Pick<IUser, 'id' | 'login'> | null;
+  machine?: IMachine | null;
 }
 
 export type NewBooking = Omit<IBooking, 'id'> & { id: null };

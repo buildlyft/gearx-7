@@ -8,9 +8,10 @@ import { of, Subject, from } from 'rxjs';
 
 import { IUser } from 'app/entities/user/user.model';
 import { UserService } from 'app/entities/user/user.service';
-import { BookingService } from '../service/booking.service';
+import { IMachine } from 'app/entities/machine/machine.model';
+import { MachineService } from 'app/entities/machine/service/machine.service';
 import { IBooking } from '../booking.model';
-
+import { BookingService } from '../service/booking.service';
 import { BookingFormService } from './booking-form.service';
 
 import { BookingUpdateComponent } from './booking-update.component';
@@ -22,6 +23,7 @@ describe('Booking Management Update Component', () => {
   let bookingFormService: BookingFormService;
   let bookingService: BookingService;
   let userService: UserService;
+  let machineService: MachineService;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -44,6 +46,7 @@ describe('Booking Management Update Component', () => {
     bookingFormService = TestBed.inject(BookingFormService);
     bookingService = TestBed.inject(BookingService);
     userService = TestBed.inject(UserService);
+    machineService = TestBed.inject(MachineService);
 
     comp = fixture.componentInstance;
   });
@@ -71,15 +74,40 @@ describe('Booking Management Update Component', () => {
       expect(comp.usersSharedCollection).toEqual(expectedCollection);
     });
 
+    it('Should call Machine query and add missing value', () => {
+      const booking: IBooking = { id: 456 };
+      const machine: IMachine = { id: 26986 };
+      booking.machine = machine;
+
+      const machineCollection: IMachine[] = [{ id: 22524 }];
+      jest.spyOn(machineService, 'query').mockReturnValue(of(new HttpResponse({ body: machineCollection })));
+      const additionalMachines = [machine];
+      const expectedCollection: IMachine[] = [...additionalMachines, ...machineCollection];
+      jest.spyOn(machineService, 'addMachineToCollectionIfMissing').mockReturnValue(expectedCollection);
+
+      activatedRoute.data = of({ booking });
+      comp.ngOnInit();
+
+      expect(machineService.query).toHaveBeenCalled();
+      expect(machineService.addMachineToCollectionIfMissing).toHaveBeenCalledWith(
+        machineCollection,
+        ...additionalMachines.map(expect.objectContaining),
+      );
+      expect(comp.machinesSharedCollection).toEqual(expectedCollection);
+    });
+
     it('Should update editForm', () => {
       const booking: IBooking = { id: 456 };
       const user: IUser = { id: 28625 };
       booking.user = user;
+      const machine: IMachine = { id: 20387 };
+      booking.machine = machine;
 
       activatedRoute.data = of({ booking });
       comp.ngOnInit();
 
       expect(comp.usersSharedCollection).toContain(user);
+      expect(comp.machinesSharedCollection).toContain(machine);
       expect(comp.booking).toEqual(booking);
     });
   });
@@ -160,6 +188,16 @@ describe('Booking Management Update Component', () => {
         jest.spyOn(userService, 'compareUser');
         comp.compareUser(entity, entity2);
         expect(userService.compareUser).toHaveBeenCalledWith(entity, entity2);
+      });
+    });
+
+    describe('compareMachine', () => {
+      it('Should forward to machineService', () => {
+        const entity = { id: 123 };
+        const entity2 = { id: 456 };
+        jest.spyOn(machineService, 'compareMachine');
+        comp.compareMachine(entity, entity2);
+        expect(machineService.compareMachine).toHaveBeenCalledWith(entity, entity2);
       });
     });
   });

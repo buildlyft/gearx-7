@@ -29,6 +29,7 @@ describe('Booking Form Service', () => {
             customerLong: expect.any(Object),
             createdDate: expect.any(Object),
             user: expect.any(Object),
+            machine: expect.any(Object),
           }),
         );
       });
@@ -48,6 +49,7 @@ describe('Booking Form Service', () => {
             customerLong: expect.any(Object),
             createdDate: expect.any(Object),
             user: expect.any(Object),
+            machine: expect.any(Object),
           }),
         );
       });

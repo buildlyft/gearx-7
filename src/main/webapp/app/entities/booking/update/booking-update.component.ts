@@ -9,6 +9,8 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 import { IUser } from 'app/entities/user/user.model';
 import { UserService } from 'app/entities/user/user.service';
+import { IMachine } from 'app/entities/machine/machine.model';
+import { MachineService } from 'app/entities/machine/service/machine.service';
 import { BookingStatus } from 'app/entities/enumerations/booking-status.model';
 import { BookingService } from '../service/booking.service';
 import { IBooking } from '../booking.model';
@@ -26,6 +28,7 @@ export class BookingUpdateComponent implements OnInit {
   bookingStatusValues = Object.keys(BookingStatus);
 
   usersSharedCollection: IUser[] = [];
+  machinesSharedCollection: IMachine[] = [];
 
   editForm: BookingFormGroup = this.bookingFormService.createBookingFormGroup();
 
@@ -33,10 +36,13 @@ export class BookingUpdateComponent implements OnInit {
     protected bookingService: BookingService,
     protected bookingFormService: BookingFormService,
     protected userService: UserService,
+    protected machineService: MachineService,
     protected activatedRoute: ActivatedRoute,
   ) {}
 
   compareUser = (o1: IUser | null, o2: IUser | null): boolean => this.userService.compareUser(o1, o2);
+
+  compareMachine = (o1: IMachine | null, o2: IMachine | null): boolean => this.machineService.compareMachine(o1, o2);
 
   ngOnInit(): void {
     this.activatedRoute.data.subscribe(({ booking }) => {
@@ -87,6 +93,10 @@ export class BookingUpdateComponent implements OnInit {
     this.bookingFormService.resetForm(this.editForm, booking);
 
     this.usersSharedCollection = this.userService.addUserToCollectionIfMissing<IUser>(this.usersSharedCollection, booking.user);
+    this.machinesSharedCollection = this.machineService.addMachineToCollectionIfMissing<IMachine>(
+      this.machinesSharedCollection,
+      booking.machine,
+    );
   }
 
   protected loadRelationshipsOptions(): void {
@@ -95,5 +105,11 @@ export class BookingUpdateComponent implements OnInit {
       .pipe(map((res: HttpResponse<IUser[]>) => res.body ?? []))
       .pipe(map((users: IUser[]) => this.userService.addUserToCollectionIfMissing<IUser>(users, this.booking?.user)))
       .subscribe((users: IUser[]) => (this.usersSharedCollection = users));
+
+    this.machineService
+      .query()
+      .pipe(map((res: HttpResponse<IMachine[]>) => res.body ?? []))
+      .pipe(map((machines: IMachine[]) => this.machineService.addMachineToCollectionIfMissing<IMachine>(machines, this.booking?.machine)))
+      .subscribe((machines: IMachine[]) => (this.machinesSharedCollection = machines));
   }
 }

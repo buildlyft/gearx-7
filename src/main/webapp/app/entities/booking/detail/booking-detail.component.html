@@ -51,6 +51,14 @@
           <dd>
             <span>{{ booking.user?.login }}</span>
           </dd>
+          <dt><span>Machine</span></dt>
+          <dd>
+            @if (booking.machine) {
+              <div>
+                <a [routerLink]="['/machine', booking.machine.id, 'view']">{{ booking.machine.id }}</a>
+              </div>
+            }
+          </dd>
         </dl>
 
         <button type="submit" (click)="previousState()" class="btn btn-info" data-cy="entityDetailsBackButton">

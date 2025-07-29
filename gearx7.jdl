@@ -45,6 +45,7 @@ enum BookingStatus {
 relationship ManyToOne {
   Booking{user(login)} to User with builtInEntity
   Machine{user(login)} to User with builtInEntity
+  Booking{machine} to Machine
 }
 
 paginate Machine, Booking with pagination

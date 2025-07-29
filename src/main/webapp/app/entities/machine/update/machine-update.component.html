@@ -231,11 +231,29 @@
         </div>
 
         <div class="mb-3" *jhiHasAnyAuthority="'ROLE_ADMIN'">
+          >
           <label class="form-label" for="field_user">User</label>
           <select class="form-control" id="field_user" data-cy="user" name="user" formControlName="user" [compareWith]="compareUser">
             <option [ngValue]="null"></option>
             @for (userOption of usersSharedCollection; track $index) {
               <option [ngValue]="userOption">{{ userOption.login }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="field_partner">Partner</label>
+          <select
+            class="form-control"
+            id="field_partner"
+            data-cy="partner"
+            name="partner"
+            formControlName="partner"
+            [compareWith]="comparePartner"
+          >
+            <option [ngValue]="null"></option>
+            @for (partnerOption of partnersSharedCollection; track $index) {
+              <option [ngValue]="partnerOption">{{ partnerOption.id }}</option>
             }
           </select>
         </div>

@@ -87,6 +87,14 @@
           <dd>
             <span>{{ machine.user?.login }}</span>
           </dd>
+          <dt><span>Partner</span></dt>
+          <dd>
+            @if (machine.partner) {
+              <div>
+                <a [routerLink]="['/partner', machine.partner.id, 'view']">{{ machine.partner.id }}</a>
+              </div>
+            }
+          </dd>
         </dl>
 
         <button type="submit" (click)="previousState()" class="btn btn-info" data-cy="entityDetailsBackButton">
