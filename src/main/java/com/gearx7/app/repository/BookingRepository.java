@@ -40,4 +40,6 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     @Query("select booking from Booking booking left join fetch booking.user where booking.id =:id")
     Optional<Booking> findOneWithToOneRelationships(@Param("id") Long id);
+
+    Page<Booking> findByMachineUserLogin(String ownerLogin, Pageable pageable);
 }

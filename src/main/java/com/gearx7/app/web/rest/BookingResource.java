@@ -205,4 +205,22 @@ public class BookingResource {
             .headers(HeaderUtil.createEntityDeletionAlert(applicationName, false, ENTITY_NAME, id.toString()))
             .build();
     }
+
+    /**
+     * GET  /bookings/by-owner/{ownerLogin} : get all bookings for machines owned by given owner.
+     *
+     * @param ownerLogin the login of the machine owner (partner)
+     * @param pageable   the pagination information
+     * @return the ResponseEntity with status 200 (OK) and with body the list of bookings
+     */
+    @GetMapping("/by-owner/{ownerLogin}")
+    public ResponseEntity<List<Booking>> getBookingsByOwner(@PathVariable String ownerLogin, Pageable pageable) {
+        log.debug("REST request to get bookings for machine owner : {}", ownerLogin);
+
+        Page<Booking> page = bookingRepository.findByMachineUserLogin(ownerLogin, pageable);
+
+        HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
+
+        return ResponseEntity.ok().headers(headers).body(page.getContent());
+    }
 }
