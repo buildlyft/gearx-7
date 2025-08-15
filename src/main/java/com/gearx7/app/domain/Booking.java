@@ -54,7 +54,7 @@ public class Booking implements Serializable {
     @ManyToOne(fetch = FetchType.LAZY)
     private User user;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JsonIgnoreProperties(value = { "user", "partner", "attachments" }, allowSetters = true)
     private Machine machine;
 
