@@ -1,6 +1,8 @@
 package com.gearx7.app.repository;
 
 import com.gearx7.app.domain.Booking;
+import com.gearx7.app.domain.enumeration.BookingStatus;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
@@ -42,4 +44,17 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     Optional<Booking> findOneWithToOneRelationships(@Param("id") Long id);
 
     Page<Booking> findByMachineUserLogin(String ownerLogin, Pageable pageable);
+
+    @Query(
+        "SELECT CASE WHEN COUNT(b) > 0 THEN true ELSE false END FROM Booking b " +
+        "WHERE b.machine_id = :machineId " +
+        "AND b.status IN :statuses " +
+        "AND ((b.start_date_time < :end AND b.end_date_time > :start))"
+    )
+    boolean existsByMachineIdAndStatusInAndDateRangeOverlap(
+        @Param("machineId") Long machineId,
+        @Param("statuses") List<BookingStatus> statuses,
+        @Param("start") Instant start,
+        @Param("end") Instant end
+    );
 }

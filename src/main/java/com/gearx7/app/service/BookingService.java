@@ -1,7 +1,11 @@
 package com.gearx7.app.service;
 
 import com.gearx7.app.domain.Booking;
+import com.gearx7.app.domain.enumeration.BookingStatus;
 import com.gearx7.app.repository.BookingRepository;
+import com.gearx7.app.web.rest.errors.BadRequestAlertException;
+import java.time.Instant;
+import java.util.Arrays;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,6 +37,20 @@ public class BookingService {
      */
     public Booking save(Booking booking) {
         log.debug("Request to save Booking : {}", booking);
+        log.debug("Request to save Booking : {}", booking);
+
+        // Don't allow save if status is BOOKED or ACCEPTED for overlapping booking
+        if (booking.getMachine() != null && booking.getStartDateTime() != null && booking.getEndDateTime() != null) {
+            boolean overlap = isOverlappingBookingExists(
+                booking.getMachine().getId(),
+                booking.getStartDateTime(),
+                booking.getEndDateTime()
+            );
+            if (overlap) {
+                throw new BadRequestAlertException("Equipment is already booked for the selected time period", "booking", "overlap");
+            }
+        }
+
         return bookingRepository.save(booking);
     }
 
@@ -130,5 +148,14 @@ public class BookingService {
     public void delete(Long id) {
         log.debug("Request to delete Booking : {}", id);
         bookingRepository.deleteById(id);
+    }
+
+    public boolean isOverlappingBookingExists(Long machineId, Instant start, Instant end) {
+        return bookingRepository.existsByMachineIdAndStatusInAndDateRangeOverlap(
+            machineId,
+            Arrays.asList(BookingStatus.PENDING, BookingStatus.ACCEPTED),
+            start,
+            end
+        );
     }
 }
