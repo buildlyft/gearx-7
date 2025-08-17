@@ -11,8 +11,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 /**
  * Service Implementation for managing {@link com.gearx7.app.domain.Booking}.
@@ -47,7 +49,8 @@ public class BookingService {
                 booking.getEndDateTime()
             );
             if (overlap) {
-                throw new BadRequestAlertException("Equipment is already booked for the selected time period", "booking", "overlap");
+                //                throw new BadRequestAlertException("Equipment is already booked for the selected time period", "booking", "overlap");
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Machine is already booked for the selected time period.");
             }
         }
 

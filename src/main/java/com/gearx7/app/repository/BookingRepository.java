@@ -47,9 +47,9 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     @Query(
         "SELECT CASE WHEN COUNT(b) > 0 THEN true ELSE false END FROM Booking b " +
-        "WHERE b.machine_id = :machineId " +
+        "WHERE b.machine.id = :machineId " +
         "AND b.status IN :statuses " +
-        "AND ((b.start_date_time < :end AND b.end_date_time > :start))"
+        "AND ((b.startDateTime < :end AND b.endDateTime > :start))"
     )
     boolean existsByMachineIdAndStatusInAndDateRangeOverlap(
         @Param("machineId") Long machineId,
