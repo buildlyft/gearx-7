@@ -26,6 +26,16 @@ const routes: Routes = [
     data: { pageTitle: 'Attachments' },
     loadChildren: () => import('./attachment/attachment.routes'),
   },
+  {
+    path: 'category',
+    data: { pageTitle: 'Categories' },
+    loadChildren: () => import('./category/category.routes'),
+  },
+  {
+    path: 'subcategory',
+    data: { pageTitle: 'Subcategories' },
+    loadChildren: () => import('./subcategory/subcategory.routes'),
+  },
   /* jhipster-needle-add-entity-route - JHipster will add entity modules routes here */
 ];
 

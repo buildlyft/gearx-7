@@ -16,7 +16,7 @@
     "enableHibernateCache": false,
     "enableSwaggerCodegen": false,
     "enableTranslation": false,
-    "entities": ["Partner", "Customer", "Machine", "Booking", "Attachment"],
+    "entities": ["Category", "Partner", "Subcategory", "Customer", "Machine", "Booking", "Attachment"],
     "feignClient": false,
     "gradleEnterpriseHost": null,
     "herokuAppName": "gearx7",

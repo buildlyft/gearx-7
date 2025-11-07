@@ -50,7 +50,7 @@ public class Partner implements Serializable {
     private String panNumber;
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "partner")
-    @JsonIgnoreProperties(value = { "attachments", "partner" }, allowSetters = true)
+    @JsonIgnoreProperties(value = { "user", "partner", "attachments" }, allowSetters = true)
     private Set<Machine> machines = new HashSet<>();
 
     // jhipster-needle-entity-add-field - JHipster will add fields here

@@ -38,7 +38,7 @@ public class Attachment implements Serializable {
     private Partner partner;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JsonIgnoreProperties(value = { "attachments", "partner" }, allowSetters = true)
+    @JsonIgnoreProperties(value = { "user", "partner", "attachments" }, allowSetters = true)
     private Machine machine;
 
     // jhipster-needle-entity-add-field - JHipster will add fields here

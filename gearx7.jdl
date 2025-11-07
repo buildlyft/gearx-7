@@ -34,6 +34,23 @@ entity Booking {
   createdDate Instant
 }
 
+entity Category {
+  name String required,
+  description String,
+  image Blob
+}
+
+entity Subcategory {
+  name String required,
+  description String,
+  image Blob
+}
+
+relationship OneToMany {
+  Category{subcategory} to Subcategory{category}
+}
+
+
 enum BookingStatus {
   PENDING,
   ACCEPTED,
@@ -50,3 +67,5 @@ relationship ManyToOne {
 
 paginate Machine, Booking with pagination
 service Machine, Booking with serviceClass
+paginate Category, Subcategory with pagination
+service Category, Subcategory with serviceClass

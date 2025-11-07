@@ -1,0 +1,36 @@
+{
+  "annotations": {
+    "changelogDate": "20250714141145"
+  },
+  "applications": "*",
+  "entityTableName": "subcategory",
+  "fields": [
+    {
+      "fieldName": "name",
+      "fieldType": "String",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "description",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "image",
+      "fieldType": "byte[]",
+      "fieldTypeBlobContent": "any"
+    }
+  ],
+  "name": "Subcategory",
+  "pagination": "pagination",
+  "relationships": [
+    {
+      "otherEntityName": "category",
+      "otherEntityRelationshipName": "subcategory",
+      "relationshipName": "category",
+      "relationshipSide": "right",
+      "relationshipType": "many-to-one"
+    }
+  ],
+  "searchEngine": "no",
+  "service": "serviceClass"
+}
