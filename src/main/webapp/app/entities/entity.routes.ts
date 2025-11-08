@@ -2,11 +2,6 @@ import { Routes } from '@angular/router';
 
 const routes: Routes = [
   {
-    path: 'partner',
-    data: { pageTitle: 'Partners' },
-    loadChildren: () => import('./partner/partner.routes'),
-  },
-  {
     path: 'customer',
     data: { pageTitle: 'Customers' },
     loadChildren: () => import('./customer/customer.routes'),
@@ -20,11 +15,6 @@ const routes: Routes = [
     path: 'booking',
     data: { pageTitle: 'Bookings' },
     loadChildren: () => import('./booking/booking.routes'),
-  },
-  {
-    path: 'attachment',
-    data: { pageTitle: 'Attachments' },
-    loadChildren: () => import('./attachment/attachment.routes'),
   },
   {
     path: 'category',

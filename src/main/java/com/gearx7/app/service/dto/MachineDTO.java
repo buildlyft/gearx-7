@@ -1,99 +1,65 @@
-package com.gearx7.app.domain;
+package com.gearx7.app.service.dto;
 
 import com.gearx7.app.domain.enumeration.MachineStatus;
-import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.Objects;
 
 /**
- * A Machine.
+ * A DTO for the {@link com.gearx7.app.domain.Machine} entity.
  */
-@Entity
-@Table(name = "machine")
 @SuppressWarnings("common-java:DuplicatedBlocks")
-public class Machine implements Serializable {
+public class MachineDTO implements Serializable {
 
-    private static final long serialVersionUID = 1L;
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "sequenceGenerator")
-    @SequenceGenerator(name = "sequenceGenerator")
-    @Column(name = "id")
     private Long id;
 
     @NotNull
-    @Column(name = "brand", nullable = false)
     private String brand;
 
     @NotNull
-    @Column(name = "type", nullable = false)
     private String type;
 
-    @Column(name = "tag")
     private String tag;
 
-    @Column(name = "model")
     private String model;
 
-    @Column(name = "vin_number")
     private String vinNumber;
 
-    @Column(name = "chassis_number")
     private String chassisNumber;
 
-    @Column(name = "description")
     private String description;
 
-    @Column(name = "capacity_ton")
     private Integer capacityTon;
 
     @NotNull
-    @Column(name = "rate_per_hour", precision = 21, scale = 2, nullable = false)
     private BigDecimal ratePerHour;
 
-    @Column(name = "minimum_usage_hours")
     private Integer minimumUsageHours;
 
     @NotNull
-    @Column(name = "latitude", nullable = false)
     private Double latitude;
 
     @NotNull
-    @Column(name = "longitude", nullable = false)
     private Double longitude;
 
-    @Column(name = "transportation_charge", precision = 21, scale = 2)
     private BigDecimal transportationCharge;
 
-    @Column(name = "driver_batta", precision = 21, scale = 2)
     private BigDecimal driverBatta;
 
-    @Column(name = "serviceability_range_km")
     private Integer serviceabilityRangeKm;
 
     @NotNull
-    @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false)
     private MachineStatus status;
 
     @NotNull
-    @Column(name = "created_date", nullable = false)
     private Instant createdDate;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    private User user;
-
-    // jhipster-needle-entity-add-field - JHipster will add fields here
+    private UserDTO user;
 
     public Long getId() {
-        return this.id;
-    }
-
-    public Machine id(Long id) {
-        this.setId(id);
-        return this;
+        return id;
     }
 
     public void setId(Long id) {
@@ -101,12 +67,7 @@ public class Machine implements Serializable {
     }
 
     public String getBrand() {
-        return this.brand;
-    }
-
-    public Machine brand(String brand) {
-        this.setBrand(brand);
-        return this;
+        return brand;
     }
 
     public void setBrand(String brand) {
@@ -114,12 +75,7 @@ public class Machine implements Serializable {
     }
 
     public String getType() {
-        return this.type;
-    }
-
-    public Machine type(String type) {
-        this.setType(type);
-        return this;
+        return type;
     }
 
     public void setType(String type) {
@@ -127,12 +83,7 @@ public class Machine implements Serializable {
     }
 
     public String getTag() {
-        return this.tag;
-    }
-
-    public Machine tag(String tag) {
-        this.setTag(tag);
-        return this;
+        return tag;
     }
 
     public void setTag(String tag) {
@@ -140,12 +91,7 @@ public class Machine implements Serializable {
     }
 
     public String getModel() {
-        return this.model;
-    }
-
-    public Machine model(String model) {
-        this.setModel(model);
-        return this;
+        return model;
     }
 
     public void setModel(String model) {
@@ -153,12 +99,7 @@ public class Machine implements Serializable {
     }
 
     public String getVinNumber() {
-        return this.vinNumber;
-    }
-
-    public Machine vinNumber(String vinNumber) {
-        this.setVinNumber(vinNumber);
-        return this;
+        return vinNumber;
     }
 
     public void setVinNumber(String vinNumber) {
@@ -166,12 +107,7 @@ public class Machine implements Serializable {
     }
 
     public String getChassisNumber() {
-        return this.chassisNumber;
-    }
-
-    public Machine chassisNumber(String chassisNumber) {
-        this.setChassisNumber(chassisNumber);
-        return this;
+        return chassisNumber;
     }
 
     public void setChassisNumber(String chassisNumber) {
@@ -179,12 +115,7 @@ public class Machine implements Serializable {
     }
 
     public String getDescription() {
-        return this.description;
-    }
-
-    public Machine description(String description) {
-        this.setDescription(description);
-        return this;
+        return description;
     }
 
     public void setDescription(String description) {
@@ -192,12 +123,7 @@ public class Machine implements Serializable {
     }
 
     public Integer getCapacityTon() {
-        return this.capacityTon;
-    }
-
-    public Machine capacityTon(Integer capacityTon) {
-        this.setCapacityTon(capacityTon);
-        return this;
+        return capacityTon;
     }
 
     public void setCapacityTon(Integer capacityTon) {
@@ -205,12 +131,7 @@ public class Machine implements Serializable {
     }
 
     public BigDecimal getRatePerHour() {
-        return this.ratePerHour;
-    }
-
-    public Machine ratePerHour(BigDecimal ratePerHour) {
-        this.setRatePerHour(ratePerHour);
-        return this;
+        return ratePerHour;
     }
 
     public void setRatePerHour(BigDecimal ratePerHour) {
@@ -218,12 +139,7 @@ public class Machine implements Serializable {
     }
 
     public Integer getMinimumUsageHours() {
-        return this.minimumUsageHours;
-    }
-
-    public Machine minimumUsageHours(Integer minimumUsageHours) {
-        this.setMinimumUsageHours(minimumUsageHours);
-        return this;
+        return minimumUsageHours;
     }
 
     public void setMinimumUsageHours(Integer minimumUsageHours) {
@@ -231,12 +147,7 @@ public class Machine implements Serializable {
     }
 
     public Double getLatitude() {
-        return this.latitude;
-    }
-
-    public Machine latitude(Double latitude) {
-        this.setLatitude(latitude);
-        return this;
+        return latitude;
     }
 
     public void setLatitude(Double latitude) {
@@ -244,12 +155,7 @@ public class Machine implements Serializable {
     }
 
     public Double getLongitude() {
-        return this.longitude;
-    }
-
-    public Machine longitude(Double longitude) {
-        this.setLongitude(longitude);
-        return this;
+        return longitude;
     }
 
     public void setLongitude(Double longitude) {
@@ -257,12 +163,7 @@ public class Machine implements Serializable {
     }
 
     public BigDecimal getTransportationCharge() {
-        return this.transportationCharge;
-    }
-
-    public Machine transportationCharge(BigDecimal transportationCharge) {
-        this.setTransportationCharge(transportationCharge);
-        return this;
+        return transportationCharge;
     }
 
     public void setTransportationCharge(BigDecimal transportationCharge) {
@@ -270,12 +171,7 @@ public class Machine implements Serializable {
     }
 
     public BigDecimal getDriverBatta() {
-        return this.driverBatta;
-    }
-
-    public Machine driverBatta(BigDecimal driverBatta) {
-        this.setDriverBatta(driverBatta);
-        return this;
+        return driverBatta;
     }
 
     public void setDriverBatta(BigDecimal driverBatta) {
@@ -283,12 +179,7 @@ public class Machine implements Serializable {
     }
 
     public Integer getServiceabilityRangeKm() {
-        return this.serviceabilityRangeKm;
-    }
-
-    public Machine serviceabilityRangeKm(Integer serviceabilityRangeKm) {
-        this.setServiceabilityRangeKm(serviceabilityRangeKm);
-        return this;
+        return serviceabilityRangeKm;
     }
 
     public void setServiceabilityRangeKm(Integer serviceabilityRangeKm) {
@@ -296,12 +187,7 @@ public class Machine implements Serializable {
     }
 
     public MachineStatus getStatus() {
-        return this.status;
-    }
-
-    public Machine status(MachineStatus status) {
-        this.setStatus(status);
-        return this;
+        return status;
     }
 
     public void setStatus(MachineStatus status) {
@@ -309,54 +195,46 @@ public class Machine implements Serializable {
     }
 
     public Instant getCreatedDate() {
-        return this.createdDate;
-    }
-
-    public Machine createdDate(Instant createdDate) {
-        this.setCreatedDate(createdDate);
-        return this;
+        return createdDate;
     }
 
     public void setCreatedDate(Instant createdDate) {
         this.createdDate = createdDate;
     }
 
-    public User getUser() {
-        return this.user;
+    public UserDTO getUser() {
+        return user;
     }
 
-    public void setUser(User user) {
+    public void setUser(UserDTO user) {
         this.user = user;
     }
-
-    public Machine user(User user) {
-        this.setUser(user);
-        return this;
-    }
-
-    // jhipster-needle-entity-add-getters-setters - JHipster will add getters and setters here
 
     @Override
     public boolean equals(Object o) {
         if (this == o) {
             return true;
         }
-        if (!(o instanceof Machine)) {
+        if (!(o instanceof MachineDTO)) {
             return false;
         }
-        return getId() != null && getId().equals(((Machine) o).getId());
+
+        MachineDTO machineDTO = (MachineDTO) o;
+        if (this.id == null) {
+            return false;
+        }
+        return Objects.equals(this.id, machineDTO.id);
     }
 
     @Override
     public int hashCode() {
-        // see https://vladmihalcea.com/how-to-implement-equals-and-hashcode-using-the-jpa-entity-identifier/
-        return getClass().hashCode();
+        return Objects.hash(this.id);
     }
 
     // prettier-ignore
     @Override
     public String toString() {
-        return "Machine{" +
+        return "MachineDTO{" +
             "id=" + getId() +
             ", brand='" + getBrand() + "'" +
             ", type='" + getType() + "'" +
@@ -375,6 +253,7 @@ public class Machine implements Serializable {
             ", serviceabilityRangeKm=" + getServiceabilityRangeKm() +
             ", status='" + getStatus() + "'" +
             ", createdDate='" + getCreatedDate() + "'" +
+            ", user=" + getUser() +
             "}";
     }
 }

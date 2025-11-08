@@ -1,7 +1,5 @@
 import dayjs from 'dayjs/esm';
 import { IUser } from 'app/entities/user/user.model';
-import { IPartner } from 'app/entities/partner/partner.model';
-import { IAttachment } from 'app/entities/attachment/attachment.model';
 import { MachineStatus } from 'app/entities/enumerations/machine-status.model';
 
 export interface IMachine {
@@ -24,8 +22,6 @@ export interface IMachine {
   status?: keyof typeof MachineStatus | null;
   createdDate?: dayjs.Dayjs | null;
   user?: Pick<IUser, 'id' | 'login'> | null;
-  partner?: IPartner | null;
-  attachments?: IAttachment[] | null;
 }
 
 export type NewMachine = Omit<IMachine, 'id'> & { id: null };

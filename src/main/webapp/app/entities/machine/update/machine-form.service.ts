@@ -49,7 +49,6 @@ type MachineFormGroupContent = {
   status: FormControl<MachineFormRawValue['status']>;
   createdDate: FormControl<MachineFormRawValue['createdDate']>;
   user: FormControl<MachineFormRawValue['user']>;
-  partner: FormControl<MachineFormRawValue['partner']>;
 };
 
 export type MachineFormGroup = FormGroup<MachineFormGroupContent>;
@@ -101,7 +100,6 @@ export class MachineFormService {
         validators: [Validators.required],
       }),
       user: new FormControl(machineRawValue.user),
-      partner: new FormControl(machineRawValue.partner),
     });
   }
 

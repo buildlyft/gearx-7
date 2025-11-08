@@ -38,7 +38,6 @@ describe('Machine Form Service', () => {
             status: expect.any(Object),
             createdDate: expect.any(Object),
             user: expect.any(Object),
-            partner: expect.any(Object),
           }),
         );
       });
@@ -67,7 +66,6 @@ describe('Machine Form Service', () => {
             status: expect.any(Object),
             createdDate: expect.any(Object),
             user: expect.any(Object),
-            partner: expect.any(Object),
           }),
         );
       });

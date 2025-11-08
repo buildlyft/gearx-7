@@ -1,3 +1,4 @@
+
 entity Machine {
   brand String required,
   type String required,
@@ -65,7 +66,6 @@ relationship ManyToOne {
   Booking{machine} to Machine
 }
 
-paginate Machine, Booking with pagination
-service Machine, Booking with serviceClass
-paginate Category, Subcategory with pagination
-service Category, Subcategory with serviceClass
+dto Machine with mapstruct
+service Machine, Booking, Category, Subcategory  with serviceClass
+paginate Machine, Booking, Category, Subcategory with pagination

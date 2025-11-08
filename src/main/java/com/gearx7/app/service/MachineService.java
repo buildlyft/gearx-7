@@ -2,6 +2,8 @@ package com.gearx7.app.service;
 
 import com.gearx7.app.domain.Machine;
 import com.gearx7.app.repository.MachineRepository;
+import com.gearx7.app.service.dto.MachineDTO;
+import com.gearx7.app.service.mapper.MachineMapper;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,99 +23,57 @@ public class MachineService {
 
     private final MachineRepository machineRepository;
 
-    public MachineService(MachineRepository machineRepository) {
+    private final MachineMapper machineMapper;
+
+    public MachineService(MachineRepository machineRepository, MachineMapper machineMapper) {
         this.machineRepository = machineRepository;
+        this.machineMapper = machineMapper;
     }
 
     /**
      * Save a machine.
      *
-     * @param machine the entity to save.
+     * @param machineDTO the entity to save.
      * @return the persisted entity.
      */
-    public Machine save(Machine machine) {
-        log.debug("Request to save Machine : {}", machine);
-        return machineRepository.save(machine);
+    public MachineDTO save(MachineDTO machineDTO) {
+        log.debug("Request to save Machine : {}", machineDTO);
+        Machine machine = machineMapper.toEntity(machineDTO);
+        machine = machineRepository.save(machine);
+        return machineMapper.toDto(machine);
     }
 
     /**
      * Update a machine.
      *
-     * @param machine the entity to save.
+     * @param machineDTO the entity to save.
      * @return the persisted entity.
      */
-    public Machine update(Machine machine) {
-        log.debug("Request to update Machine : {}", machine);
-        return machineRepository.save(machine);
+    public MachineDTO update(MachineDTO machineDTO) {
+        log.debug("Request to update Machine : {}", machineDTO);
+        Machine machine = machineMapper.toEntity(machineDTO);
+        machine = machineRepository.save(machine);
+        return machineMapper.toDto(machine);
     }
 
     /**
      * Partially update a machine.
      *
-     * @param machine the entity to update partially.
+     * @param machineDTO the entity to update partially.
      * @return the persisted entity.
      */
-    public Optional<Machine> partialUpdate(Machine machine) {
-        log.debug("Request to partially update Machine : {}", machine);
+    public Optional<MachineDTO> partialUpdate(MachineDTO machineDTO) {
+        log.debug("Request to partially update Machine : {}", machineDTO);
 
         return machineRepository
-            .findById(machine.getId())
+            .findById(machineDTO.getId())
             .map(existingMachine -> {
-                if (machine.getBrand() != null) {
-                    existingMachine.setBrand(machine.getBrand());
-                }
-                if (machine.getType() != null) {
-                    existingMachine.setType(machine.getType());
-                }
-                if (machine.getTag() != null) {
-                    existingMachine.setTag(machine.getTag());
-                }
-                if (machine.getModel() != null) {
-                    existingMachine.setModel(machine.getModel());
-                }
-                if (machine.getVinNumber() != null) {
-                    existingMachine.setVinNumber(machine.getVinNumber());
-                }
-                if (machine.getChassisNumber() != null) {
-                    existingMachine.setChassisNumber(machine.getChassisNumber());
-                }
-                if (machine.getDescription() != null) {
-                    existingMachine.setDescription(machine.getDescription());
-                }
-                if (machine.getCapacityTon() != null) {
-                    existingMachine.setCapacityTon(machine.getCapacityTon());
-                }
-                if (machine.getRatePerHour() != null) {
-                    existingMachine.setRatePerHour(machine.getRatePerHour());
-                }
-                if (machine.getMinimumUsageHours() != null) {
-                    existingMachine.setMinimumUsageHours(machine.getMinimumUsageHours());
-                }
-                if (machine.getLatitude() != null) {
-                    existingMachine.setLatitude(machine.getLatitude());
-                }
-                if (machine.getLongitude() != null) {
-                    existingMachine.setLongitude(machine.getLongitude());
-                }
-                if (machine.getTransportationCharge() != null) {
-                    existingMachine.setTransportationCharge(machine.getTransportationCharge());
-                }
-                if (machine.getDriverBatta() != null) {
-                    existingMachine.setDriverBatta(machine.getDriverBatta());
-                }
-                if (machine.getServiceabilityRangeKm() != null) {
-                    existingMachine.setServiceabilityRangeKm(machine.getServiceabilityRangeKm());
-                }
-                if (machine.getStatus() != null) {
-                    existingMachine.setStatus(machine.getStatus());
-                }
-                if (machine.getCreatedDate() != null) {
-                    existingMachine.setCreatedDate(machine.getCreatedDate());
-                }
+                machineMapper.partialUpdate(existingMachine, machineDTO);
 
                 return existingMachine;
             })
-            .map(machineRepository::save);
+            .map(machineRepository::save)
+            .map(machineMapper::toDto);
     }
 
     /**
@@ -123,9 +83,9 @@ public class MachineService {
      * @return the list of entities.
      */
     @Transactional(readOnly = true)
-    public Page<Machine> findAll(Pageable pageable) {
+    public Page<MachineDTO> findAll(Pageable pageable) {
         log.debug("Request to get all Machines");
-        return machineRepository.findAll(pageable);
+        return machineRepository.findAll(pageable).map(machineMapper::toDto);
     }
 
     /**
@@ -133,8 +93,8 @@ public class MachineService {
      *
      * @return the list of entities.
      */
-    public Page<Machine> findAllWithEagerRelationships(Pageable pageable) {
-        return machineRepository.findAllWithEagerRelationships(pageable);
+    public Page<MachineDTO> findAllWithEagerRelationships(Pageable pageable) {
+        return machineRepository.findAllWithEagerRelationships(pageable).map(machineMapper::toDto);
     }
 
     /**
@@ -144,9 +104,9 @@ public class MachineService {
      * @return the entity.
      */
     @Transactional(readOnly = true)
-    public Optional<Machine> findOne(Long id) {
+    public Optional<MachineDTO> findOne(Long id) {
         log.debug("Request to get Machine : {}", id);
-        return machineRepository.findOneWithEagerRelationships(id);
+        return machineRepository.findOneWithEagerRelationships(id).map(machineMapper::toDto);
     }
 
     /**

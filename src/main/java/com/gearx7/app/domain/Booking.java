@@ -54,8 +54,8 @@ public class Booking implements Serializable {
     @ManyToOne(fetch = FetchType.LAZY)
     private User user;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JsonIgnoreProperties(value = { "user", "partner", "attachments" }, allowSetters = true)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JsonIgnoreProperties(value = { "user" }, allowSetters = true)
     private Machine machine;
 
     // jhipster-needle-entity-add-field - JHipster will add fields here

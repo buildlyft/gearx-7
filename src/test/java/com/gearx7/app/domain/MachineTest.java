@@ -1,13 +1,9 @@
 package com.gearx7.app.domain;
 
-import static com.gearx7.app.domain.AttachmentTestSamples.*;
 import static com.gearx7.app.domain.MachineTestSamples.*;
-import static com.gearx7.app.domain.PartnerTestSamples.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.gearx7.app.web.rest.TestUtil;
-import java.util.HashSet;
-import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 class MachineTest {
@@ -24,39 +20,5 @@ class MachineTest {
 
         machine2 = getMachineSample2();
         assertThat(machine1).isNotEqualTo(machine2);
-    }
-
-    @Test
-    void partnerTest() throws Exception {
-        Machine machine = getMachineRandomSampleGenerator();
-        Partner partnerBack = getPartnerRandomSampleGenerator();
-
-        machine.setPartner(partnerBack);
-        assertThat(machine.getPartner()).isEqualTo(partnerBack);
-
-        machine.partner(null);
-        assertThat(machine.getPartner()).isNull();
-    }
-
-    @Test
-    void attachmentTest() throws Exception {
-        Machine machine = getMachineRandomSampleGenerator();
-        Attachment attachmentBack = getAttachmentRandomSampleGenerator();
-
-        machine.addAttachment(attachmentBack);
-        assertThat(machine.getAttachments()).containsOnly(attachmentBack);
-        assertThat(attachmentBack.getMachine()).isEqualTo(machine);
-
-        machine.removeAttachment(attachmentBack);
-        assertThat(machine.getAttachments()).doesNotContain(attachmentBack);
-        assertThat(attachmentBack.getMachine()).isNull();
-
-        machine.attachments(new HashSet<>(Set.of(attachmentBack)));
-        assertThat(machine.getAttachments()).containsOnly(attachmentBack);
-        assertThat(attachmentBack.getMachine()).isEqualTo(machine);
-
-        machine.setAttachments(new HashSet<>());
-        assertThat(machine.getAttachments()).doesNotContain(attachmentBack);
-        assertThat(attachmentBack.getMachine()).isNull();
     }
 }
