@@ -12,8 +12,11 @@ import com.gearx7.app.service.mapper.UserMapper;
 import com.gearx7.app.web.rest.errors.BadRequestAlertException;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
+import java.math.BigDecimal;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.time.Instant;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -211,5 +214,51 @@ public class MachineResource {
             .noContent()
             .headers(HeaderUtil.createEntityDeletionAlert(applicationName, false, ENTITY_NAME, id.toString()))
             .build();
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<List<MachineDTO>> searchMachines(
+        @RequestParam Long categoryId,
+        @RequestParam Long subcategoryId,
+        @RequestParam String startDate,
+        @RequestParam String endDate,
+        @RequestParam Double lat,
+        @RequestParam Double lon
+    ) {
+        // Mock user and partner DTOs
+        UserDTO user = new UserDTO();
+        user.setId(101L);
+        user.setLogin("partnerUser1");
+        user.setLogin("John");
+        //        user.setLastName("Doe");
+
+        // Mock machine DTOs
+        MachineDTO machine1 = new MachineDTO();
+        machine1.setId(1L);
+        machine1.setBrand("Caterpillar");
+        machine1.setType("Excavator");
+        machine1.setTag("CAT-EX-300");
+        machine1.setModel("320D");
+        machine1.setVinNumber("VIN123456789");
+        machine1.setChassisNumber("CH123456789");
+        machine1.setDescription("Medium-duty excavator suitable for construction");
+        machine1.setCapacityTon(20);
+        machine1.setRatePerHour(new BigDecimal("1500.00"));
+        machine1.setMinimumUsageHours(4);
+        machine1.setLatitude(12.9611);
+        machine1.setLongitude(77.6387);
+        machine1.setTransportationCharge(new BigDecimal("500.00"));
+        machine1.setDriverBatta(new BigDecimal("200.00"));
+        machine1.setServiceabilityRangeKm(10);
+        machine1.setStatus(com.gearx7.app.domain.enumeration.MachineStatus.AVAILABLE);
+        machine1.setCreatedDate(Instant.parse("2025-10-01T10:00:00Z"));
+        machine1.setUser(user);
+
+        // Add more mock machines as needed in similar way
+
+        List<MachineDTO> machines = Arrays.asList(machine1);
+
+        // Optionally filter by location or other criteria using params (not shown for mock)
+        return ResponseEntity.ok(machines);
     }
 }
