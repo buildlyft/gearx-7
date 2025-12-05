@@ -13,9 +13,13 @@ import com.gearx7.app.web.rest.errors.BadRequestAlertException;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -225,6 +229,15 @@ public class MachineResource {
         @RequestParam Double lat,
         @RequestParam Double lon
     ) {
+        // Parse start and end dates
+        Instant startDateTime = Instant.parse(startDate);
+        Instant endDateTime = Instant.parse(endDate);
+
+        // Check if dates are on the same day
+        LocalDate startLocalDate = startDateTime.atZone(ZoneOffset.UTC).toLocalDate();
+        LocalDate endLocalDate = endDateTime.atZone(ZoneOffset.UTC).toLocalDate();
+        boolean isSameDay = startLocalDate.equals(endLocalDate);
+
         // Mock user and partner DTOs
         UserDTO user = new UserDTO();
         user.setId(101L);
@@ -243,7 +256,8 @@ public class MachineResource {
         machine1.setChassisNumber("CH123456789");
         machine1.setDescription("Medium-duty excavator suitable for construction");
         machine1.setCapacityTon(20);
-        machine1.setRatePerHour(new BigDecimal("1500.00"));
+        BigDecimal ratePerHour = new BigDecimal("1500.00");
+        machine1.setRatePerHour(ratePerHour);
         machine1.setMinimumUsageHours(4);
         machine1.setLatitude(12.9611);
         machine1.setLongitude(77.6387);
@@ -255,6 +269,27 @@ public class MachineResource {
         machine1.setUser(user);
         machine1.setCompanyName("Abc company");
         machine1.setPartnerName("Partner1");
+
+        // Calculate total hourly rate or total daily rate based on same day check
+        if (isSameDay) {
+            // Calculate hours between start and end
+            long hours = ChronoUnit.HOURS.between(startDateTime, endDateTime);
+            // Ensure minimum usage hours if applicable
+            if (machine1.getMinimumUsageHours() != null && hours < machine1.getMinimumUsageHours()) {
+                hours = machine1.getMinimumUsageHours();
+            }
+            BigDecimal totalHourlyRate = ratePerHour.multiply(new BigDecimal(hours)).setScale(2, RoundingMode.HALF_UP);
+            machine1.setTotalHourlyRate(totalHourlyRate);
+            machine1.setTotalDailyRate(null);
+        } else {
+            // Calculate number of days (inclusive)
+            long days = ChronoUnit.DAYS.between(startLocalDate, endLocalDate) + 1;
+            // Daily rate is typically hourly rate * 24 hours * number of days
+            BigDecimal dailyRatePerDay = ratePerHour.multiply(new BigDecimal("24"));
+            BigDecimal totalDailyRate = dailyRatePerDay.multiply(new BigDecimal(days)).setScale(2, RoundingMode.HALF_UP);
+            machine1.setTotalDailyRate(totalDailyRate);
+            machine1.setTotalHourlyRate(null);
+        }
 
         // Add more mock machines as needed in similar way
 

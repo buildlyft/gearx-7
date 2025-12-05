@@ -62,6 +62,10 @@ public class MachineDTO implements Serializable {
 
     private String partnerName;
 
+    private BigDecimal totalHourlyRate;
+
+    private BigDecimal totalDailyRate;
+
     public Long getId() {
         return id;
     }
@@ -230,6 +234,22 @@ public class MachineDTO implements Serializable {
         this.partnerName = partnerName;
     }
 
+    public BigDecimal getTotalHourlyRate() {
+        return totalHourlyRate;
+    }
+
+    public void setTotalHourlyRate(BigDecimal totalHourlyRate) {
+        this.totalHourlyRate = totalHourlyRate;
+    }
+
+    public BigDecimal getTotalDailyRate() {
+        return totalDailyRate;
+    }
+
+    public void setTotalDailyRate(BigDecimal totalDailyRate) {
+        this.totalDailyRate = totalDailyRate;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -276,6 +296,8 @@ public class MachineDTO implements Serializable {
             ", user=" + getUser() +
             ", companyName='" + getCompanyName() + "'" +
             ", partnerName='" + getPartnerName() + "'" +
+            ", totalHourlyRate=" + getTotalHourlyRate() +
+            ", totalDailyRate=" + getTotalDailyRate() +
             "}";
     }
 }
