@@ -40,4 +40,15 @@ public interface MachineRepository extends JpaRepository<Machine, Long> {
 
     @Query("select machine from Machine machine left join fetch machine.user where machine.id =:id")
     Optional<Machine> findOneWithToOneRelationships(@Param("id") Long id);
+
+    @Query(
+        "select machine from Machine machine " +
+        "left join fetch machine.user " +
+        "left join fetch machine.category " +
+        "left join fetch machine.subcategory " +
+        "where machine.category.id = :categoryId " +
+        "and machine.subcategory.id = :subcategoryId " +
+        "and machine.status = 'AVAILABLE'"
+    )
+    List<Machine> findByCategoryAndSubcategory(@Param("categoryId") Long categoryId, @Param("subcategoryId") Long subcategoryId);
 }

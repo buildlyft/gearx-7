@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd
+                        http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd">
+
+    <!--
+        Added category_id and subcategory_id columns to machine table.
+    -->
+    <changeSet id="20251205131000-1" author="santosh">
+        <addColumn tableName="machine">
+            <column name="category_id" type="BIGINT">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="20251205131000-2" author="santosh">
+        <addColumn tableName="machine">
+            <column name="subcategory_id" type="BIGINT">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="20251205131000-3" author="santosh">
+        <addForeignKeyConstraint 
+            baseColumnNames="category_id" 
+            baseTableName="machine" 
+            constraintName="FK_machine_category" 
+            deferrable="false" 
+            initiallyDeferred="false" 
+            referencedColumnNames="id" 
+            referencedTableName="category" 
+            validate="true"/>
+    </changeSet>
+
+    <changeSet id="20251205131000-4" author="santosh">
+        <addForeignKeyConstraint 
+            baseColumnNames="subcategory_id" 
+            baseTableName="machine" 
+            constraintName="FK_machine_subcategory" 
+            deferrable="false" 
+            initiallyDeferred="false" 
+            referencedColumnNames="id" 
+            referencedTableName="subcategory" 
+            validate="true"/>
+    </changeSet>
+
+</databaseChangeLog>
+

@@ -1,5 +1,6 @@
 package com.gearx7.app.web.rest;
 
+import com.gearx7.app.domain.Machine;
 import com.gearx7.app.domain.User;
 import com.gearx7.app.repository.MachineRepository;
 import com.gearx7.app.repository.UserRepository;
@@ -8,6 +9,7 @@ import com.gearx7.app.security.SecurityUtils;
 import com.gearx7.app.service.MachineService;
 import com.gearx7.app.service.dto.MachineDTO;
 import com.gearx7.app.service.dto.UserDTO;
+import com.gearx7.app.service.mapper.MachineMapper;
 import com.gearx7.app.service.mapper.UserMapper;
 import com.gearx7.app.web.rest.errors.BadRequestAlertException;
 import jakarta.validation.Valid;
@@ -23,10 +25,10 @@ import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -64,6 +66,9 @@ public class MachineResource {
 
     @Autowired
     private UserMapper userMapper;
+
+    @Autowired
+    private MachineMapper machineMapper;
 
     public MachineResource(MachineService machineService, MachineRepository machineRepository, UserRepository userRepository) {
         this.machineService = machineService;
@@ -232,6 +237,8 @@ public class MachineResource {
         @RequestParam Double lat,
         @RequestParam Double lon
     ) {
+        log.debug("REST request to search Machines with categoryId: {}, subcategoryId: {}", categoryId, subcategoryId);
+
         // Parse start and end dates - handle multiple formats
         Instant startDateTime = parseDateTime(startDate);
         Instant endDateTime = parseDateTime(endDate);
@@ -241,74 +248,58 @@ public class MachineResource {
         LocalDate endLocalDate = endDateTime.atZone(ZoneOffset.UTC).toLocalDate();
         boolean isSameDay = startLocalDate.equals(endLocalDate);
 
-        // Mock user and partner DTOs
-        UserDTO user = new UserDTO();
-        user.setId(101L);
-        user.setLogin("partnerUser1");
-        user.setLogin("John");
-        //        user.setLastName("Doe");
+        // Query machines from database by category and subcategory
+        List<Machine> machines = machineRepository.findByCategoryAndSubcategory(categoryId, subcategoryId);
 
-        // Mock machine DTOs
-        MachineDTO machine1 = new MachineDTO();
-        machine1.setId(1L);
-        machine1.setBrand("Caterpillar");
-        machine1.setType("Excavator");
-        machine1.setTag("CAT-EX-300");
-        machine1.setModel("320D");
-        machine1.setVinNumber("VIN123456789");
-        machine1.setChassisNumber("CH123456789");
-        machine1.setDescription("Medium-duty excavator suitable for construction");
-        machine1.setCapacityTon(20);
-        BigDecimal ratePerHour = new BigDecimal("1500.00");
-        BigDecimal ratePerDay = new BigDecimal("30000.00");
-        machine1.setRatePerHour(ratePerHour);
-        machine1.setRatePerDay(ratePerDay);
-        machine1.setMinimumUsageHours(4);
-        machine1.setLatitude(12.9611);
-        machine1.setLongitude(77.6387);
-        machine1.setTransportationCharge(new BigDecimal("500.00"));
-        machine1.setDriverBatta(new BigDecimal("200.00"));
-        machine1.setServiceabilityRangeKm(10);
-        machine1.setStatus(com.gearx7.app.domain.enumeration.MachineStatus.AVAILABLE);
-        machine1.setCreatedDate(Instant.parse("2025-10-01T10:00:00Z"));
-        machine1.setUser(user);
-        machine1.setCompanyName("Abc company");
-        machine1.setPartnerName("Partner1");
+        // Convert to DTOs and calculate rates
+        List<MachineDTO> machineDTOs = machines
+            .stream()
+            .map(machine -> {
+                MachineDTO machineDTO = machineMapper.toDto(machine);
 
-        // Calculate total hourly rate or total daily rate based on same day check
-        if (isSameDay) {
-            // Calculate hours between start and end
-            long hours = ChronoUnit.HOURS.between(startDateTime, endDateTime);
-            // Ensure minimum usage hours if applicable
-            if (machine1.getMinimumUsageHours() != null && hours < machine1.getMinimumUsageHours()) {
-                hours = machine1.getMinimumUsageHours();
-            }
-            BigDecimal totalHourlyRate = ratePerHour.multiply(new BigDecimal(hours)).setScale(2, RoundingMode.HALF_UP);
-            machine1.setTotalHourlyRate(totalHourlyRate);
-            machine1.setTotalDailyRate(null);
-        } else {
-            // Calculate number of days (inclusive)
-            long days = ChronoUnit.DAYS.between(startLocalDate, endLocalDate) + 1;
-            // Use ratePerDay multiplied by number of days
-            BigDecimal machineRatePerDay = machine1.getRatePerDay();
-            if (machineRatePerDay != null) {
-                BigDecimal totalDailyRate = machineRatePerDay.multiply(new BigDecimal(days)).setScale(2, RoundingMode.HALF_UP);
-                machine1.setTotalDailyRate(totalDailyRate);
-            } else {
-                // Fallback to hourly rate * 24 if ratePerDay is not set
-                BigDecimal dailyRatePerDay = ratePerHour.multiply(new BigDecimal("24"));
-                BigDecimal totalDailyRate = dailyRatePerDay.multiply(new BigDecimal(days)).setScale(2, RoundingMode.HALF_UP);
-                machine1.setTotalDailyRate(totalDailyRate);
-            }
-            machine1.setTotalHourlyRate(null);
-        }
+                // Populate company name and partner name from partner relationship if available
+                // Note: This assumes partner_id exists in machine table. If Partner entity exists,
+                // you can add a ManyToOne relationship and fetch it here.
+                // For now, setting placeholder values - update when Partner entity is available
+                machineDTO.setCompanyName(null); // TODO: Fetch from partner relationship
+                machineDTO.setPartnerName(null); // TODO: Fetch from partner relationship
 
-        // Add more mock machines as needed in similar way
+                // Calculate total hourly rate or total daily rate based on same day check
+                BigDecimal ratePerHour = machineDTO.getRatePerHour();
+                if (ratePerHour != null) {
+                    if (isSameDay) {
+                        // Calculate hours between start and end
+                        long hours = ChronoUnit.HOURS.between(startDateTime, endDateTime);
+                        // Ensure minimum usage hours if applicable
+                        if (machineDTO.getMinimumUsageHours() != null && hours < machineDTO.getMinimumUsageHours()) {
+                            hours = machineDTO.getMinimumUsageHours();
+                        }
+                        BigDecimal totalHourlyRate = ratePerHour.multiply(new BigDecimal(hours)).setScale(2, RoundingMode.HALF_UP);
+                        machineDTO.setTotalHourlyRate(totalHourlyRate);
+                        machineDTO.setTotalDailyRate(null);
+                    } else {
+                        // Calculate number of days (inclusive)
+                        long days = ChronoUnit.DAYS.between(startLocalDate, endLocalDate) + 1;
+                        // Use ratePerDay multiplied by number of days
+                        BigDecimal machineRatePerDay = machineDTO.getRatePerDay();
+                        if (machineRatePerDay != null) {
+                            BigDecimal totalDailyRate = machineRatePerDay.multiply(new BigDecimal(days)).setScale(2, RoundingMode.HALF_UP);
+                            machineDTO.setTotalDailyRate(totalDailyRate);
+                        } else {
+                            // Fallback to hourly rate * 24 if ratePerDay is not set
+                            BigDecimal dailyRatePerDay = ratePerHour.multiply(new BigDecimal("24"));
+                            BigDecimal totalDailyRate = dailyRatePerDay.multiply(new BigDecimal(days)).setScale(2, RoundingMode.HALF_UP);
+                            machineDTO.setTotalDailyRate(totalDailyRate);
+                        }
+                        machineDTO.setTotalHourlyRate(null);
+                    }
+                }
 
-        List<MachineDTO> machines = Arrays.asList(machine1);
+                return machineDTO;
+            })
+            .collect(Collectors.toList());
 
-        // Optionally filter by location or other criteria using params (not shown for mock)
-        return ResponseEntity.ok(machines);
+        return ResponseEntity.ok(machineDTOs);
     }
 
     /**

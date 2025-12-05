@@ -88,6 +88,12 @@ public class Machine implements Serializable {
     @ManyToOne(fetch = FetchType.LAZY)
     private User user;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Category category;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Subcategory subcategory;
+
     // jhipster-needle-entity-add-field - JHipster will add fields here
 
     public Long getId() {
@@ -347,6 +353,32 @@ public class Machine implements Serializable {
 
     public Machine user(User user) {
         this.setUser(user);
+        return this;
+    }
+
+    public Category getCategory() {
+        return this.category;
+    }
+
+    public void setCategory(Category category) {
+        this.category = category;
+    }
+
+    public Machine category(Category category) {
+        this.setCategory(category);
+        return this;
+    }
+
+    public Subcategory getSubcategory() {
+        return this.subcategory;
+    }
+
+    public void setSubcategory(Subcategory subcategory) {
+        this.subcategory = subcategory;
+    }
+
+    public Machine subcategory(Subcategory subcategory) {
+        this.setSubcategory(subcategory);
         return this;
     }
 
