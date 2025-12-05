@@ -22,4 +22,5 @@
     <include file="config/liquibase/changelog/20250714141145_added_entity_constraints_Subcategory.xml" relativeToChangelogFile="false"/>
     <!-- jhipster-needle-liquibase-add-constraints-changelog - JHipster will add liquibase constraints changelogs here -->
     <!-- jhipster-needle-liquibase-add-incremental-changelog - JHipster will add incremental liquibase changelogs here -->
+    <include file="config/liquibase/changelog/20251205130000_add_rate_per_day_to_machine.xml" relativeToChangelogFile="false"/>
 </databaseChangeLog>
