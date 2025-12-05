@@ -260,7 +260,9 @@ public class MachineResource {
         machine1.setDescription("Medium-duty excavator suitable for construction");
         machine1.setCapacityTon(20);
         BigDecimal ratePerHour = new BigDecimal("1500.00");
+        BigDecimal ratePerDay = new BigDecimal("30000.00");
         machine1.setRatePerHour(ratePerHour);
+        machine1.setRatePerDay(ratePerDay);
         machine1.setMinimumUsageHours(4);
         machine1.setLatitude(12.9611);
         machine1.setLongitude(77.6387);
@@ -287,10 +289,17 @@ public class MachineResource {
         } else {
             // Calculate number of days (inclusive)
             long days = ChronoUnit.DAYS.between(startLocalDate, endLocalDate) + 1;
-            // Daily rate is typically hourly rate * 24 hours * number of days
-            BigDecimal dailyRatePerDay = ratePerHour.multiply(new BigDecimal("24"));
-            BigDecimal totalDailyRate = dailyRatePerDay.multiply(new BigDecimal(days)).setScale(2, RoundingMode.HALF_UP);
-            machine1.setTotalDailyRate(totalDailyRate);
+            // Use ratePerDay multiplied by number of days
+            BigDecimal machineRatePerDay = machine1.getRatePerDay();
+            if (machineRatePerDay != null) {
+                BigDecimal totalDailyRate = machineRatePerDay.multiply(new BigDecimal(days)).setScale(2, RoundingMode.HALF_UP);
+                machine1.setTotalDailyRate(totalDailyRate);
+            } else {
+                // Fallback to hourly rate * 24 if ratePerDay is not set
+                BigDecimal dailyRatePerDay = ratePerHour.multiply(new BigDecimal("24"));
+                BigDecimal totalDailyRate = dailyRatePerDay.multiply(new BigDecimal(days)).setScale(2, RoundingMode.HALF_UP);
+                machine1.setTotalDailyRate(totalDailyRate);
+            }
             machine1.setTotalHourlyRate(null);
         }
 

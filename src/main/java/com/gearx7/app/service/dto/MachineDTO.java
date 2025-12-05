@@ -36,6 +36,8 @@ public class MachineDTO implements Serializable {
     @NotNull
     private BigDecimal ratePerHour;
 
+    private BigDecimal ratePerDay;
+
     private Integer minimumUsageHours;
 
     @NotNull
@@ -144,6 +146,14 @@ public class MachineDTO implements Serializable {
 
     public void setRatePerHour(BigDecimal ratePerHour) {
         this.ratePerHour = ratePerHour;
+    }
+
+    public BigDecimal getRatePerDay() {
+        return ratePerDay;
+    }
+
+    public void setRatePerDay(BigDecimal ratePerDay) {
+        this.ratePerDay = ratePerDay;
     }
 
     public Integer getMinimumUsageHours() {
@@ -285,6 +295,7 @@ public class MachineDTO implements Serializable {
             ", description='" + getDescription() + "'" +
             ", capacityTon=" + getCapacityTon() +
             ", ratePerHour=" + getRatePerHour() +
+            ", ratePerDay=" + getRatePerDay() +
             ", minimumUsageHours=" + getMinimumUsageHours() +
             ", latitude=" + getLatitude() +
             ", longitude=" + getLongitude() +

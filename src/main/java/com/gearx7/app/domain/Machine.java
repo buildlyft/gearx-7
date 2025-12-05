@@ -53,6 +53,9 @@ public class Machine implements Serializable {
     @Column(name = "rate_per_hour", precision = 21, scale = 2, nullable = false)
     private BigDecimal ratePerHour;
 
+    @Column(name = "rate_per_day", precision = 21, scale = 2)
+    private BigDecimal ratePerDay;
+
     @Column(name = "minimum_usage_hours")
     private Integer minimumUsageHours;
 
@@ -217,6 +220,19 @@ public class Machine implements Serializable {
         this.ratePerHour = ratePerHour;
     }
 
+    public BigDecimal getRatePerDay() {
+        return this.ratePerDay;
+    }
+
+    public Machine ratePerDay(BigDecimal ratePerDay) {
+        this.setRatePerDay(ratePerDay);
+        return this;
+    }
+
+    public void setRatePerDay(BigDecimal ratePerDay) {
+        this.ratePerDay = ratePerDay;
+    }
+
     public Integer getMinimumUsageHours() {
         return this.minimumUsageHours;
     }
@@ -367,6 +383,7 @@ public class Machine implements Serializable {
             ", description='" + getDescription() + "'" +
             ", capacityTon=" + getCapacityTon() +
             ", ratePerHour=" + getRatePerHour() +
+            ", ratePerDay=" + getRatePerDay() +
             ", minimumUsageHours=" + getMinimumUsageHours() +
             ", latitude=" + getLatitude() +
             ", longitude=" + getLongitude() +
