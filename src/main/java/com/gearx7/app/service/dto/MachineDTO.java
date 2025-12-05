@@ -58,6 +58,10 @@ public class MachineDTO implements Serializable {
 
     private UserDTO user;
 
+    private String companyName;
+
+    private String partnerName;
+
     public Long getId() {
         return id;
     }
@@ -210,6 +214,22 @@ public class MachineDTO implements Serializable {
         this.user = user;
     }
 
+    public String getCompanyName() {
+        return companyName;
+    }
+
+    public void setCompanyName(String companyName) {
+        this.companyName = companyName;
+    }
+
+    public String getPartnerName() {
+        return partnerName;
+    }
+
+    public void setPartnerName(String partnerName) {
+        this.partnerName = partnerName;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -254,6 +274,8 @@ public class MachineDTO implements Serializable {
             ", status='" + getStatus() + "'" +
             ", createdDate='" + getCreatedDate() + "'" +
             ", user=" + getUser() +
+            ", companyName='" + getCompanyName() + "'" +
+            ", partnerName='" + getPartnerName() + "'" +
             "}";
     }
 }

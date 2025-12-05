@@ -253,6 +253,8 @@ public class MachineResource {
         machine1.setStatus(com.gearx7.app.domain.enumeration.MachineStatus.AVAILABLE);
         machine1.setCreatedDate(Instant.parse("2025-10-01T10:00:00Z"));
         machine1.setUser(user);
+        machine1.setCompanyName("Abc company");
+        machine1.setPartnerName("Partner1");
 
         // Add more mock machines as needed in similar way
 
