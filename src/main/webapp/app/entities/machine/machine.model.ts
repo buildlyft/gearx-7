@@ -1,5 +1,7 @@
 import dayjs from 'dayjs/esm';
 import { IUser } from 'app/entities/user/user.model';
+import { ICategory } from 'app/entities/category/category.model';
+import { ISubcategory } from 'app/entities/subcategory/subcategory.model';
 import { MachineStatus } from 'app/entities/enumerations/machine-status.model';
 
 export interface IMachine {
@@ -13,6 +15,7 @@ export interface IMachine {
   description?: string | null;
   capacityTon?: number | null;
   ratePerHour?: number | null;
+  ratePerDay?: number | null;
   minimumUsageHours?: number | null;
   latitude?: number | null;
   longitude?: number | null;
@@ -22,6 +25,8 @@ export interface IMachine {
   status?: keyof typeof MachineStatus | null;
   createdDate?: dayjs.Dayjs | null;
   user?: Pick<IUser, 'id' | 'login'> | null;
+  categoryId?: number | null;
+  subcategoryId?: number | null;
 }
 
 export type NewMachine = Omit<IMachine, 'id'> & { id: null };

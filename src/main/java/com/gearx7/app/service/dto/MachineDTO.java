@@ -60,6 +60,10 @@ public class MachineDTO implements Serializable {
 
     private UserDTO user;
 
+    private Long categoryId;
+
+    private Long subcategoryId;
+
     private String companyName;
 
     private String partnerName;
@@ -226,6 +230,22 @@ public class MachineDTO implements Serializable {
 
     public void setUser(UserDTO user) {
         this.user = user;
+    }
+
+    public Long getCategoryId() {
+        return categoryId;
+    }
+
+    public void setCategoryId(Long categoryId) {
+        this.categoryId = categoryId;
+    }
+
+    public Long getSubcategoryId() {
+        return subcategoryId;
+    }
+
+    public void setSubcategoryId(Long subcategoryId) {
+        this.subcategoryId = subcategoryId;
     }
 
     public String getCompanyName() {

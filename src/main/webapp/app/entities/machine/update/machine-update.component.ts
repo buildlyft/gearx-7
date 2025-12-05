@@ -9,6 +9,10 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 import { IUser } from 'app/entities/user/user.model';
 import { UserService } from 'app/entities/user/user.service';
+import { ICategory } from 'app/entities/category/category.model';
+import { CategoryService } from 'app/entities/category/service/category.service';
+import { ISubcategory } from 'app/entities/subcategory/subcategory.model';
+import { SubcategoryService } from 'app/entities/subcategory/service/subcategory.service';
 import { MachineStatus } from 'app/entities/enumerations/machine-status.model';
 import { MachineService } from '../service/machine.service';
 import { IMachine } from '../machine.model';
@@ -26,6 +30,8 @@ export class MachineUpdateComponent implements OnInit {
   machineStatusValues = Object.keys(MachineStatus);
 
   usersSharedCollection: IUser[] = [];
+  categoriesSharedCollection: ICategory[] = [];
+  subcategoriesSharedCollection: ISubcategory[] = [];
 
   editForm: MachineFormGroup = this.machineFormService.createMachineFormGroup();
 
@@ -33,10 +39,14 @@ export class MachineUpdateComponent implements OnInit {
     protected machineService: MachineService,
     protected machineFormService: MachineFormService,
     protected userService: UserService,
+    protected categoryService: CategoryService,
+    protected subcategoryService: SubcategoryService,
     protected activatedRoute: ActivatedRoute,
   ) {}
 
   compareUser = (o1: IUser | null, o2: IUser | null): boolean => this.userService.compareUser(o1, o2);
+  compareCategory = (o1: ICategory | null, o2: ICategory | null): boolean => this.categoryService.compareCategory(o1, o2);
+  compareSubcategory = (o1: ISubcategory | null, o2: ISubcategory | null): boolean => this.subcategoryService.compareSubcategory(o1, o2);
 
   ngOnInit(): void {
     this.activatedRoute.data.subscribe(({ machine }) => {
@@ -95,5 +105,38 @@ export class MachineUpdateComponent implements OnInit {
       .pipe(map((res: HttpResponse<IUser[]>) => res.body ?? []))
       .pipe(map((users: IUser[]) => this.userService.addUserToCollectionIfMissing<IUser>(users, this.machine?.user)))
       .subscribe((users: IUser[]) => (this.usersSharedCollection = users));
+
+    this.categoryService
+      .query()
+      .pipe(map((res: HttpResponse<ICategory[]>) => res.body ?? []))
+      .subscribe((categories: ICategory[]) => (this.categoriesSharedCollection = categories));
+
+    // Load subcategories based on selected category
+    if (this.machine?.categoryId) {
+      this.loadSubcategoriesForCategory(this.machine.categoryId);
+    } else {
+      this.subcategoryService
+        .query()
+        .pipe(map((res: HttpResponse<ISubcategory[]>) => res.body ?? []))
+        .subscribe((subcategories: ISubcategory[]) => (this.subcategoriesSharedCollection = subcategories));
+    }
+  }
+
+  protected loadSubcategoriesForCategory(categoryId: number): void {
+    this.subcategoryService
+      .query({ 'categoryId.equals': categoryId })
+      .pipe(map((res: HttpResponse<ISubcategory[]>) => res.body ?? []))
+      .subscribe((subcategories: ISubcategory[]) => (this.subcategoriesSharedCollection = subcategories));
+  }
+
+  onCategoryChange(categoryId: number | null): void {
+    if (categoryId) {
+      this.loadSubcategoriesForCategory(categoryId);
+      // Clear subcategory selection when category changes
+      this.editForm.patchValue({ subcategoryId: null });
+    } else {
+      this.subcategoriesSharedCollection = [];
+      this.editForm.patchValue({ subcategoryId: null });
+    }
   }
 }

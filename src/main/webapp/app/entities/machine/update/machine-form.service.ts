@@ -40,6 +40,7 @@ type MachineFormGroupContent = {
   description: FormControl<MachineFormRawValue['description']>;
   capacityTon: FormControl<MachineFormRawValue['capacityTon']>;
   ratePerHour: FormControl<MachineFormRawValue['ratePerHour']>;
+  ratePerDay: FormControl<MachineFormRawValue['ratePerDay']>;
   minimumUsageHours: FormControl<MachineFormRawValue['minimumUsageHours']>;
   latitude: FormControl<MachineFormRawValue['latitude']>;
   longitude: FormControl<MachineFormRawValue['longitude']>;
@@ -49,6 +50,8 @@ type MachineFormGroupContent = {
   status: FormControl<MachineFormRawValue['status']>;
   createdDate: FormControl<MachineFormRawValue['createdDate']>;
   user: FormControl<MachineFormRawValue['user']>;
+  categoryId: FormControl<MachineFormRawValue['categoryId']>;
+  subcategoryId: FormControl<MachineFormRawValue['subcategoryId']>;
 };
 
 export type MachineFormGroup = FormGroup<MachineFormGroupContent>;
@@ -83,6 +86,7 @@ export class MachineFormService {
       ratePerHour: new FormControl(machineRawValue.ratePerHour, {
         validators: [Validators.required],
       }),
+      ratePerDay: new FormControl(machineRawValue.ratePerDay),
       minimumUsageHours: new FormControl(machineRawValue.minimumUsageHours),
       latitude: new FormControl(machineRawValue.latitude, {
         validators: [Validators.required],
@@ -100,6 +104,8 @@ export class MachineFormService {
         validators: [Validators.required],
       }),
       user: new FormControl(machineRawValue.user),
+      categoryId: new FormControl(machineRawValue.categoryId),
+      subcategoryId: new FormControl(machineRawValue.subcategoryId),
     });
   }
 

@@ -12,7 +12,13 @@ import org.mapstruct.*;
 @Mapper(componentModel = "spring")
 public interface MachineMapper extends EntityMapper<MachineDTO, Machine> {
     @Mapping(target = "user", source = "user", qualifiedByName = "userLogin")
+    @Mapping(target = "categoryId", source = "category.id")
+    @Mapping(target = "subcategoryId", source = "subcategory.id")
     MachineDTO toDto(Machine s);
+
+    @Mapping(target = "category", ignore = true)
+    @Mapping(target = "subcategory", ignore = true)
+    Machine toEntity(MachineDTO machineDTO);
 
     @Named("userLogin")
     @BeanMapping(ignoreByDefault = true)

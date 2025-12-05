@@ -111,6 +111,18 @@
         </div>
 
         <div class="mb-3">
+          <label class="form-label" for="field_ratePerDay">Rate Per Day</label>
+          <input
+            type="number"
+            class="form-control"
+            name="ratePerDay"
+            id="field_ratePerDay"
+            data-cy="ratePerDay"
+            formControlName="ratePerDay"
+          />
+        </div>
+
+        <div class="mb-3">
           <label class="form-label" for="field_minimumUsageHours">Minimum Usage Hours</label>
           <input
             type="number"
@@ -230,8 +242,41 @@
           }
         </div>
 
-        <div class="mb-3" *jhiHasAnyAuthority="'ROLE_ADMIN'">
+        <div class="mb-3">
+          <label class="form-label" for="field_category">Category</label>
+          <select
+            class="form-control"
+            id="field_category"
+            data-cy="category"
+            name="category"
+            formControlName="categoryId"
+            (change)="onCategoryChange($any($event.target).value ? +$any($event.target).value : null)"
           >
+            <option [ngValue]="null"></option>
+            @for (categoryOption of categoriesSharedCollection; track $index) {
+              <option [ngValue]="categoryOption.id">{{ categoryOption.name }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="field_subcategory">Subcategory</label>
+          <select
+            class="form-control"
+            id="field_subcategory"
+            data-cy="subcategory"
+            name="subcategory"
+            formControlName="subcategoryId"
+            [disabled]="!editForm.get('categoryId')?.value"
+          >
+            <option [ngValue]="null"></option>
+            @for (subcategoryOption of subcategoriesSharedCollection; track $index) {
+              <option [ngValue]="subcategoryOption.id">{{ subcategoryOption.name }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="mb-3" *jhiHasAnyAuthority="'ROLE_ADMIN'">
           <label class="form-label" for="field_user">User</label>
           <select class="form-control" id="field_user" data-cy="user" name="user" formControlName="user" [compareWith]="compareUser">
             <option [ngValue]="null"></option>

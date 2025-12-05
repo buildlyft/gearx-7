@@ -1,7 +1,11 @@
 package com.gearx7.app.service;
 
+import com.gearx7.app.domain.Category;
 import com.gearx7.app.domain.Machine;
+import com.gearx7.app.domain.Subcategory;
+import com.gearx7.app.repository.CategoryRepository;
 import com.gearx7.app.repository.MachineRepository;
+import com.gearx7.app.repository.SubcategoryRepository;
 import com.gearx7.app.service.dto.MachineDTO;
 import com.gearx7.app.service.mapper.MachineMapper;
 import java.util.Optional;
@@ -25,9 +29,20 @@ public class MachineService {
 
     private final MachineMapper machineMapper;
 
-    public MachineService(MachineRepository machineRepository, MachineMapper machineMapper) {
+    private final CategoryRepository categoryRepository;
+
+    private final SubcategoryRepository subcategoryRepository;
+
+    public MachineService(
+        MachineRepository machineRepository,
+        MachineMapper machineMapper,
+        CategoryRepository categoryRepository,
+        SubcategoryRepository subcategoryRepository
+    ) {
         this.machineRepository = machineRepository;
         this.machineMapper = machineMapper;
+        this.categoryRepository = categoryRepository;
+        this.subcategoryRepository = subcategoryRepository;
     }
 
     /**
@@ -39,6 +54,23 @@ public class MachineService {
     public MachineDTO save(MachineDTO machineDTO) {
         log.debug("Request to save Machine : {}", machineDTO);
         Machine machine = machineMapper.toEntity(machineDTO);
+
+        // Set category if provided
+        if (machineDTO.getCategoryId() != null) {
+            Category category = categoryRepository
+                .findById(machineDTO.getCategoryId())
+                .orElseThrow(() -> new RuntimeException("Category not found with id: " + machineDTO.getCategoryId()));
+            machine.setCategory(category);
+        }
+
+        // Set subcategory if provided
+        if (machineDTO.getSubcategoryId() != null) {
+            Subcategory subcategory = subcategoryRepository
+                .findById(machineDTO.getSubcategoryId())
+                .orElseThrow(() -> new RuntimeException("Subcategory not found with id: " + machineDTO.getSubcategoryId()));
+            machine.setSubcategory(subcategory);
+        }
+
         machine = machineRepository.save(machine);
         return machineMapper.toDto(machine);
     }
@@ -52,6 +84,27 @@ public class MachineService {
     public MachineDTO update(MachineDTO machineDTO) {
         log.debug("Request to update Machine : {}", machineDTO);
         Machine machine = machineMapper.toEntity(machineDTO);
+
+        // Set category if provided
+        if (machineDTO.getCategoryId() != null) {
+            Category category = categoryRepository
+                .findById(machineDTO.getCategoryId())
+                .orElseThrow(() -> new RuntimeException("Category not found with id: " + machineDTO.getCategoryId()));
+            machine.setCategory(category);
+        } else {
+            machine.setCategory(null);
+        }
+
+        // Set subcategory if provided
+        if (machineDTO.getSubcategoryId() != null) {
+            Subcategory subcategory = subcategoryRepository
+                .findById(machineDTO.getSubcategoryId())
+                .orElseThrow(() -> new RuntimeException("Subcategory not found with id: " + machineDTO.getSubcategoryId()));
+            machine.setSubcategory(subcategory);
+        } else {
+            machine.setSubcategory(null);
+        }
+
         machine = machineRepository.save(machine);
         return machineMapper.toDto(machine);
     }
@@ -69,6 +122,28 @@ public class MachineService {
             .findById(machineDTO.getId())
             .map(existingMachine -> {
                 machineMapper.partialUpdate(existingMachine, machineDTO);
+
+                // Update category if provided
+                if (machineDTO.getCategoryId() != null) {
+                    Category category = categoryRepository
+                        .findById(machineDTO.getCategoryId())
+                        .orElseThrow(() -> new RuntimeException("Category not found with id: " + machineDTO.getCategoryId()));
+                    existingMachine.setCategory(category);
+                } else if (machineDTO.getCategoryId() == null && machineDTO.getId() != null) {
+                    // Allow clearing category by setting to null explicitly
+                    existingMachine.setCategory(null);
+                }
+
+                // Update subcategory if provided
+                if (machineDTO.getSubcategoryId() != null) {
+                    Subcategory subcategory = subcategoryRepository
+                        .findById(machineDTO.getSubcategoryId())
+                        .orElseThrow(() -> new RuntimeException("Subcategory not found with id: " + machineDTO.getSubcategoryId()));
+                    existingMachine.setSubcategory(subcategory);
+                } else if (machineDTO.getSubcategoryId() == null && machineDTO.getId() != null) {
+                    // Allow clearing subcategory by setting to null explicitly
+                    existingMachine.setSubcategory(null);
+                }
 
                 return existingMachine;
             })
