@@ -18,7 +18,10 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.List;
@@ -229,9 +232,9 @@ public class MachineResource {
         @RequestParam Double lat,
         @RequestParam Double lon
     ) {
-        // Parse start and end dates
-        Instant startDateTime = Instant.parse(startDate);
-        Instant endDateTime = Instant.parse(endDate);
+        // Parse start and end dates - handle multiple formats
+        Instant startDateTime = parseDateTime(startDate);
+        Instant endDateTime = parseDateTime(endDate);
 
         // Check if dates are on the same day
         LocalDate startLocalDate = startDateTime.atZone(ZoneOffset.UTC).toLocalDate();
@@ -297,5 +300,35 @@ public class MachineResource {
 
         // Optionally filter by location or other criteria using params (not shown for mock)
         return ResponseEntity.ok(machines);
+    }
+
+    /**
+     * Parse date string in various formats to Instant.
+     * Handles formats like:
+     * - "2025-11-10T08:00" (without seconds and timezone)
+     * - "2025-11-10T08:00:00" (without timezone)
+     * - "2025-11-10T08:00:00Z" (with timezone)
+     * - ISO-8601 full format
+     */
+    private Instant parseDateTime(String dateString) {
+        try {
+            // Try parsing as ISO-8601 Instant first (with timezone)
+            return Instant.parse(dateString);
+        } catch (DateTimeParseException e) {
+            try {
+                // Try parsing as LocalDateTime without timezone (format: "2025-11-10T08:00" or "2025-11-10T08:00:00")
+                DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
+                LocalDateTime localDateTime = LocalDateTime.parse(dateString, formatter);
+                // Convert to Instant assuming UTC timezone
+                return localDateTime.toInstant(ZoneOffset.UTC);
+            } catch (DateTimeParseException e2) {
+                // If all parsing fails, throw a more descriptive error
+                throw new BadRequestAlertException(
+                    "Invalid date format: " + dateString + ". Expected format: YYYY-MM-DDTHH:mm or ISO-8601 format",
+                    ENTITY_NAME,
+                    "invalidDateFormat"
+                );
+            }
+        }
     }
 }
