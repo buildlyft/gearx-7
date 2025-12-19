@@ -1,5 +1,6 @@
 package com.gearx7.app.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.gearx7.app.domain.enumeration.MachineStatus;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
@@ -88,7 +89,31 @@ public class Machine implements Serializable {
     @ManyToOne(fetch = FetchType.LAZY)
     private User user;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JsonIgnoreProperties(value = { "subcategories" }, allowSetters = true)
+    private Category category;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JsonIgnoreProperties(value = { "category" }, allowSetters = true)
+    private Subcategory subcategory;
+
     // jhipster-needle-entity-add-field - JHipster will add fields here
+
+    public Category getCategory() {
+        return category;
+    }
+
+    public void setCategory(Category category) {
+        this.category = category;
+    }
+
+    public Subcategory getSubcategory() {
+        return subcategory;
+    }
+
+    public void setSubcategory(Subcategory subcategory) {
+        this.subcategory = subcategory;
+    }
 
     public Long getId() {
         return this.id;

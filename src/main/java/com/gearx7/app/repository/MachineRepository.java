@@ -1,6 +1,7 @@
 package com.gearx7.app.repository;
 
 import com.gearx7.app.domain.Machine;
+import com.gearx7.app.domain.enumeration.MachineStatus;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
@@ -40,4 +41,26 @@ public interface MachineRepository extends JpaRepository<Machine, Long> {
 
     @Query("select machine from Machine machine left join fetch machine.user where machine.id =:id")
     Optional<Machine> findOneWithToOneRelationships(@Param("id") Long id);
+
+    @Query(
+        """
+            SELECT m
+            FROM Machine m
+            WHERE m.status = com.gearx7.app.domain.enumeration.MachineStatus.AVAILABLE
+              AND m.category.id = :categoryId
+              AND m.subcategory.id = :subcategoryId
+              AND m.latitude BETWEEN :minLat AND :maxLat
+              AND m.longitude BETWEEN :minLon AND :maxLon
+        """
+    )
+    List<Machine> findAvailableMachinesWithinRadius(
+        @Param("categoryId") Long categoryId,
+        @Param("subcategoryId") Long subcategoryId,
+        @Param("minLat") double minLat,
+        @Param("maxLat") double maxLat,
+        @Param("minLon") double minLon,
+        @Param("maxLon") double maxLon
+    );
+
+    Optional<Machine> findById(Long id);
 }

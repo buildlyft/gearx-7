@@ -12,4 +12,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface SubcategoryRepository extends JpaRepository<Subcategory, Long> {
     List<Subcategory> findByCategoryId(Long categoryId);
+
+    //To verify subcategory belongs to category or not
+    boolean existsByIdAndCategoryId(Long id, Long categoryId);
 }

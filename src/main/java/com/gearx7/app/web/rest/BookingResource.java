@@ -7,6 +7,7 @@ import com.gearx7.app.security.AuthoritiesConstants;
 import com.gearx7.app.security.SecurityUtils;
 import com.gearx7.app.service.BookingService;
 import com.gearx7.app.web.rest.errors.BadRequestAlertException;
+import com.gearx7.app.web.rest.errors.FailedValidator;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import java.net.URI;
@@ -62,18 +63,25 @@ public class BookingResource {
      */
     @PostMapping("")
     public ResponseEntity<Booking> createBooking(@Valid @RequestBody Booking booking) throws URISyntaxException {
-        log.debug("REST request to save Booking : {}", booking);
+        log.info("REST request to save Booking : {}", booking);
+        FailedValidator.validateInputParameters(booking);
+
         if (booking.getId() != null) {
+            log.warn("Attempt to create Booking with existing ID: {}", booking.getId());
             throw new BadRequestAlertException("A new booking cannot already have an ID", ENTITY_NAME, "idexists");
         }
 
         if (!SecurityUtils.hasCurrentUserThisAuthority(AuthoritiesConstants.ADMIN)) {
-            log.debug("No user passed in, using current user: {}", SecurityUtils.getCurrentUserLogin().orElseThrow());
+            log.info("No user passed in, using current user: {}", SecurityUtils.getCurrentUserLogin().orElseThrow());
             String username = SecurityUtils.getCurrentUserLogin().orElseThrow();
             booking.setUser(userRepository.findOneByLogin(username).orElseThrow());
+        } else {
+            log.info("Admin user creating booking for userId={}", booking.getUser().getId());
         }
 
         Booking result = bookingService.save(booking);
+        log.info("Booking created successfully with id={}", result.getId());
+
         return ResponseEntity
             .created(new URI("/api/bookings/" + result.getId()))
             .headers(HeaderUtil.createEntityCreationAlert(applicationName, false, ENTITY_NAME, result.getId().toString()))
@@ -83,7 +91,7 @@ public class BookingResource {
     /**
      * {@code PUT  /bookings/:id} : Updates an existing booking.
      *
-     * @param id the id of the booking to save.
+     * @param id      the id of the booking to save.
      * @param booking the booking to update.
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the updated booking,
      * or with status {@code 400 (Bad Request)} if the booking is not valid,
@@ -117,7 +125,7 @@ public class BookingResource {
     /**
      * {@code PATCH  /bookings/:id} : Partial updates given fields of an existing booking, field will ignore if it is null
      *
-     * @param id the id of the booking to save.
+     * @param id      the id of the booking to save.
      * @param booking the booking to update.
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the updated booking,
      * or with status {@code 400 (Bad Request)} if the booking is not valid,
@@ -153,7 +161,7 @@ public class BookingResource {
     /**
      * {@code GET  /bookings} : get all the bookings.
      *
-     * @param pageable the pagination information.
+     * @param pageable  the pagination information.
      * @param eagerload flag to eager load entities from relationships (This is applicable for many-to-many).
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of bookings in body.
      */

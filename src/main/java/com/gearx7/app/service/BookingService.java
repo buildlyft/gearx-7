@@ -1,8 +1,12 @@
 package com.gearx7.app.service;
 
 import com.gearx7.app.domain.Booking;
+import com.gearx7.app.domain.Machine;
+import com.gearx7.app.domain.User;
 import com.gearx7.app.domain.enumeration.BookingStatus;
 import com.gearx7.app.repository.BookingRepository;
+import com.gearx7.app.repository.MachineRepository;
+import com.gearx7.app.repository.UserRepository;
 import com.gearx7.app.web.rest.errors.BadRequestAlertException;
 import java.time.Instant;
 import java.util.Arrays;
@@ -27,8 +31,14 @@ public class BookingService {
 
     private final BookingRepository bookingRepository;
 
-    public BookingService(BookingRepository bookingRepository) {
+    private final MachineRepository machineRepository;
+
+    private final UserRepository userRepository;
+
+    public BookingService(BookingRepository bookingRepository, MachineRepository machineRepository, UserRepository userRepository) {
         this.bookingRepository = bookingRepository;
+        this.machineRepository = machineRepository;
+        this.userRepository = userRepository;
     }
 
     /**
@@ -38,8 +48,13 @@ public class BookingService {
      * @return the persisted entity.
      */
     public Booking save(Booking booking) {
+        log.info("Request to save Booking : {}", booking);
         log.debug("Request to save Booking : {}", booking);
-        log.debug("Request to save Booking : {}", booking);
+
+        Machine machine = findByMachineId(booking.getMachine().getId());
+        booking.setMachine(machine);
+        User user = findByUserId(booking.getUser().getId());
+        booking.setUser(user);
 
         // Don't allow save if status is BOOKED or ACCEPTED for overlapping booking
         if (booking.getMachine() != null && booking.getStartDateTime() != null && booking.getEndDateTime() != null) {
@@ -49,7 +64,7 @@ public class BookingService {
                 booking.getEndDateTime()
             );
             if (overlap) {
-                //                throw new BadRequestAlertException("Equipment is already booked for the selected time period", "booking", "overlap");
+                // throw new BadRequestAlertException("Equipment is already booked for the selected time period", "booking", "overlap");
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Machine is already booked for the selected time period.");
             }
         }
@@ -160,5 +175,17 @@ public class BookingService {
             start,
             end
         );
+    }
+
+    public Machine findByMachineId(Long machineId) {
+        return machineRepository
+            .findById(machineId)
+            .orElseThrow(() -> new BadRequestAlertException("Machine not found with id " + machineId, "Booking", "machineIdNotFound"));
+    }
+
+    public User findByUserId(Long userId) {
+        return userRepository
+            .findById(userId)
+            .orElseThrow(() -> new BadRequestAlertException("User not found with id " + userId, "Booking", "UserIdNotFound"));
     }
 }

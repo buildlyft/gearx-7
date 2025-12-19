@@ -21,6 +21,8 @@ export interface IMachine {
   serviceabilityRangeKm?: number | null;
   status?: keyof typeof MachineStatus | null;
   createdDate?: dayjs.Dayjs | null;
+  categoryId?: number | null;
+  subcategoryId?: number | null;
   user?: Pick<IUser, 'id' | 'login'> | null;
 }
 

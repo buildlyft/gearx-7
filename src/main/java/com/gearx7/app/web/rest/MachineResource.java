@@ -34,6 +34,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
@@ -104,7 +105,7 @@ public class MachineResource {
     /**
      * {@code PUT  /machines/:id} : Updates an existing machine.
      *
-     * @param id the id of the machineDTO to save.
+     * @param id         the id of the machineDTO to save.
      * @param machineDTO the machineDTO to update.
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the updated machineDTO,
      * or with status {@code 400 (Bad Request)} if the machineDTO is not valid,
@@ -138,7 +139,7 @@ public class MachineResource {
     /**
      * {@code PATCH  /machines/:id} : Partial updates given fields of an existing machine, field will ignore if it is null
      *
-     * @param id the id of the machineDTO to save.
+     * @param id         the id of the machineDTO to save.
      * @param machineDTO the machineDTO to update.
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the updated machineDTO,
      * or with status {@code 400 (Bad Request)} if the machineDTO is not valid,
@@ -174,7 +175,7 @@ public class MachineResource {
     /**
      * {@code GET  /machines} : get all the machines.
      *
-     * @param pageable the pagination information.
+     * @param pageable  the pagination information.
      * @param eagerload flag to eager load entities from relationships (This is applicable for many-to-many).
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of machines in body.
      */
@@ -230,84 +231,47 @@ public class MachineResource {
         @RequestParam String startDate,
         @RequestParam String endDate,
         @RequestParam Double lat,
-        @RequestParam Double lon
+        @RequestParam Double lon // here pass radius from API Request
     ) {
+        log.info(
+            "REST request to Search Machines received: categoryId={}, subcategoryId={}, startDate={}, endDate={}, lat={}, lon={}",
+            categoryId,
+            subcategoryId,
+            startDate,
+            endDate,
+            lat,
+            lon
+        );
+
         // Parse start and end dates - handle multiple formats
         Instant startDateTime = parseDateTime(startDate);
         Instant endDateTime = parseDateTime(endDate);
 
-        // Check if dates are on the same day
-        LocalDate startLocalDate = startDateTime.atZone(ZoneOffset.UTC).toLocalDate();
-        LocalDate endLocalDate = endDateTime.atZone(ZoneOffset.UTC).toLocalDate();
-        boolean isSameDay = startLocalDate.equals(endLocalDate);
+        Instant now = Instant.now();
 
-        // Mock user and partner DTOs
-        UserDTO user = new UserDTO();
-        user.setId(101L);
-        user.setLogin("partnerUser1");
-        user.setLogin("John");
-        //        user.setLastName("Doe");
-
-        // Mock machine DTOs
-        MachineDTO machine1 = new MachineDTO();
-        machine1.setId(1L);
-        machine1.setBrand("Caterpillar");
-        machine1.setType("Excavator");
-        machine1.setTag("CAT-EX-300");
-        machine1.setModel("320D");
-        machine1.setVinNumber("VIN123456789");
-        machine1.setChassisNumber("CH123456789");
-        machine1.setDescription("Medium-duty excavator suitable for construction");
-        machine1.setCapacityTon(20);
-        BigDecimal ratePerHour = new BigDecimal("1500.00");
-        BigDecimal ratePerDay = new BigDecimal("30000.00");
-        machine1.setRatePerHour(ratePerHour);
-        machine1.setRatePerDay(ratePerDay);
-        machine1.setMinimumUsageHours(4);
-        machine1.setLatitude(12.9611);
-        machine1.setLongitude(77.6387);
-        machine1.setTransportationCharge(new BigDecimal("500.00"));
-        machine1.setDriverBatta(new BigDecimal("200.00"));
-        machine1.setServiceabilityRangeKm(10);
-        machine1.setStatus(com.gearx7.app.domain.enumeration.MachineStatus.AVAILABLE);
-        machine1.setCreatedDate(Instant.parse("2025-10-01T10:00:00Z"));
-        machine1.setUser(user);
-        machine1.setCompanyName("Abc company");
-        machine1.setPartnerName("Partner1");
-
-        // Calculate total hourly rate or total daily rate based on same day check
-        if (isSameDay) {
-            // Calculate hours between start and end
-            long hours = ChronoUnit.HOURS.between(startDateTime, endDateTime);
-            // Ensure minimum usage hours if applicable
-            if (machine1.getMinimumUsageHours() != null && hours < machine1.getMinimumUsageHours()) {
-                hours = machine1.getMinimumUsageHours();
-            }
-            BigDecimal totalHourlyRate = ratePerHour.multiply(new BigDecimal(hours)).setScale(2, RoundingMode.HALF_UP);
-            machine1.setTotalHourlyRate(totalHourlyRate);
-            machine1.setTotalDailyRate(null);
-        } else {
-            // Calculate number of days (inclusive)
-            long days = ChronoUnit.DAYS.between(startLocalDate, endLocalDate) + 1;
-            // Use ratePerDay multiplied by number of days
-            BigDecimal machineRatePerDay = machine1.getRatePerDay();
-            if (machineRatePerDay != null) {
-                BigDecimal totalDailyRate = machineRatePerDay.multiply(new BigDecimal(days)).setScale(2, RoundingMode.HALF_UP);
-                machine1.setTotalDailyRate(totalDailyRate);
-            } else {
-                // Fallback to hourly rate * 24 if ratePerDay is not set
-                BigDecimal dailyRatePerDay = ratePerHour.multiply(new BigDecimal("24"));
-                BigDecimal totalDailyRate = dailyRatePerDay.multiply(new BigDecimal(days)).setScale(2, RoundingMode.HALF_UP);
-                machine1.setTotalDailyRate(totalDailyRate);
-            }
-            machine1.setTotalHourlyRate(null);
+        if (startDateTime.isBefore(now)) {
+            log.warn("Start date {} is in past", startDateTime);
+            throw new BadRequestAlertException("Start date must be today or a future date", "machine", "startDateInPast");
         }
 
-        // Add more mock machines as needed in similar way
+        if (endDateTime.isBefore(now)) {
+            log.warn("End date {} is in past", endDateTime);
+            throw new BadRequestAlertException("End date must be today or a future date", "machine", "endDateInPast");
+        }
 
-        List<MachineDTO> machines = Arrays.asList(machine1);
+        if (!startDateTime.isBefore(endDateTime)) {
+            log.error("Invalid date range. startDate={} endDate={}", startDateTime, endDateTime);
+            throw new BadRequestAlertException("Start date must be before end date", "machine", "invalidDateRange");
+        }
+        log.debug("Date validation success, calling service...");
 
-        // Optionally filter by location or other criteria using params (not shown for mock)
+        List<MachineDTO> machines = machineService.searchMachines(categoryId, subcategoryId, startDateTime, endDateTime, lat, lon);
+
+        if (machines == null || machines.isEmpty()) {
+            log.info("Search completed. No machines found.");
+            return ResponseEntity.noContent().build();
+        }
+        log.info("Search completed. {} machines found.", machines.size());
         return ResponseEntity.ok(machines);
     }
 
@@ -320,10 +284,14 @@ public class MachineResource {
      * - ISO-8601 full format
      */
     private Instant parseDateTime(String dateString) {
+        log.debug("Parsing date: {}", dateString);
+
         try {
             // Try parsing as ISO-8601 Instant first (with timezone)
             return Instant.parse(dateString);
         } catch (DateTimeParseException e) {
+            log.debug("Failed to parse ISO Instant, trying LocalDateTime format {}", dateString);
+
             try {
                 // Try parsing as LocalDateTime without timezone (format: "2025-11-10T08:00" or "2025-11-10T08:00:00")
                 DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
@@ -331,6 +299,7 @@ public class MachineResource {
                 // Convert to Instant assuming UTC timezone
                 return localDateTime.toInstant(ZoneOffset.UTC);
             } catch (DateTimeParseException e2) {
+                log.error("Invalid date format: {}", dateString);
                 // If all parsing fails, throw a more descriptive error
                 throw new BadRequestAlertException(
                     "Invalid date format: " + dateString + ". Expected format: YYYY-MM-DDTHH:mm or ISO-8601 format",

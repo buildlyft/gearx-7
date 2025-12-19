@@ -5,7 +5,6 @@ import com.gearx7.app.domain.enumeration.BookingStatus;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import java.io.Serializable;
-import java.math.BigDecimal;
 import java.time.Instant;
 
 /**

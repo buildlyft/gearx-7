@@ -230,6 +230,39 @@
           }
         </div>
 
+        <div class="mb-3">
+          <label class="form-label" for="field_categoryId">CategoryId</label>
+          <input
+            type="text"
+            class="form-control"
+            name="categoryId"
+            id="field_categoryId"
+            data-cy="categoryId"
+            formControlName="categoryId"
+          />
+          @if (editForm.get('categoryId')!.invalid && (editForm.get('categoryId')!.dirty || editForm.get('categoryId')!.touched)) {
+            <div>
+              @if (editForm.get('categoryId')?.errors?.required) {
+                <small class="form-text text-danger">This field is required.</small>
+              }
+            </div>
+          }
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="field_subcategoryId">SubCategoryId</label>
+
+          <input type="text" class="form-control" id="field_subcategoryId" data-cy="subcategoryId" formControlName="subcategoryId" />
+
+          @if (editForm.get('subcategoryId')!.invalid && (editForm.get('subcategoryId')!.dirty || editForm.get('subcategoryId')!.touched)) {
+            <div>
+              @if (editForm.get('subcategoryId')?.errors?.required) {
+                <small class="form-text text-danger">This field is required.</small>
+              }
+            </div>
+          }
+        </div>
+
         <div class="mb-3" *jhiHasAnyAuthority="'ROLE_ADMIN'">
           >
           <label class="form-label" for="field_user">User</label>

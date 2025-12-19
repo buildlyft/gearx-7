@@ -161,6 +161,21 @@
                 <fa-icon class="p-1" icon="sort"></fa-icon>
               </div>
             </th>
+            <th scope="col" jhiSortBy="categoryId">
+              <div class="d-flex">
+                <span>Category</span>
+
+                <fa-icon class="p-1" icon="sort"></fa-icon>
+              </div>
+            </th>
+            <th scope="col" jhiSortBy="subcategoryId">
+              <div class="d-flex">
+                <span>Sub Category</span>
+
+                <fa-icon class="p-1" icon="sort"></fa-icon>
+              </div>
+            </th>
+
             <th scope="col" jhiSortBy="user.login">
               <div class="d-flex">
                 <span>User</span>
@@ -193,6 +208,8 @@
               <td>{{ machine.serviceabilityRangeKm }}</td>
               <td>{{ machine.status }}</td>
               <td>{{ machine.createdDate | formatMediumDatetime }}</td>
+              <td>{{ machine.categoryId }}</td>
+              <td>{{ machine.subcategoryId }}</td>
               <td>
                 {{ machine.user?.login }}
               </td>

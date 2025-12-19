@@ -110,4 +110,35 @@
             <!-- jhipster-needle-liquibase-add-loadcolumn - JHipster (and/or extensions) can add load columns here -->
         </loadData>
     </changeSet>
+
+    <changeSet id="20250714141245-2" author="jhipster">
+
+        <addColumn tableName="machine">
+            <column name="category_id" type="bigint">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+        <addColumn tableName="machine">
+            <column name="subcategory_id" type="bigint">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="20250714141245-3" author="jhipster">
+        <addForeignKeyConstraint
+            baseTableName="machine"
+            baseColumnNames="category_id"
+            referencedTableName="category"
+            referencedColumnNames="id"
+            constraintName="fk_machine_category"/>
+
+        <addForeignKeyConstraint
+            baseTableName="machine"
+            baseColumnNames="subcategory_id"
+            referencedTableName="subcategory"
+            referencedColumnNames="id"
+            constraintName="fk_machine_subcategory"/>
+
+    </changeSet>
 </databaseChangeLog>

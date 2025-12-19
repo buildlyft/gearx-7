@@ -48,6 +48,8 @@ type MachineFormGroupContent = {
   serviceabilityRangeKm: FormControl<MachineFormRawValue['serviceabilityRangeKm']>;
   status: FormControl<MachineFormRawValue['status']>;
   createdDate: FormControl<MachineFormRawValue['createdDate']>;
+  categoryId: FormControl<MachineFormRawValue['categoryId']>;
+  subcategoryId: FormControl<MachineFormRawValue['subcategoryId']>;
   user: FormControl<MachineFormRawValue['user']>;
 };
 
@@ -99,6 +101,13 @@ export class MachineFormService {
       createdDate: new FormControl(machineRawValue.createdDate, {
         validators: [Validators.required],
       }),
+      categoryId: new FormControl(machineRawValue.categoryId, {
+        validators: [Validators.required],
+      }),
+      subcategoryId: new FormControl(machineRawValue.subcategoryId, {
+        validators: [Validators.required],
+      }),
+
       user: new FormControl(machineRawValue.user),
     });
   }
