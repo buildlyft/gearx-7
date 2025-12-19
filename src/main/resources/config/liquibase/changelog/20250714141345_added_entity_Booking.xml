@@ -79,4 +79,16 @@
             <!-- jhipster-needle-liquibase-add-loadcolumn - JHipster (and/or extensions) can add load columns here -->
         </loadData>
     </changeSet>
+
+    <changeSet id="20250714141345-2-add-expected-price-and-notes-to-booking" author="jhipster">
+        <addColumn tableName="booking">
+            <column name="expected_price" type="decimal(21,2)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="notes" type="varchar(255)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
 </databaseChangeLog>

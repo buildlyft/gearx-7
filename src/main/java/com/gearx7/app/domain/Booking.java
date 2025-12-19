@@ -5,6 +5,7 @@ import com.gearx7.app.domain.enumeration.BookingStatus;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.time.Instant;
 
 /**
@@ -57,6 +58,28 @@ public class Booking implements Serializable {
     @ManyToOne(fetch = FetchType.LAZY)
     @JsonIgnoreProperties(value = { "user" }, allowSetters = true)
     private Machine machine;
+
+    @Column(name = "expected_price")
+    private Double expectedPrice;
+
+    @Column(name = "notes")
+    private String notes;
+
+    public Double getExpectedPrice() {
+        return expectedPrice;
+    }
+
+    public void setExpectedPrice(Double expectedPrice) {
+        this.expectedPrice = expectedPrice;
+    }
+
+    public String getNotes() {
+        return notes;
+    }
+
+    public void setNotes(String notes) {
+        this.notes = notes;
+    }
 
     // jhipster-needle-entity-add-field - JHipster will add fields here
 
