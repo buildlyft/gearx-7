@@ -1,6 +1,7 @@
 package com.gearx7.app.service.dto;
 
 import com.gearx7.app.domain.enumeration.MachineStatus;
+import jakarta.persistence.Column;
 import jakarta.validation.constraints.*;
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -71,6 +72,61 @@ public class MachineDTO implements Serializable {
     private Long categoryId;
 
     private Long subcategoryId;
+
+    private String warranty;
+    private String driverName;
+    private String adharNo;
+    private Integer age;
+    private String licenseNo;
+    private String insuranceNo;
+
+    public String getWarranty() {
+        return warranty;
+    }
+
+    public void setWarranty(String warranty) {
+        this.warranty = warranty;
+    }
+
+    public String getDriverName() {
+        return driverName;
+    }
+
+    public void setDriverName(String driverName) {
+        this.driverName = driverName;
+    }
+
+    public String getAdharNo() {
+        return adharNo;
+    }
+
+    public void setAdharNo(String adharNo) {
+        this.adharNo = adharNo;
+    }
+
+    public Integer getAge() {
+        return age;
+    }
+
+    public void setAge(Integer age) {
+        this.age = age;
+    }
+
+    public String getLicenseNo() {
+        return licenseNo;
+    }
+
+    public void setLicenseNo(String licenseNo) {
+        this.licenseNo = licenseNo;
+    }
+
+    public String getInsuranceNo() {
+        return insuranceNo;
+    }
+
+    public void setInsuranceNo(String insuranceNo) {
+        this.insuranceNo = insuranceNo;
+    }
 
     public Long getCategoryId() {
         return categoryId;
@@ -301,34 +357,89 @@ public class MachineDTO implements Serializable {
         return Objects.hash(this.id);
     }
 
-    // prettier-ignore
     @Override
     public String toString() {
-        return "MachineDTO{" +
-            "id=" + getId() +
-            ", brand='" + getBrand() + "'" +
-            ", type='" + getType() + "'" +
-            ", tag='" + getTag() + "'" +
-            ", model='" + getModel() + "'" +
-            ", vinNumber='" + getVinNumber() + "'" +
-            ", chassisNumber='" + getChassisNumber() + "'" +
-            ", description='" + getDescription() + "'" +
-            ", capacityTon=" + getCapacityTon() +
-            ", ratePerHour=" + getRatePerHour() +
-            ", ratePerDay=" + getRatePerDay() +
-            ", minimumUsageHours=" + getMinimumUsageHours() +
-            ", latitude=" + getLatitude() +
-            ", longitude=" + getLongitude() +
-            ", transportationCharge=" + getTransportationCharge() +
-            ", driverBatta=" + getDriverBatta() +
-            ", serviceabilityRangeKm=" + getServiceabilityRangeKm() +
-            ", status='" + getStatus() + "'" +
-            ", createdDate='" + getCreatedDate() + "'" +
-            ", user=" + getUser() +
-            ", companyName='" + getCompanyName() + "'" +
-            ", partnerName='" + getPartnerName() + "'" +
-            ", totalHourlyRate=" + getTotalHourlyRate() +
-            ", totalDailyRate=" + getTotalDailyRate() +
-            "}";
+        return (
+            "MachineDTO{" +
+            "id=" +
+            id +
+            ", brand='" +
+            brand +
+            '\'' +
+            ", type='" +
+            type +
+            '\'' +
+            ", tag='" +
+            tag +
+            '\'' +
+            ", model='" +
+            model +
+            '\'' +
+            ", vinNumber='" +
+            vinNumber +
+            '\'' +
+            ", chassisNumber='" +
+            chassisNumber +
+            '\'' +
+            ", description='" +
+            description +
+            '\'' +
+            ", capacityTon=" +
+            capacityTon +
+            ", ratePerHour=" +
+            ratePerHour +
+            ", ratePerDay=" +
+            ratePerDay +
+            ", minimumUsageHours=" +
+            minimumUsageHours +
+            ", latitude=" +
+            latitude +
+            ", longitude=" +
+            longitude +
+            ", transportationCharge=" +
+            transportationCharge +
+            ", driverBatta=" +
+            driverBatta +
+            ", serviceabilityRangeKm=" +
+            serviceabilityRangeKm +
+            ", status=" +
+            status +
+            ", createdDate=" +
+            createdDate +
+            ", user=" +
+            user +
+            ", companyName='" +
+            companyName +
+            '\'' +
+            ", partnerName='" +
+            partnerName +
+            '\'' +
+            ", totalHourlyRate=" +
+            totalHourlyRate +
+            ", totalDailyRate=" +
+            totalDailyRate +
+            ", categoryId=" +
+            categoryId +
+            ", subcategoryId=" +
+            subcategoryId +
+            ", warranty='" +
+            warranty +
+            '\'' +
+            ", driverName='" +
+            driverName +
+            '\'' +
+            ", adharNo='" +
+            adharNo +
+            '\'' +
+            ", age=" +
+            age +
+            ", licenseNo='" +
+            licenseNo +
+            '\'' +
+            ", insuranceNo='" +
+            insuranceNo +
+            '\'' +
+            '}'
+        );
     }
 }

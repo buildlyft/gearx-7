@@ -97,6 +97,72 @@ public class Machine implements Serializable {
     @JsonIgnoreProperties(value = { "category" }, allowSetters = true)
     private Subcategory subcategory;
 
+    @Column(name = "warranty")
+    private String warranty;
+
+    @Column(name = "driver_name")
+    private String driverName;
+
+    @Column(name = "adhar_no")
+    private String adharNo;
+
+    @Column(name = "age")
+    private Integer age;
+
+    @Column(name = "license_no")
+    private String licenseNo;
+
+    @Column(name = "insurance_no")
+    private String insuranceNo;
+
+    public String getWarranty() {
+        return warranty;
+    }
+
+    public void setWarranty(String warranty) {
+        this.warranty = warranty;
+    }
+
+    public String getDriverName() {
+        return driverName;
+    }
+
+    public void setDriverName(String driverName) {
+        this.driverName = driverName;
+    }
+
+    public String getAdharNo() {
+        return adharNo;
+    }
+
+    public void setAdharNo(String adharNo) {
+        this.adharNo = adharNo;
+    }
+
+    public Integer getAge() {
+        return age;
+    }
+
+    public void setAge(Integer age) {
+        this.age = age;
+    }
+
+    public String getLicenseNo() {
+        return licenseNo;
+    }
+
+    public void setLicenseNo(String licenseNo) {
+        this.licenseNo = licenseNo;
+    }
+
+    public String getInsuranceNo() {
+        return insuranceNo;
+    }
+
+    public void setInsuranceNo(String insuranceNo) {
+        this.insuranceNo = insuranceNo;
+    }
+
     // jhipster-needle-entity-add-field - JHipster will add fields here
 
     public Category getCategory() {
@@ -417,6 +483,15 @@ public class Machine implements Serializable {
             ", serviceabilityRangeKm=" + getServiceabilityRangeKm() +
             ", status='" + getStatus() + "'" +
             ", createdDate='" + getCreatedDate() + "'" +
+            ", user='" + getUser() + "'" +
+            ", category='" + getCategory() + "'" +
+            ", subcategory='" + getSubcategory() + "'" +
+            ", warranty='" + getWarranty() + "'" +
+            ", driverName='" + getDriverName() + "'" +
+            ", adharNo='" + getAdharNo() + "'" +
+            ", age='" + getAge() + "'" +
+            ", licenseNo='" + getLicenseNo() + "'" +
+            ", insuranceNo='" + getInsuranceNo() + "'" +
             "}";
     }
 }

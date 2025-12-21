@@ -141,4 +141,38 @@
             constraintName="fk_machine_subcategory"/>
 
     </changeSet>
+
+    <changeSet id="21122025-1" author="Ganesh">
+        <addColumn tableName="machine">
+            <column name="warranty" type="varchar(255)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+        <addColumn tableName="machine">
+            <column name="driver_name" type="varchar(255)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+        <addColumn tableName="machine">
+            <column name="adhar_no" type="varchar(255)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+        <addColumn tableName="machine">
+            <column name="age" type="integer">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+        <addColumn tableName="machine">
+            <column name="license_no" type="varchar(255)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+        <addColumn tableName="machine">
+            <column name="insurance_no" type="varchar(255)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
 </databaseChangeLog>
