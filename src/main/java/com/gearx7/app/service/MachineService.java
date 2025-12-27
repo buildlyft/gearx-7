@@ -160,8 +160,11 @@ public class MachineService {
         Double userLat,
         Double userLon
     ) {
+        final double RADIUS_KM = 15.0;
+
         log.info(
-            "Searching machines for categoryId={}, subcategoryId={}, start={}, end={}, lat={}, lon={}",
+            "Searching within {} KM radius for categoryId={}, subcategoryId={}, start={}, end={}, lat={}, lon={}",
+            RADIUS_KM,
             categoryId,
             subcategoryId,
             start,
@@ -193,32 +196,9 @@ public class MachineService {
             throw new BadRequestAlertException("Invalid latitude or longitude", "machine", "invalidLocation");
         }
 
-        final double RADIUS_KM = 10.0;
+        List<Machine> machines = machineRepository.searchWithinRadius(categoryId, subcategoryId, userLat, userLon, RADIUS_KM);
 
-        double latOffset = RADIUS_KM / 111.0;
-        double lonOffset = RADIUS_KM / (111.0 * Math.cos(Math.toRadians(userLat)));
-
-        double minLat = userLat - latOffset;
-        double maxLat = userLat + latOffset;
-        double minLon = userLon - lonOffset;
-        double maxLon = userLon + lonOffset;
-
-        log.debug("Radius Box => minLat={}, maxLat={}, minLon={}, maxLon={}", minLat, maxLat, minLon, maxLon);
-
-        List<Machine> machines = machineRepository.findAvailableMachinesWithinRadius(
-            categoryId,
-            subcategoryId,
-            minLat,
-            maxLat,
-            minLon,
-            maxLon
-        );
-
-        if (machines == null) {
-            machines = Collections.emptyList();
-        }
-
-        log.info("{} machines found in 10 KM bounding box", machines.size());
+        log.info("{} machines found within {} KM radius", machines.size(), RADIUS_KM);
 
         List<MachineDTO> availableMachines = new ArrayList<>();
 

@@ -44,7 +44,7 @@ public class FailedValidator {
 
         // check startDateTime and endDateTime
 
-        Instant start = booking.getStartDateTime();
+        /*  Instant start = booking.getStartDateTime();
         Instant end = booking.getEndDateTime();
         Instant now = Instant.now();
         if (start == null) {
@@ -70,7 +70,7 @@ public class FailedValidator {
         if (!end.isAfter(start)) {
             log.error("Booking validation failed: endDateTime ({}) is not after startDateTime ({})", end, start);
             throw new BadRequestAlertException("End date and time must be after start date and time", "Booking", "endBeforeStart");
-        }
+        }*/
 
         log.debug("Booking validation successful (userId={}, machineId={})", user.getId(), machine.getId());
     }
