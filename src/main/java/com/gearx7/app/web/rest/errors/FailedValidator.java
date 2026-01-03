@@ -3,7 +3,6 @@ package com.gearx7.app.web.rest.errors;
 import com.gearx7.app.domain.Booking;
 import com.gearx7.app.domain.Machine;
 import com.gearx7.app.domain.User;
-import java.time.Instant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -70,7 +69,17 @@ public class FailedValidator {
         if (!end.isAfter(start)) {
             log.error("Booking validation failed: endDateTime ({}) is not after startDateTime ({})", end, start);
             throw new BadRequestAlertException("End date and time must be after start date and time", "Booking", "endBeforeStart");
-        }*/
+        }
+
+        if (start.equals(end)) {
+             throw new BadRequestAlertException(
+                        "Start time and end time cannot be same",
+                        "booking",
+                        "startEndSame");
+          }
+
+
+        */
 
         log.debug("Booking validation successful (userId={}, machineId={})", user.getId(), machine.getId());
     }

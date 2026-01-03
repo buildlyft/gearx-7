@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="
+        http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd
+        http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd">
+
+    <!-- =========================================
+         Create Machine_operator Table
+    ========================================== -->
+    <changeSet id="20260101111700-1" author="Ganesh">
+
+        <createTable tableName="machine_operator">
+            <column name="id" type="bigint">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <column name="driver_name" type="varchar(255)"/>
+
+            <column name="operator_contact" type="varchar(255)"/>
+
+            <column name="license_issue_date" type="date"/>
+
+            <column name="machine_id" type="bigint">
+                <constraints nullable="false" unique="true"/>
+            </column>
+
+            <column name="user_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="vehicle_document_id" type="bigint">
+                <constraints unique="true"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint
+            baseTableName="machine_operator"
+            baseColumnNames="machine_id"
+            constraintName="fk_machine_operator_machine"
+            referencedTableName="machine"
+            referencedColumnNames="id"/>
+
+        <addForeignKeyConstraint
+            baseTableName="machine_operator"
+            baseColumnNames="user_id"
+            constraintName="fk_machine_operator_user"
+            referencedTableName="jhi_user"
+            referencedColumnNames="id"/>
+
+        <addForeignKeyConstraint
+            baseTableName="machine_operator"
+            baseColumnNames="vehicle_document_id"
+            constraintName="fk_machine_operator_vehicle_document"
+            referencedTableName="vehicle_document"
+            referencedColumnNames="id"/>
+
+    </changeSet>
+
+    <changeSet author="Ganesh (generated)" id="02012026-1">
+        <createSequence sequenceName="machine_operator_seq" startValue="1" incrementBy="1"/>
+    </changeSet>
+
+</databaseChangeLog>

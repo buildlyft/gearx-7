@@ -99,3 +99,8 @@ jhipster:
 # ===================================================================
 
 # application:
+
+cloudinary:
+  cloud_name: dacla2c6s
+  api_key: 339646871288244
+  api_secret: nYio6sxkg6bhEQEhReU7SeooQ9k

@@ -115,6 +115,30 @@ public class Machine implements Serializable {
     @Column(name = "insurance_no")
     private String insuranceNo;
 
+    @OneToOne(mappedBy = "machine", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnoreProperties(value = { "machine", "user", "vehicleDocument" }, allowSetters = true)
+    private MachineOperator operator;
+
+    @OneToOne(mappedBy = "machine", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnoreProperties(value = { "machine" }, allowSetters = true)
+    private VehicleDocument document;
+
+    public MachineOperator getOperator() {
+        return operator;
+    }
+
+    public void setOperators(MachineOperator operator) {
+        this.operator = operator;
+    }
+
+    public VehicleDocument getDocument() {
+        return document;
+    }
+
+    public void setDocuments(VehicleDocument document) {
+        this.document = document;
+    }
+
     public String getWarranty() {
         return warranty;
     }
@@ -492,6 +516,8 @@ public class Machine implements Serializable {
             ", age='" + getAge() + "'" +
             ", licenseNo='" + getLicenseNo() + "'" +
             ", insuranceNo='" + getInsuranceNo() + "'" +
+            ", operator='" + getOperator() + "'" +
+            ", documents='" + getDocument() + "'" +
             "}";
     }
 }

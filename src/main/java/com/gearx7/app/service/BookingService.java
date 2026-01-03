@@ -4,9 +4,7 @@ import com.gearx7.app.domain.Booking;
 import com.gearx7.app.domain.Machine;
 import com.gearx7.app.domain.User;
 import com.gearx7.app.domain.enumeration.BookingStatus;
-import com.gearx7.app.repository.BookingRepository;
-import com.gearx7.app.repository.MachineRepository;
-import com.gearx7.app.repository.UserRepository;
+import com.gearx7.app.repository.*;
 import com.gearx7.app.web.rest.errors.BadRequestAlertException;
 import java.time.Instant;
 import java.util.Arrays;
@@ -35,10 +33,22 @@ public class BookingService {
 
     private final UserRepository userRepository;
 
-    public BookingService(BookingRepository bookingRepository, MachineRepository machineRepository, UserRepository userRepository) {
+    //    private final MachineOperatorRepository machineOperatorRepository;
+    //
+    //    private final VehicleDocumentRepository vehicleDocumentRepository;
+
+    public BookingService(
+        BookingRepository bookingRepository,
+        MachineRepository machineRepository,
+        UserRepository userRepository
+        //  MachineOperatorRepository machineOperatorRepository,
+        // VehicleDocumentRepository vehicleDocumentRepository
+    ) {
         this.bookingRepository = bookingRepository;
         this.machineRepository = machineRepository;
         this.userRepository = userRepository;
+        //        this.machineOperatorRepository=machineOperatorRepository;
+        //        this.vehicleDocumentRepository=vehicleDocumentRepository;
     }
 
     /**
@@ -51,7 +61,32 @@ public class BookingService {
         log.info("Request to save Booking : {}", booking);
         log.debug("Request to save Booking : {}", booking);
 
-        Machine machine = findByMachineId(booking.getMachine().getId());
+        Machine machine = findByMachineId(booking.getMachine().getId()); // this one check given machine id exists from DB or not
+        /*                                                                  // this method executed from the MachineRepo
+        // Check Machine Operator
+
+        machineOperatorRepository.findByMachineId(machine.getId()) // check MachineOperator details based on the existing machine
+            .orElseThrow(() ->                                     // this method returns MachineOperator(Driver) Details from MachineOperator Table
+                new BadRequestAlertException(
+                    "Machine operator details are missing for this machine",
+                    "booking",
+                    "machineOperatorMissing"
+                )
+            );
+
+        //Check Vehicle Documents Exist
+
+        boolean hasDocs =
+            vehicleDocumentRepository.existsByMachineId(machine.getId());
+
+        if (!hasDocs) {
+            throw new BadRequestAlertException(
+                "Vehicle documents are missing for this machine",
+                "booking",
+                "vehicleDocumentsMissing"
+            );
+        }
+*/
         booking.setMachine(machine);
         User user = findByUserId(booking.getUser().getId());
         booking.setUser(user);
@@ -64,7 +99,6 @@ public class BookingService {
                 booking.getEndDateTime()
             );
             if (overlap) {
-                // throw new BadRequestAlertException("Equipment is already booked for the selected time period", "booking", "overlap");
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Machine is already booked for the selected time period.");
             }
         }

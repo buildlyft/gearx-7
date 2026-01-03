@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="
+        http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd
+        http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd">
+
+    <!-- =========================================
+         Create Vehicle Document Table
+    ========================================== -->
+    <changeSet id="20260101112300-1" author="Ganesh">
+
+        <createTable tableName="vehicle_document">
+
+            <column name="id" type="bigint">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <column name="machine_id" type="bigint">
+                <constraints nullable="false" unique="true"/>
+            </column>
+
+            <column name="uploaded_by" type="bigint"/>
+
+            <column name="doc_type" type="varchar(100)"/>
+
+            <column name="file_name" type="varchar(512)"/>
+
+            <column name="file_key" type="varchar(1024)"/>
+
+            <column name="content_type" type="varchar(255)"/>
+
+            <column name="size" type="bigint"/>
+
+            <column name="uploaded_at" type="timestamp"/>
+
+            <column name="expires_at" type="timestamp"/>
+
+        </createTable>
+
+        <!-- Foreign Key: Machine -->
+        <addForeignKeyConstraint
+            baseTableName="vehicle_document"
+            baseColumnNames="machine_id"
+            constraintName="fk_vehicle_document_machine"
+            referencedTableName="machine"
+            referencedColumnNames="id"/>
+
+        <!-- Foreign Key: Uploaded By User -->
+        <addForeignKeyConstraint
+            baseTableName="vehicle_document"
+            baseColumnNames="uploaded_by"
+            constraintName="fk_vehicle_document_user"
+            referencedTableName="jhi_user"
+            referencedColumnNames="id"/>
+
+    </changeSet>
+
+    <changeSet author="Ganesh (generated)" id="02012026-1">
+        <createSequence
+            sequenceName="vehicle_document_seq"
+            startValue="1"
+            incrementBy="1"/>
+    </changeSet>
+
+
+</databaseChangeLog>

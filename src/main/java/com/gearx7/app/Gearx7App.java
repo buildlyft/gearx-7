@@ -2,6 +2,7 @@ package com.gearx7.app;
 
 import com.gearx7.app.config.ApplicationProperties;
 import com.gearx7.app.config.CRLFLogConverter;
+import com.gearx7.app.config.CloudinaryConfig;
 import jakarta.annotation.PostConstruct;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -15,12 +16,14 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.liquibase.LiquibaseProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Import;
 import org.springframework.core.env.Environment;
 import tech.jhipster.config.DefaultProfileUtil;
 import tech.jhipster.config.JHipsterConstants;
 
 @SpringBootApplication
 @EnableConfigurationProperties({ LiquibaseProperties.class, ApplicationProperties.class })
+@Import(CloudinaryConfig.class)
 public class Gearx7App {
 
     private static final Logger log = LoggerFactory.getLogger(Gearx7App.class);

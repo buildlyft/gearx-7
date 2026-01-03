@@ -57,9 +57,9 @@ public interface MachineRepository extends JpaRepository<Machine, Long> {
                 sin(radians(:userLat)) *
                 sin(radians(m.latitude))
             )
-        ) <= :radiusKm                                     //  If distance ≤ radius → machine included , If distance > radius → ignored
+        ) <= :radiusKm
         """
-    )
+    ) //  If distance ≤ radius → machine included , If distance > radius → ignored
     List<Machine> searchWithinRadius(
         @Param("categoryId") Long categoryId,
         @Param("subcategoryId") Long subcategoryId,
