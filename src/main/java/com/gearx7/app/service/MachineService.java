@@ -1,11 +1,16 @@
 package com.gearx7.app.service;
 
 import com.gearx7.app.domain.Machine;
+import com.gearx7.app.domain.User;
 import com.gearx7.app.repository.CategoryRepository;
 import com.gearx7.app.repository.MachineRepository;
 import com.gearx7.app.repository.SubcategoryRepository;
+import com.gearx7.app.repository.UserRepository;
+import com.gearx7.app.security.AuthoritiesConstants;
+import com.gearx7.app.security.SecurityUtils;
 import com.gearx7.app.service.dto.MachineDTO;
 import com.gearx7.app.service.mapper.MachineMapper;
+import com.gearx7.app.service.mapper.UserMapper;
 import com.gearx7.app.web.rest.errors.BadRequestAlertException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -20,6 +25,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,16 +47,24 @@ public class MachineService {
 
     private final SubcategoryRepository subCategoryRepository;
 
+    private final UserRepository userRepository;
+
+    private final UserMapper userMapper;
+
     public MachineService(
         MachineRepository machineRepository,
         MachineMapper machineMapper,
         CategoryRepository categoryRepository,
-        SubcategoryRepository subCategoryRepository
+        SubcategoryRepository subCategoryRepository,
+        UserRepository userRepository,
+        UserMapper userMapper
     ) {
         this.machineRepository = machineRepository;
         this.machineMapper = machineMapper;
         this.categoryRepository = categoryRepository;
         this.subCategoryRepository = subCategoryRepository;
+        this.userRepository = userRepository;
+        this.userMapper = userMapper;
     }
 
     /**
@@ -58,9 +73,27 @@ public class MachineService {
      * @param machineDTO the entity to save.
      * @return the persisted entity.
      */
+    @Transactional
     public MachineDTO save(MachineDTO machineDTO) {
         log.debug("Request to save Machine : {}", machineDTO);
+
+        //  FINAL SECURITY GATE
+        if (!SecurityUtils.hasCurrentUserAnyOfAuthorities(AuthoritiesConstants.ADMIN, AuthoritiesConstants.PARTNER)) {
+            throw new AccessDeniedException("You are not allowed to create a machine");
+        }
+
         Machine machine = machineMapper.toEntity(machineDTO);
+
+        // ADMIN Flow: specify partner user
+        if (SecurityUtils.hasCurrentUserThisAuthority(AuthoritiesConstants.ADMIN)) {
+            User partner = validateAndLoadPartner(machineDTO);
+            machine.setUser(partner);
+            // PARTNER Flow: assign current logged-in user
+        } else if (SecurityUtils.hasCurrentUserThisAuthority(AuthoritiesConstants.PARTNER)) {
+            User currentUser = getCurrentLoggedInUser();
+            machine.setUser(currentUser);
+        }
+
         machine = machineRepository.save(machine);
         return machineMapper.toDto(machine);
     }
@@ -237,5 +270,31 @@ public class MachineService {
 
         log.info("Total {} machines returned to controller", availableMachines.size());
         return availableMachines;
+    }
+
+    private User getCurrentLoggedInUser() {
+        String login = SecurityUtils.getCurrentUserLogin().orElseThrow(() -> new IllegalStateException("No logged-in user"));
+
+        return userRepository.findOneByLogin(login).orElseThrow(() -> new UsernameNotFoundException("User not found"));
+    }
+
+    private User validateAndLoadPartner(MachineDTO machineDTO) {
+        if (machineDTO.getUser() == null || machineDTO.getUser().getId() == null) {
+            throw new BadRequestAlertException("Admin must specify partner user", "machine", "userrequired");
+        }
+
+        Long partnerId = machineDTO.getUser().getId();
+
+        User partner = userRepository
+            .findById(partnerId)
+            .orElseThrow(() -> new BadRequestAlertException("Partner user does not exist", "machine", "usernotfound"));
+
+        boolean isPartner = partner.getAuthorities().stream().anyMatch(a -> AuthoritiesConstants.PARTNER.equals(a.getName()));
+
+        if (!isPartner) {
+            throw new BadRequestAlertException("Machine can be created only for PARTNER users", "machine", "invalidpartner");
+        }
+
+        return partner;
     }
 }

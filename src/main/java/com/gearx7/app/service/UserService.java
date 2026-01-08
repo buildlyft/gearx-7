@@ -129,6 +129,7 @@ public class UserService {
                 .collect(Collectors.toSet());
             newUser.setAuthorities(authorities);
         }
+        newUser.setPhone(userDTO.getPhone());
         userRepository.save(newUser);
         log.debug("Created Information for User: {}", newUser);
         return newUser;

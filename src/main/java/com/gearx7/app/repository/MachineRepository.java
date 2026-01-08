@@ -1,7 +1,6 @@
 package com.gearx7.app.repository;
 
 import com.gearx7.app.domain.Machine;
-import com.gearx7.app.domain.enumeration.MachineStatus;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Page;

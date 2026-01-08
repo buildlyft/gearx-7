@@ -16,6 +16,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.AccessDeniedException;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -36,6 +37,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -80,20 +82,21 @@ public class MachineResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PostMapping("")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_PARTNER')")
     public ResponseEntity<MachineDTO> createMachine(@Valid @RequestBody MachineDTO machineDTO) throws URISyntaxException {
         log.debug("REST request to save Machine : {}", machineDTO);
         if (machineDTO.getId() != null) {
             throw new BadRequestAlertException("A new machine cannot already have an ID", ENTITY_NAME, "idexists");
         }
 
-        if (!SecurityUtils.hasCurrentUserThisAuthority(AuthoritiesConstants.ADMIN)) {
-            log.debug("No user passed in, using current user: {}", SecurityUtils.getCurrentUserLogin().orElseThrow());
-            String username = SecurityUtils.getCurrentUserLogin().orElseThrow();
-            //machineDTO.setUser(userRepository.findOneByLogin(username).orElseThrow());
-            User userEntity = userRepository.findOneByLogin(username).orElseThrow(() -> new UsernameNotFoundException("User not found"));
-            UserDTO userDTO = userMapper.userToUserDTO(userEntity); // Convert entity to DTO
-            machineDTO.setUser(userDTO);
-        }
+        //        if (!SecurityUtils.hasCurrentUserThisAuthority(AuthoritiesConstants.ADMIN)) {
+        //            log.debug("No user passed in, using current user: {}", SecurityUtils.getCurrentUserLogin().orElseThrow());
+        //            String username = SecurityUtils.getCurrentUserLogin().orElseThrow();
+        //            //machineDTO.setUser(userRepository.findOneByLogin(username).orElseThrow());
+        //            User userEntity = userRepository.findOneByLogin(username).orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        //            UserDTO userDTO = userMapper.userToUserDTO(userEntity); // Convert entity to DTO
+        //            machineDTO.setUser(userDTO);
+        //        }
 
         MachineDTO result = machineService.save(machineDTO);
         return ResponseEntity

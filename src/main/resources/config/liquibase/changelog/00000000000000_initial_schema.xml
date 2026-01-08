@@ -118,4 +118,27 @@
             <column name="local_date" type="date"/>
         </createTable>
     </changeSet>
+
+    <changeSet id="080120261614" author="Ganesh">
+
+        <!-- STEP 1: Add column (nullable) -->
+        <addColumn tableName="jhi_user">
+            <column name="phone" type="varchar(20)"/>
+        </addColumn>
+
+        <!-- STEP 2: Fill existing users -->
+        <update tableName="jhi_user">
+            <column name="phone" value="9999999999"/>
+            <where>phone IS NULL</where>
+        </update>
+
+        <!-- STEP 3: Enforce NOT NULL -->
+        <addNotNullConstraint
+            tableName="jhi_user"
+            columnName="phone"
+            columnDataType="varchar(20)"/>
+
+    </changeSet>
+
+
 </databaseChangeLog>

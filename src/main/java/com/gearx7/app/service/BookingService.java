@@ -5,6 +5,7 @@ import com.gearx7.app.domain.Machine;
 import com.gearx7.app.domain.User;
 import com.gearx7.app.domain.enumeration.BookingStatus;
 import com.gearx7.app.repository.*;
+import com.gearx7.app.service.interfaces.SmsService;
 import com.gearx7.app.web.rest.errors.BadRequestAlertException;
 import java.time.Instant;
 import java.util.Arrays;
@@ -16,6 +17,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.server.ResponseStatusException;
 
 /**
@@ -33,6 +36,8 @@ public class BookingService {
 
     private final UserRepository userRepository;
 
+    private final SmsService smsService;
+
     //    private final MachineOperatorRepository machineOperatorRepository;
     //
     //    private final VehicleDocumentRepository vehicleDocumentRepository;
@@ -40,15 +45,17 @@ public class BookingService {
     public BookingService(
         BookingRepository bookingRepository,
         MachineRepository machineRepository,
-        UserRepository userRepository
+        UserRepository userRepository,
+        SmsService smsService
         //  MachineOperatorRepository machineOperatorRepository,
         // VehicleDocumentRepository vehicleDocumentRepository
     ) {
         this.bookingRepository = bookingRepository;
         this.machineRepository = machineRepository;
         this.userRepository = userRepository;
-        //        this.machineOperatorRepository=machineOperatorRepository;
-        //        this.vehicleDocumentRepository=vehicleDocumentRepository;
+        this.smsService = smsService;
+        //this.machineOperatorRepository=machineOperatorRepository;
+        // this.vehicleDocumentRepository=vehicleDocumentRepository;
     }
 
     /**
@@ -57,6 +64,7 @@ public class BookingService {
      * @param booking the entity to save.
      * @return the persisted entity.
      */
+    @Transactional
     public Booking save(Booking booking) {
         log.info("Request to save Booking : {}", booking);
         log.debug("Request to save Booking : {}", booking);
@@ -103,7 +111,25 @@ public class BookingService {
             }
         }
 
-        return bookingRepository.save(booking);
+        Booking savedBooking = bookingRepository.save(booking);
+        log.info("Booking saved successfully | bookingId={}", savedBooking.getId());
+
+        // 5️⃣ SEND SMS ONLY AFTER TRANSACTION COMMIT
+        TransactionSynchronizationManager.registerSynchronization(
+            new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    try {
+                        smsService.sendBookingCreatedSmsToUser(savedBooking);
+                        log.info("Booking-created SMS sent AFTER COMMIT | bookingId={}", savedBooking.getId());
+                    } catch (Exception ex) {
+                        log.error("SMS failed AFTER COMMIT (ignored) | bookingId={}", savedBooking.getId(), ex);
+                    }
+                }
+            }
+        );
+
+        return savedBooking;
     }
 
     /**
