@@ -64,7 +64,6 @@ public class BookingResource {
     @PostMapping("")
     public ResponseEntity<Booking> createBooking(@Valid @RequestBody Booking booking) throws URISyntaxException {
         log.info("REST request to save Booking : {}", booking);
-        FailedValidator.validateInputParameters(booking);
 
         if (booking.getId() != null) {
             log.warn("Attempt to create Booking with existing ID: {}", booking.getId());
@@ -78,6 +77,8 @@ public class BookingResource {
         } else {
             log.info("Admin user creating booking for userId={}", booking.getUser().getId());
         }
+
+        FailedValidator.validateInputParameters(booking);
 
         Booking result = bookingService.save(booking);
         log.info("Booking created successfully with id={}", result.getId());
