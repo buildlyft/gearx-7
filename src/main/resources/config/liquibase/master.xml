@@ -14,6 +14,7 @@
     <include file="config/liquibase/changelog/20250714141145_added_entity_Customer.xml" relativeToChangelogFile="false"/>
     <include file="config/liquibase/changelog/20250714141245_added_entity_Machine.xml" relativeToChangelogFile="false"/>
     <include file="config/liquibase/changelog/20250714141345_added_entity_Booking.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/202601091300_added_type.xml" relativeToChangelogFile="false"/>
     <include file="config/liquibase/changelog/20250714141045_added_entity_Category.xml" relativeToChangelogFile="false"/>
     <include file="config/liquibase/changelog/20250714141145_added_entity_Subcategory.xml" relativeToChangelogFile="false"/>
     <!-- jhipster-needle-liquibase-add-changelog - JHipster will add liquibase changelogs here -->

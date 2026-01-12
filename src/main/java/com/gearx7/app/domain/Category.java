@@ -41,7 +41,20 @@ public class Category implements Serializable {
     @JsonIgnoreProperties(value = { "category" }, allowSetters = true)
     private Set<Subcategory> subcategories = new HashSet<>();
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JsonIgnoreProperties(value = { "categories" }, allowSetters = true)
+    @JoinColumn(name = "type_id")
+    private Type type;
+
     // jhipster-needle-entity-add-field - JHipster will add fields here
+
+    public Type getType() {
+        return this.type;
+    }
+
+    public void setType(Type type) {
+        this.type = type;
+    }
 
     public Long getId() {
         return this.id;
@@ -167,6 +180,7 @@ public class Category implements Serializable {
             ", description='" + getDescription() + "'" +
             ", image='" + getImage() + "'" +
             ", imageContentType='" + getImageContentType() + "'" +
+            ",  type='" + getType() + "'" +
             "}";
     }
 }
