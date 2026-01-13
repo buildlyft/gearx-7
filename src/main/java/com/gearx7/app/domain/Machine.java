@@ -54,7 +54,8 @@ public class Machine implements Serializable {
     @Column(name = "rate_per_hour", precision = 21, scale = 2, nullable = false)
     private BigDecimal ratePerHour;
 
-    @Column(name = "rate_per_day", precision = 21, scale = 2)
+    @NotNull
+    @Column(name = "rate_per_day", precision = 21, scale = 2, nullable = false)
     private BigDecimal ratePerDay;
 
     @Column(name = "minimum_usage_hours")

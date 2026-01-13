@@ -175,4 +175,20 @@
         </addColumn>
     </changeSet>
 
+    <changeSet id="20260113-rate-per-day-not-null" author="Ganesh">
+
+        <!-- Step 1: Fix existing NULL values -->
+        <update tableName="machine">
+            <column name="rate_per_day" valueComputed="rate_per_hour * 8"/>
+            <where>rate_per_day IS NULL</where>
+        </update>
+
+        <!-- Step 2: Enforce NOT NULL constraint -->
+        <addNotNullConstraint
+            tableName="machine"
+            columnName="rate_per_day"
+            columnDataType="numeric(21,2)"/>
+
+    </changeSet>
+
 </databaseChangeLog>
