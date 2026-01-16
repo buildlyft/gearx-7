@@ -2,6 +2,8 @@ package com.gearx7.app.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -15,10 +17,12 @@ public class Type {
     @Column(name = "id")
     private Long id;
 
-    @Column(name = "type_name", length = 100)
+    @Column(name = "type_name", nullable = false, unique = true)
+    @NotBlank
+    @Size(min = 3, max = 100)
     private String typeName;
 
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "type")
+    @OneToMany(fetch = FetchType.EAGER, mappedBy = "type")
     @JsonIgnoreProperties(value = { "type" }, allowSetters = true)
     private Set<Category> categories = new HashSet<>();
 
