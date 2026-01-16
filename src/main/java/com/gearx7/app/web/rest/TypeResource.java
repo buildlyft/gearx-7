@@ -33,7 +33,7 @@ public class TypeResource {
      * {@code 201 (Created)} and with body the new Type, or with status
      * {@code 400 (Bad Request)} if the Type has already an ID.
      */
-    @PostMapping
+    @PostMapping("")
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<Type> createType(@Valid @RequestBody Type type) {
         Type result = typeService.createType(type);
@@ -45,7 +45,7 @@ public class TypeResource {
      * @return List of Types
      */
 
-    @GetMapping
+    @GetMapping("")
     public ResponseEntity<List<Type>> getAllTypes() {
         List<Type> types = typeService.getAllTypes();
 
