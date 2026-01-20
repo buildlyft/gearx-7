@@ -19,8 +19,8 @@ public class VehicleDocument implements Serializable {
     private Long id;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "machine_id", nullable = false, unique = true)
-    @JsonIgnoreProperties(value = { "document", "operators" }, allowSetters = true)
+    @JoinColumn(name = "machine_id", nullable = false)
+    @JsonIgnoreProperties(value = { "documents", "operator" }, allowSetters = true)
     private Machine machine;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -134,25 +134,14 @@ public class VehicleDocument implements Serializable {
 
     @Override
     public boolean equals(Object o) {
-        if (o == null || getClass() != o.getClass()) return false;
-        VehicleDocument that = (VehicleDocument) o;
-        return (
-            Objects.equals(id, that.id) &&
-            Objects.equals(machine, that.machine) &&
-            Objects.equals(uploadedBy, that.uploadedBy) &&
-            Objects.equals(docType, that.docType) &&
-            Objects.equals(fileName, that.fileName) &&
-            Objects.equals(fileKey, that.fileKey) &&
-            Objects.equals(contentType, that.contentType) &&
-            Objects.equals(size, that.size) &&
-            Objects.equals(uploadedAt, that.uploadedAt) &&
-            Objects.equals(expiresAt, that.expiresAt)
-        );
+        if (this == o) return true;
+        if (!(o instanceof VehicleDocument)) return false;
+        return id != null && id.equals(((VehicleDocument) o).id);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, machine, uploadedBy, docType, fileName, fileKey, contentType, size, uploadedAt, expiresAt);
+        return getClass().hashCode();
     }
 
     @Override

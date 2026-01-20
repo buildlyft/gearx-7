@@ -22,9 +22,17 @@ public class Type {
     @Size(min = 3, max = 100)
     private String typeName;
 
-    @OneToMany(fetch = FetchType.EAGER, mappedBy = "type")
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "type")
     @JsonIgnoreProperties(value = { "type" }, allowSetters = true)
     private Set<Category> categories = new HashSet<>();
+
+    @PrePersist
+    @PreUpdate
+    private void normalize() {
+        if (typeName != null) {
+            typeName = typeName.trim();
+        }
+    }
 
     public Long getId() {
         return id;
@@ -48,6 +56,18 @@ public class Type {
 
     public void setCategories(Set<Category> categories) {
         this.categories = categories;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Type)) return false;
+        return id != null && id.equals(((Type) o).id);
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
     }
 
     @Override

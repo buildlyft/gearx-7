@@ -65,5 +65,24 @@
             incrementBy="1"/>
     </changeSet>
 
+    <!-- =========================================================
+     delete unique constraint on machine_id to allow multiple documents
+     FIX: Allow multiple documents per machine
+========================================================= -->
+    <changeSet id="20260120-remove-machine-unique" author="Ganesh">
+
+        <preConditions onFail="MARK_RAN">
+            <uniqueConstraintExists
+                tableName="vehicle_document"
+                constraintName="vehicle_document_machine_id_key"/>
+        </preConditions>
+
+        <dropUniqueConstraint
+            tableName="vehicle_document"
+            constraintName="vehicle_document_machine_id_key"/>
+
+    </changeSet>
+
+
 
 </databaseChangeLog>

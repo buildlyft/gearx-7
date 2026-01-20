@@ -12,7 +12,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,7 +23,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import tech.jhipster.web.util.HeaderUtil;
 import tech.jhipster.web.util.PaginationUtil;
-import tech.jhipster.web.util.ResponseUtil;
 
 /**
  * REST controller for managing {@link com.gearx7.app.domain.Category}.
@@ -105,10 +103,6 @@ public class CategoryResource {
             throw new BadRequestAlertException("Invalid ID", ENTITY_NAME, "idinvalid");
         }
 
-        if (!categoryRepository.existsById(id)) {
-            throw new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound");
-        }
-
         Category result = categoryService.update(category);
         return ResponseEntity
             .ok()
@@ -140,16 +134,12 @@ public class CategoryResource {
             throw new BadRequestAlertException("Invalid ID", ENTITY_NAME, "idinvalid");
         }
 
-        if (!categoryRepository.existsById(id)) {
-            throw new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound");
-        }
+        Category result = categoryService.partialUpdate(category);
 
-        Optional<Category> result = categoryService.partialUpdate(category);
-
-        return ResponseUtil.wrapOrNotFound(
-            result,
-            HeaderUtil.createEntityUpdateAlert(applicationName, false, ENTITY_NAME, category.getId().toString())
-        );
+        return ResponseEntity
+            .ok()
+            .headers(HeaderUtil.createEntityUpdateAlert(applicationName, false, ENTITY_NAME, category.getId().toString()))
+            .body(result);
     }
 
     /**
@@ -175,8 +165,8 @@ public class CategoryResource {
     @GetMapping("/{id}")
     public ResponseEntity<Category> getCategory(@PathVariable("id") Long id) {
         log.debug("REST request to get Category : {}", id);
-        Optional<Category> category = categoryService.findOne(id);
-        return ResponseUtil.wrapOrNotFound(category);
+        Category category = categoryService.findOne(id);
+        return ResponseEntity.ok(category);
     }
 
     /**

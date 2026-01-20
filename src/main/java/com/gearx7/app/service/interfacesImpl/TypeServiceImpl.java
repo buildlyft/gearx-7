@@ -4,13 +4,18 @@ import com.gearx7.app.domain.Type;
 import com.gearx7.app.repository.TypeRepository;
 import com.gearx7.app.service.interfaces.TypeService;
 import com.gearx7.app.web.rest.errors.BadRequestAlertException;
+import com.gearx7.app.web.rest.errors.NotFoundAlertException;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Transactional
 public class TypeServiceImpl implements TypeService {
+
+    private final Logger log = LoggerFactory.getLogger(TypeServiceImpl.class);
 
     private final TypeRepository typeRepository;
 
@@ -27,14 +32,26 @@ public class TypeServiceImpl implements TypeService {
 
     @Override
     public Type createType(Type type) {
+        log.info("Request to create Type: {}", type);
         if (type.getId() != null) {
+            log.error("Attempted to create a new Type with existing ID: {}", type.getId());
             throw new BadRequestAlertException("New type cannot already have an ID", "type", "idexists");
         }
 
-        if (typeRepository.existsByTypeNameIgnoreCase(type.getTypeName())) {
+        String normalized = normalize(type.getTypeName());
+
+        if (normalized.isEmpty()) {
+            throw new BadRequestAlertException("Type name cannot be blank", "type", "blank");
+        }
+
+        if (typeRepository.existsByTypeNameIgnoreCase(normalized)) {
+            log.error("Attempted to create a duplicate Type with name: {}", type.getTypeName());
             throw new BadRequestAlertException("Type already exists", "type", "duplicate");
         }
-        return typeRepository.save(type);
+        type.setTypeName(normalized);
+        Type savedType = typeRepository.save(type);
+        log.info("Type created successfully with ID: {}", savedType.getId());
+        return savedType;
     }
 
     /**
@@ -45,17 +62,37 @@ public class TypeServiceImpl implements TypeService {
 
     @Override
     public Type updateType(Long id, Type type) {
+        log.info("Request to update Type with ID {} : {}", id, type);
+
+        if (type.getId() != null && !type.getId().equals(id)) {
+            throw new BadRequestAlertException("Invalid ID", "type", "idinvalid");
+        }
+
         Type existingType = getTypeById(id);
 
-        if (
-            !existingType.getTypeName().equalsIgnoreCase(type.getTypeName()) &&
-            typeRepository.existsByTypeNameIgnoreCase(type.getTypeName())
-        ) {
+        String existingName = normalize(existingType.getTypeName());
+        String newName = normalize(type.getTypeName());
+
+        if (newName.isEmpty()) {
+            throw new BadRequestAlertException("Type name cannot be blank", "type", "blank");
+        }
+
+        if (existingName.equalsIgnoreCase(newName)) {
+            log.info("No update needed. Type name unchanged for id {}", id);
+            return existingType;
+        }
+
+        // DUPLICATE CHECK
+        if (typeRepository.existsByTypeNameIgnoreCase(newName)) {
+            log.error("Duplicate Type name found during update: {}", type.getTypeName());
             throw new BadRequestAlertException("Type already exists", "type", "duplicate");
         }
-        existingType.setTypeName(type.getTypeName());
+        existingType.setTypeName(newName);
 
-        return typeRepository.save(existingType);
+        Type updatedType = typeRepository.save(existingType);
+        log.info("Type with ID {} updated successfully", existingType.getId());
+
+        return updatedType;
     }
 
     /**
@@ -65,25 +102,41 @@ public class TypeServiceImpl implements TypeService {
     @Override
     @Transactional(readOnly = true)
     public List<Type> getAllTypes() {
-        return typeRepository.findAll();
-    }
-
-    /**
-     * Get Type by Id
-     * @param id
-     * if exists from Db @return Type or else throw exception
-     */
-    @Override
-    @Transactional
-    public Type getTypeById(Long id) {
-        return typeRepository.findById(id).orElseThrow(() -> new BadRequestAlertException("Type not found", "type", "notfound"));
+        log.info("Request to get all Types");
+        return typeRepository.findAllWithCategories();
     }
 
     @Override
     public void deleteType(Long id) {
-        if (!typeRepository.existsById(id)) {
-            throw new BadRequestAlertException("Type not found", "type", "notfound");
+        log.info("Request to delete Type with id {}", id);
+        Type existing = getTypeById(id);
+
+        if (!existing.getCategories().isEmpty()) {
+            throw new BadRequestAlertException("Cannot delete type with existing categories", "type", "hascategories");
         }
-        typeRepository.deleteById(id);
+        typeRepository.delete(existing);
+        log.info("Type with id {} deleted successfully", id);
+    }
+
+    /**
+     * Get Type by id
+     * @param id
+     * if exists from Db @return Type or else throw exception
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public Type getTypeById(Long id) {
+        log.debug("Request to get Type with id {}", id);
+
+        return typeRepository
+            .findByIdWithCategories(id)
+            .orElseThrow(() -> {
+                log.error("Type not found with id {}", id);
+                return new NotFoundAlertException("Type not found", "type", "notfound");
+            });
+    }
+
+    private String normalize(String value) {
+        return value == null ? "" : value.trim();
     }
 }

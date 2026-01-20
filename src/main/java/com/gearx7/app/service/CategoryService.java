@@ -1,8 +1,10 @@
 package com.gearx7.app.service;
 
 import com.gearx7.app.domain.Category;
+import com.gearx7.app.domain.Type;
 import com.gearx7.app.repository.CategoryRepository;
-import java.util.Optional;
+import com.gearx7.app.repository.TypeRepository;
+import com.gearx7.app.web.rest.errors.BadRequestAlertException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -21,8 +23,11 @@ public class CategoryService {
 
     private final CategoryRepository categoryRepository;
 
-    public CategoryService(CategoryRepository categoryRepository) {
+    private final TypeRepository typeRepository;
+
+    public CategoryService(CategoryRepository categoryRepository, TypeRepository typeRepository) {
         this.categoryRepository = categoryRepository;
+        this.typeRepository = typeRepository;
     }
 
     /**
@@ -33,6 +38,7 @@ public class CategoryService {
      */
     public Category save(Category category) {
         log.debug("Request to save Category : {}", category);
+        category.setType(resolveType(category));
         return categoryRepository.save(category);
     }
 
@@ -44,7 +50,16 @@ public class CategoryService {
      */
     public Category update(Category category) {
         log.debug("Request to update Category : {}", category);
-        return categoryRepository.save(category);
+        // Ensure category exists before updating
+        // if exists retrieve existing entity and if not found throw error
+        Category existing = getCategoryOrThrow(category.getId());
+        existing.setName(category.getName());
+        existing.setDescription(category.getDescription());
+        existing.setImage(category.getImage());
+        existing.setImageContentType(category.getImageContentType());
+        existing.setType(resolveType(category));
+
+        return categoryRepository.save(existing);
     }
 
     /**
@@ -53,28 +68,28 @@ public class CategoryService {
      * @param category the entity to update partially.
      * @return the persisted entity.
      */
-    public Optional<Category> partialUpdate(Category category) {
+    public Category partialUpdate(Category category) {
         log.debug("Request to partially update Category : {}", category);
 
-        return categoryRepository
-            .findById(category.getId())
-            .map(existingCategory -> {
-                if (category.getName() != null) {
-                    existingCategory.setName(category.getName());
-                }
-                if (category.getDescription() != null) {
-                    existingCategory.setDescription(category.getDescription());
-                }
-                if (category.getImage() != null) {
-                    existingCategory.setImage(category.getImage());
-                }
-                if (category.getImageContentType() != null) {
-                    existingCategory.setImageContentType(category.getImageContentType());
-                }
+        Category existing = getCategoryOrThrow(category.getId());
 
-                return existingCategory;
-            })
-            .map(categoryRepository::save);
+        if (category.getName() != null) {
+            existing.setName(category.getName());
+        }
+        if (category.getDescription() != null) {
+            existing.setDescription(category.getDescription());
+        }
+        if (category.getImage() != null) {
+            existing.setImage(category.getImage());
+        }
+        if (category.getImageContentType() != null) {
+            existing.setImageContentType(category.getImageContentType());
+        }
+        if (category.getType() != null) {
+            existing.setType(resolveType(category));
+        }
+
+        return categoryRepository.save(existing);
     }
 
     /**
@@ -96,9 +111,9 @@ public class CategoryService {
      * @return the entity.
      */
     @Transactional(readOnly = true)
-    public Optional<Category> findOne(Long id) {
+    public Category findOne(Long id) {
         log.debug("Request to get Category : {}", id);
-        return categoryRepository.findById(id);
+        return getCategoryOrThrow(id);
     }
 
     /**
@@ -108,6 +123,34 @@ public class CategoryService {
      */
     public void delete(Long id) {
         log.debug("Request to delete Category : {}", id);
-        categoryRepository.deleteById(id);
+        Category existing = getCategoryOrThrow(id);
+        categoryRepository.delete(existing);
+    }
+
+    //=============Helper methods================
+
+    /**
+     * Resolve and validate Type entity.
+     * Ensures managed entity is attached to persistence context.
+     */
+
+    private Type resolveType(Category category) {
+        if (category.getType() == null || category.getType().getId() == null) {
+            return null;
+        }
+
+        return typeRepository
+            .findById(category.getType().getId())
+            .orElseThrow(() -> new BadRequestAlertException("Invalid Type ID", "category", "typenotfound"));
+    }
+
+    private Category getCategoryOrThrow(Long id) {
+        if (id == null) {
+            throw new BadRequestAlertException("Category ID is required", "category", "idnull");
+        }
+
+        return categoryRepository
+            .findByIdWithSubcategories(id)
+            .orElseThrow(() -> new BadRequestAlertException("Category not found", "category", "idnotfound"));
     }
 }

@@ -5,6 +5,8 @@ import com.gearx7.app.service.interfaces.TypeService;
 import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -12,6 +14,8 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/types")
 public class TypeResource {
+
+    private final Logger log = LoggerFactory.getLogger(TypeResource.class);
 
     private final TypeService typeService;
 
@@ -36,7 +40,9 @@ public class TypeResource {
     @PostMapping("")
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<Type> createType(@Valid @RequestBody Type type) {
+        log.info("REST request to Create Type : {}", type);
         Type result = typeService.createType(type);
+        log.info("Type is created successfully with id : {}", result.getId());
         return ResponseEntity.created(URI.create("/api/types/" + result.getId())).body(result);
     }
 
@@ -47,8 +53,9 @@ public class TypeResource {
 
     @GetMapping("")
     public ResponseEntity<List<Type>> getAllTypes() {
+        log.info("REST request to get all Types");
         List<Type> types = typeService.getAllTypes();
-
+        log.info("Returning {} types", types.size());
         return ResponseEntity.ok(types);
     }
 
@@ -60,7 +67,9 @@ public class TypeResource {
 
     @GetMapping("/{id}")
     public ResponseEntity<Type> getTypeById(@PathVariable(required = true, name = "id") Long id) {
+        log.info("REST request to get Type by id : {}", id);
         Type type = typeService.getTypeById(id);
+        log.info("Fetched Type : {}", type);
         return ResponseEntity.ok(type);
     }
 
@@ -73,7 +82,10 @@ public class TypeResource {
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<Type> updateType(@PathVariable(required = true, name = "id") Long id, @Valid @RequestBody Type type) {
-        return ResponseEntity.ok(typeService.updateType(id, type));
+        log.info("REST request to update Type with id {} : {} ", id, type);
+        Type updatedType = typeService.updateType(id, type);
+        log.info("Type updated successfully with id: {}", id);
+        return ResponseEntity.ok(updatedType);
     }
 
     /**
@@ -84,7 +96,9 @@ public class TypeResource {
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<Void> deleteType(@PathVariable(required = true, name = "id") Long id) {
+        log.info("REST request to delete Type with id : {}", id);
         typeService.deleteType(id);
+        log.info("Type deleted successfully with id: {}", id);
         return ResponseEntity.noContent().build();
     }
 }

@@ -8,11 +8,17 @@ import com.gearx7.app.repository.MachineOperatorRepository;
 import com.gearx7.app.repository.MachineRepository;
 import com.gearx7.app.repository.UserRepository;
 import com.gearx7.app.repository.VehicleDocumentRepository;
+import com.gearx7.app.security.AuthoritiesConstants;
+import com.gearx7.app.security.SecurityUtils;
 import com.gearx7.app.web.rest.errors.BadRequestAlertException;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -30,7 +36,7 @@ public class MachineOperatorAndVehicleDocService {
 
     private final VehicleDocumentRepository vehicleDocumentRepository;
 
-    private FileStorageService fileStorageService;
+    private final FileStorageService fileStorageService;
 
     public MachineOperatorAndVehicleDocService(
         MachineOperatorRepository machineOperatorRepository,
@@ -52,7 +58,6 @@ public class MachineOperatorAndVehicleDocService {
      * @param machineId
      * @param userId
      * @param vehicleDocumentId
-     *
      * @return MachineOperator
      *
      */
@@ -115,83 +120,100 @@ public class MachineOperatorAndVehicleDocService {
         return saved;
     }
 
-    private Machine getMachine(Long id) {
-        return machineRepository
-            .findById(id)
-            .orElseThrow(() -> new BadRequestAlertException("Machine not found with id " + id, "machine", "machineNotFound"));
-    }
-
-    private User getUser(Long id) {
-        return userRepository
-            .findById(id)
-            .orElseThrow(() -> new BadRequestAlertException("User not found with id " + id, "user", "userNotFound"));
-    }
-
-    private VehicleDocument getDocument(Long id) {
-        return vehicleDocumentRepository
-            .findById(id)
-            .orElseThrow(() ->
-                new BadRequestAlertException("Vehicle document not found with id " + id, "vehicleDocument", "documentNotFound")
-            );
-    }
-
     /**
      * Add Vehicle Document to Machine
      *
      * @param machineId
      * @param uploadedBy
      * @param docType
-     * @param file
+     * @param files
      * @return VehicleDocument
      *
      */
 
     @Transactional
-    public VehicleDocument addVehicleDocument(Long machineId, Long uploadedBy, String docType, MultipartFile file) {
-        log.info("REQUEST: Uploading document | machineId={} uploadedBy={} docType={}", machineId, uploadedBy, docType);
-
-        if (file == null || file.isEmpty()) {
-            throw new BadRequestAlertException("File is required", "vehicleDocument", "fileMissing");
+    public List<VehicleDocument> addVehicleDocuments(Long machineId, Long uploadedBy, String docType, MultipartFile[] files) {
+        //only ADMIN and PARTNER can upload documents
+        if (!SecurityUtils.hasCurrentUserAnyOfAuthorities(AuthoritiesConstants.ADMIN, AuthoritiesConstants.PARTNER)) {
+            log.warn("SERVICE SECURITY VIOLATION  Unauthorized document upload attempt | machineId={}", machineId);
+            throw new AccessDeniedException("Only ADMIN and PARTNER can upload vehicle documents");
         }
-
-        Machine machine = getMachine(machineId);
-
-        User uploader = getUser(uploadedBy);
-
-        // ---------- Ensure Machine Has No Existing Document ----------
-        ensureMachineHasNoDocument(machineId);
-
-        // ---------- Upload File ----------
-        String key = fileStorageService.store(file);
-        log.info("File uploaded successfully | storageKey={}", key);
-
-        VehicleDocument vehicleDocument = new VehicleDocument();
-
-        vehicleDocument.setMachine(machine);
-        vehicleDocument.setUploadedBy(uploader);
-        vehicleDocument.setDocType(docType);
-        vehicleDocument.setFileKey(key);
-        vehicleDocument.setFileName(file.getOriginalFilename());
-        vehicleDocument.setContentType(file.getContentType());
-        vehicleDocument.setSize(file.getSize());
-        vehicleDocument.setUploadedAt(Instant.now());
-
-        VehicleDocument saved = vehicleDocumentRepository.save(vehicleDocument);
-
         log.info(
-            "SUCCESS: Vehicle document stored | id={} machineId={} uploadedBy={} docType={}",
-            saved.getId(),
+            "SERVICE START Bulk document upload | machineId={} uploadedBy={} docType={} totalFiles={}",
             machineId,
             uploadedBy,
-            docType
+            docType,
+            files.length
         );
+        Machine machine = getMachine(machineId);
+        User uploader = getUser(uploadedBy);
 
-        return saved;
+        //        if (vehicleDocumentRepository.existsByMachineIdAndDocType(machineId, docType)) {
+        //            log.warn(
+        //                "SERVICE VALIDATION FAILED  Duplicate docType | machineId={} docType={}", machineId, docType
+        //            );
+        //
+        //            throw new BadRequestAlertException("Document of this type already exists for this machine", "vehicleDocument", "duplicateDocType"
+        //            );
+        //        }
+
+        List<VehicleDocument> savedDocs = new ArrayList<>();
+
+        for (MultipartFile file : files) {
+            if (file == null || file.isEmpty()) {
+                log.warn("SERVICE SKIP  Empty file detected | machineId={}", machineId);
+                continue; // skip empty files
+            }
+            log.debug(
+                "SERVICE PROCESSING FILE  name={} size={} contentType={}",
+                file.getOriginalFilename(),
+                file.getSize(),
+                file.getContentType()
+            );
+
+            String key = fileStorageService.store(file);
+
+            VehicleDocument doc = new VehicleDocument();
+            doc.setMachine(machine);
+            doc.setUploadedBy(uploader);
+            doc.setDocType(docType);
+            doc.setFileKey(key);
+            doc.setFileName(file.getOriginalFilename());
+            doc.setContentType(file.getContentType());
+            doc.setSize(file.getSize());
+            doc.setUploadedAt(Instant.now());
+
+            savedDocs.add(vehicleDocumentRepository.save(doc));
+        }
+        log.info("SERVICE SUCCESS  Bulk upload completed | machineId={} documentsSaved={}", machineId, savedDocs.size());
+
+        return savedDocs;
     }
 
-    private void ensureMachineHasNoDocument(Long machineId) {
-        if (vehicleDocumentRepository.existsByMachineId(machineId)) {
-            throw new BadRequestAlertException("Vehicle document already exists for this machine", "vehicleDocument", "alreadyExists");
-        }
+    private Machine getMachine(Long id) {
+        return machineRepository
+            .findById(id)
+            .orElseThrow(() -> {
+                log.error("SERVICE ERROR  Machine not found | machineId={}", id);
+                return new BadRequestAlertException("Machine not found with id " + id, "machine", "machineNotFound");
+            });
+    }
+
+    private User getUser(Long id) {
+        return userRepository
+            .findById(id)
+            .orElseThrow(() -> {
+                log.error("SERVICE ERROR  User not found | userId={}", id);
+                return new BadRequestAlertException("User not found with id " + id, "user", "userNotFound");
+            });
+    }
+
+    private VehicleDocument getDocument(Long id) {
+        return vehicleDocumentRepository
+            .findById(id)
+            .orElseThrow(() -> {
+                log.error("SERVICE ERROR  Vehicle document not found | documentId={}", id);
+                return new BadRequestAlertException("Vehicle document not found with id " + id, "vehicleDocument", "documentNotFound");
+            });
     }
 }

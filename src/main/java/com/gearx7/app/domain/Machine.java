@@ -7,6 +7,10 @@ import jakarta.validation.constraints.*;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * A Machine.
@@ -120,9 +124,9 @@ public class Machine implements Serializable {
     @JsonIgnoreProperties(value = { "machine", "user", "vehicleDocument" }, allowSetters = true)
     private MachineOperator operator;
 
-    @OneToOne(mappedBy = "machine", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonIgnoreProperties(value = { "machine" }, allowSetters = true)
-    private VehicleDocument document;
+    @OneToMany(mappedBy = "machine", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JsonIgnoreProperties(value = { "machine", "uploadedBy" }, allowSetters = true)
+    private List<VehicleDocument> documents = new ArrayList<>();
 
     public MachineOperator getOperator() {
         return operator;
@@ -132,12 +136,12 @@ public class Machine implements Serializable {
         this.operator = operator;
     }
 
-    public VehicleDocument getDocument() {
-        return document;
+    public List<VehicleDocument> getDocuments() {
+        return documents;
     }
 
-    public void setDocuments(VehicleDocument document) {
-        this.document = document;
+    public void setDocuments(List<VehicleDocument> documents) {
+        this.documents = documents;
     }
 
     public String getWarranty() {
@@ -518,7 +522,7 @@ public class Machine implements Serializable {
             ", licenseNo='" + getLicenseNo() + "'" +
             ", insuranceNo='" + getInsuranceNo() + "'" +
             ", operator='" + getOperator() + "'" +
-            ", documents='" + getDocument() + "'" +
+            ", documents='" + getDocuments() + "'" +
             "}";
     }
 }
