@@ -5,9 +5,9 @@ import java.util.List;
 import org.springframework.web.multipart.MultipartFile;
 
 public interface MachineOperatorService {
-    MachineOperatorDetailsDTO create(MachineOperatorDetailsDTO dto, List<MultipartFile> files, List<String> docTypes);
+    MachineOperatorDetailsDTO create(MachineOperatorDetailsDTO dto, List<MultipartFile> files);
 
-    MachineOperatorDetailsDTO reassign(Long machineId, MachineOperatorDetailsDTO dto, List<MultipartFile> files, List<String> docTypes);
+    MachineOperatorDetailsDTO reassign(Long machineId, MachineOperatorDetailsDTO dto, List<MultipartFile> files);
 
     MachineOperatorDetailsDTO getByMachineId(Long machineId);
 }

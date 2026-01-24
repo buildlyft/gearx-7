@@ -34,16 +34,8 @@ public class MachineOperatorResource {
     @PostMapping(value = "/create_and_assign", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<MachineOperatorDetailsDTO> createOperatorAndAssignToMachine(
         @ModelAttribute MachineOperatorDetailsDTO dto,
-        @RequestParam(value = "files", required = false) List<MultipartFile> files,
-        @RequestParam(value = "docTypes", required = false) List<String> docTypes
+        @RequestParam(value = "files", required = false) List<MultipartFile> files
     ) {
-        //        ObjectMapper mapper = new ObjectMapper();
-        //
-        //        mapper.findAndRegisterModules(); // LocalDate support
-        //
-        //        MachineOperatorDetailsDTO dto =
-        //            mapper.readValue(json, MachineOperatorDetailsDTO.class);
-
         log.info(
             "REST CREATE operator | machineId={} userId={} files={}",
             dto.getMachineId(),
@@ -51,7 +43,7 @@ public class MachineOperatorResource {
             files != null ? files.size() : 0
         );
 
-        MachineOperatorDetailsDTO result = service.create(dto, files, docTypes);
+        MachineOperatorDetailsDTO result = service.create(dto, files);
 
         log.info("REST Operator created successfully | operatorId={} machineId={}", result.getOperatorId(), result.getMachineId());
 
@@ -80,8 +72,7 @@ public class MachineOperatorResource {
     public ResponseEntity<MachineOperatorDetailsDTO> reassign(
         @PathVariable Long machineId,
         @RequestPart("data") MachineOperatorDetailsDTO dto,
-        @RequestPart(value = "files", required = false) List<MultipartFile> files,
-        @RequestPart(value = "docTypes", required = false) List<String> docTypes
+        @RequestPart(value = "files", required = false) List<MultipartFile> files
     ) {
         log.info(
             "REST REASSIGN operator request | machineId={} userId={} files={}",
@@ -89,6 +80,6 @@ public class MachineOperatorResource {
             dto.getUserId(),
             files != null ? files.size() : 0
         );
-        return ResponseEntity.ok(service.reassign(machineId, dto, files, docTypes));
+        return ResponseEntity.ok(service.reassign(machineId, dto, files));
     }
 }

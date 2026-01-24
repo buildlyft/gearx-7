@@ -51,7 +51,7 @@ public class MachineOperatorServiceImpl implements MachineOperatorService {
     /* ================= CREATE ================= */
 
     @Override
-    public MachineOperatorDetailsDTO create(MachineOperatorDetailsDTO dto, List<MultipartFile> files, List<String> docTypes) {
+    public MachineOperatorDetailsDTO create(MachineOperatorDetailsDTO dto, List<MultipartFile> files) {
         log.info("Create operator | machineId={} userId={}", dto.getMachineId(), dto.getUserId());
 
         Machine machine = getMachine(dto.getMachineId());
@@ -61,20 +61,15 @@ public class MachineOperatorServiceImpl implements MachineOperatorService {
 
         MachineOperator operator = saveOperator(machine, user, dto);
 
-        saveDocuments(operator, machine, user, files, docTypes);
+        saveDocuments(operator, machine, user, files);
 
-        return mapToDTO(operator);
+        return buildResponse(operator);
     }
 
     /* ================= REASSIGN ================= */
 
     @Override
-    public MachineOperatorDetailsDTO reassign(
-        Long machineId,
-        MachineOperatorDetailsDTO dto,
-        List<MultipartFile> files,
-        List<String> docTypes
-    ) {
+    public MachineOperatorDetailsDTO reassign(Long machineId, MachineOperatorDetailsDTO dto, List<MultipartFile> files) {
         Machine machine = getMachine(machineId);
         User user = getUser(dto.getUserId());
 
@@ -82,9 +77,9 @@ public class MachineOperatorServiceImpl implements MachineOperatorService {
 
         MachineOperator operator = saveOperator(machine, user, dto);
 
-        saveDocuments(operator, machine, user, files, docTypes);
+        saveDocuments(operator, machine, user, files);
 
-        return mapToDTO(operator);
+        return buildResponse(operator);
     }
 
     /* ================= GET ================= */
@@ -98,15 +93,10 @@ public class MachineOperatorServiceImpl implements MachineOperatorService {
                 new NotFoundAlertException("No active operator for machine id :" + machineId, "MachineOperator", "OperatorNotFound")
             );
 
-        List<VehicleDocument> docs = documentRepo.findByOperatorId(operator.getId());
-
-        MachineOperatorDetailsDTO dto = mapToDTO(operator);
-        dto.setDocuments(mapDocuments(docs));
-
-        return dto;
+        return buildResponse(operator);
     }
 
-    /* ================= INTERNAL METHODS ================= */
+    /* ================= INTERNAL ================= */
 
     private MachineOperator saveOperator(Machine machine, User user, MachineOperatorDetailsDTO dto) {
         MachineOperator operator = new MachineOperator();
@@ -122,27 +112,41 @@ public class MachineOperatorServiceImpl implements MachineOperatorService {
         return operatorRepo.save(operator);
     }
 
-    private void saveDocuments(MachineOperator operator, Machine machine, User user, List<MultipartFile> files, List<String> docTypes) {
+    private void saveDocuments(MachineOperator operator, Machine machine, User user, List<MultipartFile> files) {
         if (files == null || files.isEmpty()) return;
 
-        if (docTypes == null || files.size() != docTypes.size()) {
-            throw new BadRequestAlertException("Files and docTypes mismatch", "VehicleDocument", "invalidRequest");
-        }
-
-        for (int i = 0; i < files.size(); i++) {
-            String url = storageService.uploadOperatorDocument(files.get(i), operator.getId());
+        for (MultipartFile file : files) {
+            String docType = extractDocType(file.getOriginalFilename());
+            String url = storageService.uploadOperatorDocument(file, operator.getId());
 
             VehicleDocument doc = new VehicleDocument();
             doc.setOperator(operator);
             doc.setMachine(machine);
-            doc.setDocType(docTypes.get(i));
+            doc.setDocType(docType);
             doc.setFileKey(url);
-            doc.setContentType(files.get(i).getContentType());
+            doc.setContentType(file.getContentType());
             doc.setUploadedBy(user);
             doc.setUploadedAt(Instant.now());
 
             documentRepo.save(doc);
         }
+    }
+
+    private String extractDocType(String filename) {
+        if (filename == null) return "UNKNOWN";
+
+        String name = filename.contains(".") ? filename.substring(0, filename.lastIndexOf('.')) : filename;
+
+        return name.trim().toUpperCase().replaceAll("[^A-Z0-9]+", "_");
+    }
+
+    private MachineOperatorDetailsDTO buildResponse(MachineOperator operator) {
+        MachineOperatorDetailsDTO dto = mapToDTO(operator);
+
+        List<VehicleDocument> docs = documentRepo.findByOperatorId(operator.getId());
+
+        dto.setDocuments(mapDocuments(docs));
+        return dto;
     }
 
     /* ================= MAPPERS ================= */
@@ -176,15 +180,11 @@ public class MachineOperatorServiceImpl implements MachineOperatorService {
     /* ================= HELPERS ================= */
 
     private Machine getMachine(Long id) {
-        return machineRepo
-            .findById(id)
-            .orElseThrow(() -> new NotFoundAlertException("Machine not found with given id :" + id, "Machine", "MachineNotFound"));
+        return machineRepo.findById(id).orElseThrow(() -> new NotFoundAlertException("Machine not found", "Machine", "MachineNotFound"));
     }
 
     private User getUser(Long id) {
-        return userRepo
-            .findById(id)
-            .orElseThrow(() -> new NotFoundAlertException("User not found with given id :" + id, "User", "UserNotFound"));
+        return userRepo.findById(id).orElseThrow(() -> new NotFoundAlertException("User not found", "User", "UserNotFound"));
     }
 
     private void validateNewAssignment(Long machineId, Long userId) {
