@@ -1,6 +1,7 @@
 package com.gearx7.app.repository;
 
 import com.gearx7.app.domain.Machine;
+import com.gearx7.app.domain.MachineOperator;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
@@ -68,4 +69,9 @@ public interface MachineRepository extends JpaRepository<Machine, Long> {
     );
 
     Optional<Machine> findById(Long id);
+    /*
+    Optional<MachineOperator> findByIdAndActiveTrue(Long machineId);
+
+    boolean existsByIdAndActiveTrue(Long machineId);
+*/
 }

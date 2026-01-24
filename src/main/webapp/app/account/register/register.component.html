@@ -64,6 +64,23 @@
           </div>
 
           <div class="mb-3">
+            <label class="form-label" for="phone">Phone Number</label>
+            <input type="text" class="form-control" id="phone" formControlName="phone" placeholder="Your phone number" data-cy="phone" />
+
+            @if (registerForm.get('phone')!.invalid && (registerForm.get('phone')!.dirty || registerForm.get('phone')!.touched)) {
+              <div>
+                @if (registerForm.get('phone')?.errors?.required) {
+                  <small class="form-text text-danger">Your phone number is required.</small>
+                }
+
+                @if (registerForm.get('phone')?.errors?.pattern) {
+                  <small class="form-text text-danger">Phone number must be 10 digits.</small>
+                }
+              </div>
+            }
+          </div>
+
+          <div class="mb-3">
             <label class="form-label" for="email">Email</label>
             <input
               type="email"

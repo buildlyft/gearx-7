@@ -5,6 +5,7 @@ import com.gearx7.app.domain.Type;
 import com.gearx7.app.repository.CategoryRepository;
 import com.gearx7.app.repository.TypeRepository;
 import com.gearx7.app.web.rest.errors.BadRequestAlertException;
+import com.gearx7.app.web.rest.errors.NotFoundAlertException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -151,6 +152,6 @@ public class CategoryService {
 
         return categoryRepository
             .findByIdWithSubcategories(id)
-            .orElseThrow(() -> new BadRequestAlertException("Category not found", "category", "idnotfound"));
+            .orElseThrow(() -> new NotFoundAlertException("Category not found", "category", "idnotfound"));
     }
 }

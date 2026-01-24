@@ -2,7 +2,7 @@ package com.gearx7.app.web.rest;
 
 import com.gearx7.app.domain.VehicleDocument;
 import com.gearx7.app.repository.VehicleDocumentRepository;
-import com.gearx7.app.service.MachineOperatorAndVehicleDocService;
+import com.gearx7.app.service.VehicleDocService;
 import com.gearx7.app.web.rest.errors.BadRequestAlertException;
 import java.util.List;
 import org.slf4j.Logger;
@@ -20,11 +20,11 @@ public class VehicleDocumentResource {
     private final Logger log = LoggerFactory.getLogger(VehicleDocumentResource.class);
 
     private final VehicleDocumentRepository vehicleDocumentRepository;
-    private final MachineOperatorAndVehicleDocService machineOperatorAndVehicleDocService;
+    private final VehicleDocService machineOperatorAndVehicleDocService;
 
     public VehicleDocumentResource(
         VehicleDocumentRepository vehicleDocumentRepository,
-        MachineOperatorAndVehicleDocService machineOperatorAndVehicleDocService
+        VehicleDocService machineOperatorAndVehicleDocService
     ) {
         this.vehicleDocumentRepository = vehicleDocumentRepository;
         this.machineOperatorAndVehicleDocService = machineOperatorAndVehicleDocService;
@@ -35,7 +35,7 @@ public class VehicleDocumentResource {
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_PARTNER')")
     public ResponseEntity<List<VehicleDocument>> attacheMultipleVehicleDocuments(
         @RequestParam Long machineId,
-        @RequestParam Long uploadedBy,
+        @RequestParam(required = false) Long uploadedBy,
         @RequestParam(required = false) String docType,
         @RequestParam("files") MultipartFile[] files
     ) {

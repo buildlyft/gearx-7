@@ -3,14 +3,12 @@ package com.gearx7.app.domain;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.gearx7.app.domain.enumeration.MachineStatus;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 /**
  * A Machine.
@@ -120,20 +118,20 @@ public class Machine implements Serializable {
     @Column(name = "insurance_no")
     private String insuranceNo;
 
-    @OneToOne(mappedBy = "machine", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "machine", fetch = FetchType.LAZY)
     @JsonIgnoreProperties(value = { "machine", "user", "vehicleDocument" }, allowSetters = true)
-    private MachineOperator operator;
+    private List<MachineOperator> operators;
 
     @OneToMany(mappedBy = "machine", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    @JsonIgnoreProperties(value = { "machine", "uploadedBy" }, allowSetters = true)
+    @JsonIgnoreProperties(value = { "machine", "uploadedBy", "operator" }, allowSetters = true)
     private List<VehicleDocument> documents = new ArrayList<>();
 
-    public MachineOperator getOperator() {
-        return operator;
+    public List<MachineOperator> getOperators() {
+        return operators;
     }
 
-    public void setOperators(MachineOperator operator) {
-        this.operator = operator;
+    public void setOperators(List<MachineOperator> operators) {
+        this.operators = operators;
     }
 
     public List<VehicleDocument> getDocuments() {
@@ -521,7 +519,7 @@ public class Machine implements Serializable {
             ", age='" + getAge() + "'" +
             ", licenseNo='" + getLicenseNo() + "'" +
             ", insuranceNo='" + getInsuranceNo() + "'" +
-            ", operator='" + getOperator() + "'" +
+            ", operator='" + getOperators() + "'" +
             ", documents='" + getDocuments() + "'" +
             "}";
     }

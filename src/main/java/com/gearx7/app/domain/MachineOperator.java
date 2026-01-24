@@ -2,9 +2,11 @@ package com.gearx7.app.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Size;
 import java.io.Serializable;
+import java.time.Instant;
 import java.time.LocalDate;
-import java.util.Objects;
+import java.util.List;
 
 @Entity
 @Table(name = "machine_operator")
@@ -21,8 +23,8 @@ public class MachineOperator implements Serializable {
     @Column(name = "driver_name")
     private String driverName;
 
-    @OneToOne
-    @JoinColumn(name = "machine_id", nullable = false, unique = true)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "machine_id", nullable = false)
     @JsonIgnoreProperties(value = { "document", "operator", "subcategory", "category", "user" }, allowSetters = true)
     private Machine machine;
 
@@ -36,84 +38,110 @@ public class MachineOperator implements Serializable {
     @Column(name = "license_issue_date")
     private LocalDate licenseIssueDate;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "vehicle_document_id", unique = true)
-    @JsonIgnoreProperties(value = { "machine" }, allowSetters = true)
-    private VehicleDocument vehicleDocument;
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "operator", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnoreProperties(value = { "machine", "operator" }, allowSetters = true)
+    private List<VehicleDocument> vehicleDocument;
 
-    public void setDriverName(String driverName) {
-        this.driverName = driverName;
+    @Column(name = "address")
+    @Size(min = 2, max = 225)
+    public String address;
+
+    @Column(name = "active")
+    private Boolean active = true;
+
+    @Column(name = "created_at")
+    private Instant createdAt;
+
+    public Instant getCreatedAt() {
+        return createdAt;
     }
 
-    public String getDriverName() {
-        return driverName;
+    public void setCreatedAt(Instant createdAt) {
+        this.createdAt = createdAt;
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    public Boolean getActive() {
+        return active;
     }
 
-    public void setMachine(Machine machine) {
-        this.machine = machine;
-    }
-
-    public void setUser(User user) {
-        this.user = user;
-    }
-
-    public void setOperatorContact(String operatorContact) {
-        this.operatorContact = operatorContact;
-    }
-
-    public void setLicenseIssueDate(LocalDate licenseIssueDate) {
-        this.licenseIssueDate = licenseIssueDate;
-    }
-
-    public void setVehicleDocument(VehicleDocument vehicleDocument) {
-        this.vehicleDocument = vehicleDocument;
+    public void setActive(Boolean active) {
+        this.active = active;
     }
 
     public Long getId() {
         return id;
     }
 
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getDriverName() {
+        return driverName;
+    }
+
+    public void setDriverName(String driverName) {
+        this.driverName = driverName;
+    }
+
     public Machine getMachine() {
         return machine;
+    }
+
+    public void setMachine(Machine machine) {
+        this.machine = machine;
     }
 
     public User getUser() {
         return user;
     }
 
+    public void setUser(User user) {
+        this.user = user;
+    }
+
     public String getOperatorContact() {
         return operatorContact;
+    }
+
+    public void setOperatorContact(String operatorContact) {
+        this.operatorContact = operatorContact;
     }
 
     public LocalDate getLicenseIssueDate() {
         return licenseIssueDate;
     }
 
-    public VehicleDocument getVehicleDocument() {
+    public void setLicenseIssueDate(LocalDate licenseIssueDate) {
+        this.licenseIssueDate = licenseIssueDate;
+    }
+
+    public List<VehicleDocument> getVehicleDocument() {
         return vehicleDocument;
+    }
+
+    public void setVehicleDocument(List<VehicleDocument> vehicleDocument) {
+        this.vehicleDocument = vehicleDocument;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
     }
 
     @Override
     public boolean equals(Object o) {
-        if (o == null || getClass() != o.getClass()) return false;
-        MachineOperator that = (MachineOperator) o;
-        return (
-            Objects.equals(id, that.id) &&
-            Objects.equals(machine, that.machine) &&
-            Objects.equals(user, that.user) &&
-            Objects.equals(operatorContact, that.operatorContact) &&
-            Objects.equals(licenseIssueDate, that.licenseIssueDate) &&
-            Objects.equals(vehicleDocument, that.vehicleDocument)
-        );
+        if (this == o) return true;
+        if (!(o instanceof MachineOperator)) return false;
+        return id != null && id.equals(((MachineOperator) o).id);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, machine, user, operatorContact, licenseIssueDate, vehicleDocument);
+        return getClass().hashCode();
     }
 
     @Override
@@ -122,14 +150,17 @@ public class MachineOperator implements Serializable {
             "MachineOperator{" +
             "id=" +
             id +
+            ", driverName='" +
+            driverName +
+            '\'' +
             ", operatorContact='" +
             operatorContact +
             '\'' +
             ", licenseIssueDate=" +
             licenseIssueDate +
+            ", address='" +
+            address +
             '\'' +
-            ",driverName='" +
-            driverName +
             '}'
         );
     }

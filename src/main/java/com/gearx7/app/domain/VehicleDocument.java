@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import java.io.Serializable;
 import java.time.Instant;
-import java.util.Objects;
 
 @Entity
 @Table(name = "vehicle_document")
@@ -22,6 +21,11 @@ public class VehicleDocument implements Serializable {
     @JoinColumn(name = "machine_id", nullable = false)
     @JsonIgnoreProperties(value = { "documents", "operator" }, allowSetters = true)
     private Machine machine;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "operator_id")
+    @JsonIgnoreProperties(value = { "vehicleDocument", "machine" }, allowSetters = true)
+    private MachineOperator operator;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "uploaded_by")
@@ -51,6 +55,14 @@ public class VehicleDocument implements Serializable {
 
     @Column(name = "expires_at")
     private Instant expiresAt;
+
+    public MachineOperator getOperator() {
+        return operator;
+    }
+
+    public void setOperator(MachineOperator operator) {
+        this.operator = operator;
+    }
 
     public void setId(Long id) {
         this.id = id;
@@ -150,6 +162,12 @@ public class VehicleDocument implements Serializable {
             "VehicleDocument{" +
             "id=" +
             id +
+            ", machine=" +
+            machine +
+            ", operator=" +
+            operator +
+            ", uploadedBy=" +
+            uploadedBy +
             ", docType='" +
             docType +
             '\'' +

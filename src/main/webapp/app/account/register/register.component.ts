@@ -34,6 +34,10 @@ export default class RegisterComponent implements AfterViewInit {
         Validators.pattern('^[a-zA-Z0-9!$&*+=?^_`{|}~.-]+@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*$|^[_.@A-Za-z0-9-]+$'),
       ],
     }),
+    phone: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.required, Validators.pattern('^[0-9]{10}$')],
+    }),
     email: new FormControl('', {
       nonNullable: true,
       validators: [Validators.required, Validators.minLength(5), Validators.maxLength(254), Validators.email],
@@ -66,9 +70,9 @@ export default class RegisterComponent implements AfterViewInit {
     if (password !== confirmPassword) {
       this.doNotMatch = true;
     } else {
-      const { login, email } = this.registerForm.getRawValue();
+      const { login, phone, email } = this.registerForm.getRawValue();
       this.registerService
-        .save({ login, email, password, langKey: 'en' })
+        .save({ login, phone, email, password, langKey: 'en' })
         .subscribe({ next: () => (this.success = true), error: response => this.processError(response) });
     }
   }

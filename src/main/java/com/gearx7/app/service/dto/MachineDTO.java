@@ -1,11 +1,15 @@
 package com.gearx7.app.service.dto;
 
+import com.gearx7.app.domain.MachineOperator;
+import com.gearx7.app.domain.VehicleDocument;
 import com.gearx7.app.domain.enumeration.MachineStatus;
 import jakarta.persistence.Column;
 import jakarta.validation.constraints.*;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -74,11 +78,36 @@ public class MachineDTO implements Serializable {
     private Long subcategoryId;
 
     private String warranty;
+
     private String driverName;
+
     private String adharNo;
+
     private Integer age;
+
     private String licenseNo;
+
     private String insuranceNo;
+
+    private List<VehicleDocument> documents = new ArrayList<>();
+
+    private List<MachineOperator> operators;
+
+    public List<VehicleDocument> getDocuments() {
+        return documents;
+    }
+
+    public void setDocuments(List<VehicleDocument> documents) {
+        this.documents = documents;
+    }
+
+    public List<MachineOperator> getOperators() {
+        return operators;
+    }
+
+    public void setOperators(List<MachineOperator> operators) {
+        this.operators = operators;
+    }
 
     public String getWarranty() {
         return warranty;

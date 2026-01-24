@@ -83,6 +83,43 @@
 
     </changeSet>
 
+    <changeSet id="202602011543" author="Ganesh">
 
+        <comment>
+            Add operator_id column to vehicle_document table
+            to link documents with machine operator
+        </comment>
+
+        <addColumn tableName="vehicle_document">
+            <column name="operator_id" type="bigint"/>
+        </addColumn>
+
+        <addForeignKeyConstraint
+            baseTableName="vehicle_document"
+            baseColumnNames="operator_id"
+            constraintName="fk_vehicle_document_operator"
+            referencedTableName="machine_operator"
+            referencedColumnNames="id"/>
+
+    </changeSet>
+
+    <!--<changeSet id="20260204153-add-active-column-machine-operator" author="Ganesh">
+
+        <comment>
+            Add active flag to support operator reassignment without deletion
+        </comment>
+
+        <addColumn tableName="machine_operator">
+            <column name="active" type="boolean" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+
+        <update tableName="machine_operator">
+            <column name="active" valueBoolean="true"/>
+            <where>active IS NULL</where>
+        </update>
+
+    </changeSet>-->
 
 </databaseChangeLog>

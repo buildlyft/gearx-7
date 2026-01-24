@@ -1,114 +1,94 @@
 package com.gearx7.app.web.rest;
 
-import com.gearx7.app.domain.Machine;
-import com.gearx7.app.domain.MachineOperator;
-import com.gearx7.app.repository.MachineOperatorRepository;
-import com.gearx7.app.repository.MachineRepository;
-import com.gearx7.app.service.MachineOperatorAndVehicleDocService;
-import com.gearx7.app.web.rest.errors.BadRequestAlertException;
+import com.gearx7.app.service.dto.MachineOperatorDetailsDTO;
+import com.gearx7.app.service.interfaces.MachineOperatorService;
 import java.util.List;
-import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
-@RequestMapping("/api/machine-documents")
+@RequestMapping("/api/machine-operators")
 public class MachineOperatorResource {
 
-    private final Logger log = LoggerFactory.getLogger(MachineOperatorResource.class);
+    private static final Logger log = LoggerFactory.getLogger(MachineOperatorResource.class);
 
-    private final MachineOperatorRepository machineOperatorRepository;
-    private final MachineOperatorAndVehicleDocService machineOperatorAndVehicleDocService;
-    private final MachineRepository machineRepository;
+    private final MachineOperatorService service;
 
-    public MachineOperatorResource(
-        MachineOperatorRepository machineOperatorRepository,
-        MachineOperatorAndVehicleDocService machineOperatorAndVehicleDocService,
-        MachineRepository machineRepository
+    public MachineOperatorResource(MachineOperatorService service) {
+        this.service = service;
+    }
+
+    /**
+     *
+     * @param dto MachineOperatorDetailsDTO
+     *
+     * consumes = request Content-Type
+     * This API only accepts requests whose Content-Type is multipart/form-data
+     *
+     * @return MachineOperatorDetailsDTO
+     */
+    @PostMapping(value = "/create_and_assign", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<MachineOperatorDetailsDTO> createOperatorAndAssignToMachine(
+        @ModelAttribute MachineOperatorDetailsDTO dto,
+        @RequestParam(value = "files", required = false) List<MultipartFile> files,
+        @RequestParam(value = "docTypes", required = false) List<String> docTypes
     ) {
-        this.machineOperatorRepository = machineOperatorRepository;
-        this.machineOperatorAndVehicleDocService = machineOperatorAndVehicleDocService;
-        this.machineRepository = machineRepository;
-    }
-
-    // Assign Operator to Machine
-    @PostMapping("/assign")
-    public ResponseEntity<MachineOperator> assignOperator(@RequestBody MachineOperator machineOperator) {
-        log.info(
-            "REST REQUEST: Assign operator | driverName={} machineId={} userId={} documentId={} contact={} issueDate={}",
-            machineOperator.getDriverName(),
-            machineOperator.getMachine() != null ? machineOperator.getMachine().getId() : null,
-            machineOperator.getUser() != null ? machineOperator.getUser().getId() : null,
-            machineOperator.getVehicleDocument() != null ? machineOperator.getVehicleDocument().getId() : null,
-            machineOperator.getOperatorContact(),
-            machineOperator.getLicenseIssueDate()
-        );
-
-        if (machineOperator.getMachine() == null || machineOperator.getMachine().getId() == null) {
-            throw new BadRequestAlertException("Machine id is required", "machineOperator", "machineIdMissing");
-        }
-
-        if (machineOperator.getUser() == null || machineOperator.getUser().getId() == null) {
-            throw new BadRequestAlertException("User id is required", "machineOperator", "userIdMissing");
-        }
-
-        if (machineOperator.getVehicleDocument() == null || machineOperator.getVehicleDocument().getId() == null) {
-            throw new BadRequestAlertException("Vehicle Document id is required", "machineOperator", "docIdMissing");
-        }
-
-        MachineOperator saved = machineOperatorAndVehicleDocService.addOperator(
-            machineOperator.getDriverName(),
-            machineOperator.getMachine().getId(),
-            machineOperator.getUser().getId(),
-            machineOperator.getVehicleDocument().getId(),
-            machineOperator.getOperatorContact(),
-            machineOperator.getLicenseIssueDate()
-        );
+        //        ObjectMapper mapper = new ObjectMapper();
+        //
+        //        mapper.findAndRegisterModules(); // LocalDate support
+        //
+        //        MachineOperatorDetailsDTO dto =
+        //            mapper.readValue(json, MachineOperatorDetailsDTO.class);
 
         log.info(
-            "REST REQUEST SUCCESS: Operator assigned | operatorId={} driverName={} machineId={} userId={} vehicleDocumentId={} contact={} issueDate={}",
-            saved.getDriverName(),
-            saved.getId(),
-            saved.getMachine().getId(),
-            saved.getUser().getId(),
-            saved.getVehicleDocument().getId(),
-            saved.getOperatorContact(),
-            saved.getLicenseIssueDate()
+            "REST CREATE operator | machineId={} userId={} files={}",
+            dto.getMachineId(),
+            dto.getUserId(),
+            files != null ? files.size() : 0
         );
 
-        return ResponseEntity.ok(saved);
+        MachineOperatorDetailsDTO result = service.create(dto, files, docTypes);
+
+        log.info("REST Operator created successfully | operatorId={} machineId={}", result.getOperatorId(), result.getMachineId());
+
+        return ResponseEntity.ok(result);
     }
 
-    // Get operator of machine
+    /**
+     *
+     * @param machineId
+     * @return returns only the active operator for a machine otherwise you will get exception
+     */
     @GetMapping("/machine/{machineId}")
-    public ResponseEntity<?> getOperatorByMachine(@PathVariable Long machineId) {
-        log.info("REST REQUEST: Get operator for machineId={}", machineId);
+    public ResponseEntity<MachineOperatorDetailsDTO> getMachineOperatorDetails(@PathVariable Long machineId) {
+        log.debug("REST request to GET active operator for machineId={}", machineId);
 
-        Machine machine = machineRepository
-            .findById(machineId)
-            .orElseThrow(() -> {
-                log.error("REST ERROR: Machine not found | machineId={}", machineId);
-                return new BadRequestAlertException("Machine not found with id " + machineId, "machineOperator", "machineNotFound");
-            });
-
-        return machineOperatorRepository
-            .findByMachineId(machineId)
-            .<ResponseEntity<?>>map(operator -> {
-                log.info("REST SUCCESS: Operator found | operatorId={} machineId={}", operator.getId(), machineId);
-                return ResponseEntity.ok(operator);
-            })
-            .orElseGet(() -> {
-                log.warn("REST INFO: Machine exists but no operator assigned | machineId={}", machineId);
-                return ResponseEntity.ok(Map.of("message", "Machine exists but no operator assigned yet", "machineId", machineId));
-            });
+        return ResponseEntity.ok(service.getByMachineId(machineId));
     }
 
-    @GetMapping("/getAllOperators")
-    public ResponseEntity<List<MachineOperator>> getAllOperators() {
-        List<MachineOperator> operators = machineOperatorRepository.findAll();
-        log.info("REST SUCCESS: {} operators found", operators.size());
-        return ResponseEntity.ok(operators);
+    /**
+     *
+     * @param machineId
+     * @param dto MachineOperatorDetailsDTO
+     * @return new updated MachineOperatorDetailsDTO
+     */
+    @PutMapping(value = "/machine/{machineId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<MachineOperatorDetailsDTO> reassign(
+        @PathVariable Long machineId,
+        @RequestPart("data") MachineOperatorDetailsDTO dto,
+        @RequestPart(value = "files", required = false) List<MultipartFile> files,
+        @RequestPart(value = "docTypes", required = false) List<String> docTypes
+    ) {
+        log.info(
+            "REST REASSIGN operator request | machineId={} userId={} files={}",
+            machineId,
+            dto.getUserId(),
+            files != null ? files.size() : 0
+        );
+        return ResponseEntity.ok(service.reassign(machineId, dto, files, docTypes));
     }
 }

@@ -51,6 +51,9 @@ public class AdminUserDTO implements Serializable {
 
     private Set<String> authorities;
 
+    @Size(min = 10, max = 10)
+    @NotBlank
+    @Pattern(regexp = "^[0-9]{10}$", message = "Phone number must be 10 digits")
     private String phone;
 
     public AdminUserDTO() {

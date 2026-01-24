@@ -28,6 +28,7 @@ describe('RegisterComponent', () => {
 
   it('should ensure the two passwords entered match', () => {
     comp.registerForm.patchValue({
+      phone: '9999999999',
       password: 'password',
       confirmPassword: 'non-matching',
     });
@@ -42,6 +43,7 @@ describe('RegisterComponent', () => {
     fakeAsync((service: RegisterService) => {
       jest.spyOn(service, 'save').mockReturnValue(of({}));
       comp.registerForm.patchValue({
+        phone: '9999999999',
         password: 'password',
         confirmPassword: 'password',
       });
@@ -50,6 +52,7 @@ describe('RegisterComponent', () => {
       tick();
 
       expect(service.save).toHaveBeenCalledWith({
+        phone: '9999999999',
         email: '',
         password: 'password',
         login: '',
@@ -72,6 +75,7 @@ describe('RegisterComponent', () => {
         }),
       );
       comp.registerForm.patchValue({
+        phone: '9999999999',
         password: 'password',
         confirmPassword: 'password',
       });
@@ -95,6 +99,7 @@ describe('RegisterComponent', () => {
         }),
       );
       comp.registerForm.patchValue({
+        phone: '9999999999',
         password: 'password',
         confirmPassword: 'password',
       });
@@ -117,6 +122,7 @@ describe('RegisterComponent', () => {
         }),
       );
       comp.registerForm.patchValue({
+        phone: '9999999999',
         password: 'password',
         confirmPassword: 'password',
       });

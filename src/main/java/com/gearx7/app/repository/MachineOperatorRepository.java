@@ -7,7 +7,13 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface MachineOperatorRepository extends JpaRepository<MachineOperator, Long> {
-    Optional<MachineOperator> findByMachineId(Long machineId);
+    //  Get only current(active) operator for machine
+    Optional<MachineOperator> findByMachineIdAndActiveTrue(Long machineId);
 
-    boolean existsByMachineId(Long machineId);
+    //  Check if machine already has an active operator
+    boolean existsByMachineIdAndActiveTrue(Long machineId);
+
+    Optional<MachineOperator> findByUserIdAndActiveTrue(Long userId);
+
+    boolean existsByUserIdAndActiveTrue(Long userId);
 }

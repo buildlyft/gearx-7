@@ -1,34 +1,29 @@
 package com.gearx7.app.service;
 
 import com.gearx7.app.domain.Machine;
-import com.gearx7.app.domain.MachineOperator;
 import com.gearx7.app.domain.User;
 import com.gearx7.app.domain.VehicleDocument;
-import com.gearx7.app.repository.MachineOperatorRepository;
 import com.gearx7.app.repository.MachineRepository;
 import com.gearx7.app.repository.UserRepository;
 import com.gearx7.app.repository.VehicleDocumentRepository;
 import com.gearx7.app.security.AuthoritiesConstants;
 import com.gearx7.app.security.SecurityUtils;
-import com.gearx7.app.web.rest.errors.BadRequestAlertException;
+import com.gearx7.app.service.interfacesImpl.CloudinaryDocumentStorageServiceImpl;
+import com.gearx7.app.web.rest.errors.NotFoundAlertException;
 import java.time.Instant;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 @Service
-public class MachineOperatorAndVehicleDocService {
+public class VehicleDocService {
 
-    private final Logger log = LoggerFactory.getLogger(MachineOperatorAndVehicleDocService.class);
-
-    private final MachineOperatorRepository machineOperatorRepository;
+    private final Logger log = LoggerFactory.getLogger(VehicleDocService.class);
 
     private final MachineRepository machineRepository;
 
@@ -36,88 +31,18 @@ public class MachineOperatorAndVehicleDocService {
 
     private final VehicleDocumentRepository vehicleDocumentRepository;
 
-    private final FileStorageService fileStorageService;
+    private final CloudinaryDocumentStorageServiceImpl fileStorageService;
 
-    public MachineOperatorAndVehicleDocService(
-        MachineOperatorRepository machineOperatorRepository,
+    public VehicleDocService(
         MachineRepository machineRepository,
         UserRepository userRepository,
         VehicleDocumentRepository vehicleDocumentRepository,
-        FileStorageService fileStorageService
+        CloudinaryDocumentStorageServiceImpl fileStorageService
     ) {
-        this.machineOperatorRepository = machineOperatorRepository;
         this.machineRepository = machineRepository;
         this.userRepository = userRepository;
         this.vehicleDocumentRepository = vehicleDocumentRepository;
         this.fileStorageService = fileStorageService;
-    }
-
-    /**
-     * Assign Operator to Machine
-     *
-     * @param machineId
-     * @param userId
-     * @param vehicleDocumentId
-     * @return MachineOperator
-     *
-     */
-
-    @Transactional
-    public MachineOperator addOperator(
-        String driverName,
-        Long machineId,
-        Long userId,
-        Long vehicleDocumentId,
-        String operatorContact,
-        LocalDate licenseIssueDate
-    ) {
-        log.info(
-            "SERVICE: Assigning operator | driverName={} machineId={} userId={} documentId={} operatorContact={} licenseIssueDate={}",
-            driverName,
-            machineId,
-            userId,
-            vehicleDocumentId,
-            operatorContact,
-            licenseIssueDate
-        );
-        // find given machine exists or not
-        Machine machine = getMachine(machineId);
-
-        if (machineOperatorRepository.existsByMachineId(machineId)) {
-            throw new BadRequestAlertException("Machine already has an operator", "machineOperator", "operatorAlreadyAssigned");
-        }
-        // find given user exists or not
-        User user = getUser(userId);
-
-        VehicleDocument doc = getDocument(vehicleDocumentId);
-
-        if (!doc.getMachine().getId().equals(machineId)) {
-            throw new BadRequestAlertException(
-                "Vehicle document does not belong to this machine",
-                "vehicleDocument",
-                "invalidMachineDocument"
-            );
-        }
-
-        MachineOperator op = new MachineOperator();
-        op.setDriverName(driverName);
-        op.setMachine(machine);
-        op.setUser(user);
-        op.setVehicleDocument(doc);
-        op.setOperatorContact(operatorContact);
-        op.setLicenseIssueDate(licenseIssueDate);
-
-        MachineOperator saved = machineOperatorRepository.save(op);
-        log.info(
-            "SERVICE SUCCESS: Operator assigned | operatorId={} driverName={} machineId={} userId={} operatorContact={} licenseIssueDate={}",
-            saved.getId(),
-            driverName,
-            machineId,
-            userId,
-            operatorContact,
-            licenseIssueDate
-        );
-        return saved;
     }
 
     /**
@@ -171,7 +96,7 @@ public class MachineOperatorAndVehicleDocService {
                 file.getContentType()
             );
 
-            String key = fileStorageService.store(file);
+            String key = fileStorageService.uploadMachineDocument(file, machine.getId());
 
             VehicleDocument doc = new VehicleDocument();
             doc.setMachine(machine);
@@ -195,7 +120,7 @@ public class MachineOperatorAndVehicleDocService {
             .findById(id)
             .orElseThrow(() -> {
                 log.error("SERVICE ERROR  Machine not found | machineId={}", id);
-                return new BadRequestAlertException("Machine not found with id " + id, "machine", "machineNotFound");
+                return new NotFoundAlertException("Machine not found with id " + id, "machine", "machineNotFound");
             });
     }
 
@@ -204,16 +129,7 @@ public class MachineOperatorAndVehicleDocService {
             .findById(id)
             .orElseThrow(() -> {
                 log.error("SERVICE ERROR  User not found | userId={}", id);
-                return new BadRequestAlertException("User not found with id " + id, "user", "userNotFound");
-            });
-    }
-
-    private VehicleDocument getDocument(Long id) {
-        return vehicleDocumentRepository
-            .findById(id)
-            .orElseThrow(() -> {
-                log.error("SERVICE ERROR  Vehicle document not found | documentId={}", id);
-                return new BadRequestAlertException("Vehicle document not found with id " + id, "vehicleDocument", "documentNotFound");
+                return new NotFoundAlertException("User not found with id " + id, "user", "userNotFound");
             });
     }
 }

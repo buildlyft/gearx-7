@@ -63,4 +63,79 @@
         <createSequence sequenceName="machine_operator_seq" startValue="1" incrementBy="1"/>
     </changeSet>
 
+    <changeSet id="20260124144-final-machine-operator-fix" author="Ganesh">
+
+        <preConditions onFail="MARK_RAN">
+            <and>
+
+                <!-- Drop wrong unique constraint -->
+                <uniqueConstraintExists
+                    tableName="machine_operator"
+                    constraintName="machine_operator_machine_id_key"/>
+
+                <!-- Drop invalid FK -->
+                <foreignKeyConstraintExists
+                    foreignKeyName="fk_machine_operator_vehicle_document"/>
+
+                <!-- Drop invalid column -->
+                <columnExists
+                    tableName="machine_operator"
+                    columnName="vehicle_document_id"/>
+
+            </and>
+        </preConditions>
+
+        <!-- 1. DROP WRONG UNIQUE CONSTRAINT -->
+        <dropUniqueConstraint
+            tableName="machine_operator"
+            constraintName="machine_operator_machine_id_key"/>
+
+        <!-- 2. REMOVE INVALID VEHICLE_DOCUMENT RELATIONSHIP -->
+        <dropForeignKeyConstraint
+            baseTableName="machine_operator"
+            constraintName="fk_machine_operator_vehicle_document"/>
+
+        <dropColumn
+            tableName="machine_operator"
+            columnName="vehicle_document_id"/>
+
+        <!-- 3. ADD ACTIVE FLAG -->
+        <addColumn tableName="machine_operator">
+            <column name="active" type="boolean" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+
+        <!-- 4. ADD ADDRESS -->
+        <addColumn tableName="machine_operator">
+            <column name="address" type="varchar(225)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <!-- Backfill -->
+        <update tableName="machine_operator">
+            <column name="active" valueBoolean="true"/>
+            <where>active IS NULL</where>
+        </update>
+
+        <!-- 5. ADD CORRECT UNIQUE CONSTRAINTS -->
+        <addUniqueConstraint
+            tableName="machine_operator"
+            columnNames="machine_id, active"
+            constraintName="uk_machine_operator_active_machine"/>
+
+        <addUniqueConstraint
+            tableName="machine_operator"
+            columnNames="user_id, active"
+            constraintName="uk_machine_operator_active_user"/>
+
+    </changeSet>
+
+    <changeSet id="202601231811" author="Ganesh">
+        <addColumn tableName="machine_operator">
+            <column name="created_at" type="${datetimeType}"/>
+        </addColumn>
+    </changeSet>
+
 </databaseChangeLog>
