@@ -15,7 +15,7 @@ describe('Machine Management Detail Component', () => {
             {
               path: '**',
               component: MachineDetailComponent,
-              resolve: { machine: () => of({ id: 123 }) },
+              resolve: { machine: () => of({ id: 123, categoryId: 10, subcategoryId: 20 }) },
             },
           ],
           withComponentInputBinding(),
@@ -32,7 +32,7 @@ describe('Machine Management Detail Component', () => {
       const instance = await harness.navigateByUrl('/', MachineDetailComponent);
 
       // THEN
-      expect(instance.machine).toEqual(expect.objectContaining({ id: 123 }));
+      expect(instance.machine).toEqual(expect.objectContaining({ id: 123, categoryId: 10, subcategoryId: 20 }));
     });
   });
 });

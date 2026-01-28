@@ -13,6 +13,10 @@ import { MachineStatus } from 'app/entities/enumerations/machine-status.model';
 import { MachineService } from '../service/machine.service';
 import { IMachine } from '../machine.model';
 import { MachineFormService, MachineFormGroup } from './machine-form.service';
+import { CategoryService } from 'app/entities/category/service/category.service';
+import { SubcategoryService } from 'app/entities/subcategory/service/subcategory.service';
+import { ICategory } from 'app/entities/category/category.model';
+import { ISubcategory } from 'app/entities/subcategory/subcategory.model';
 
 @Component({
   standalone: true,
@@ -23,9 +27,12 @@ import { MachineFormService, MachineFormGroup } from './machine-form.service';
 export class MachineUpdateComponent implements OnInit {
   isSaving = false;
   machine: IMachine | null = null;
+
   machineStatusValues = Object.keys(MachineStatus);
 
   usersSharedCollection: IUser[] = [];
+  categories: ICategory[] = [];
+  subcategories: ISubcategory[] = [];
 
   editForm: MachineFormGroup = this.machineFormService.createMachineFormGroup();
 
@@ -34,28 +41,73 @@ export class MachineUpdateComponent implements OnInit {
     protected machineFormService: MachineFormService,
     protected userService: UserService,
     protected activatedRoute: ActivatedRoute,
+    protected categoryService: CategoryService,
+    protected subcategoryService: SubcategoryService,
   ) {}
 
   compareUser = (o1: IUser | null, o2: IUser | null): boolean => this.userService.compareUser(o1, o2);
 
+  // ---------------------------------------------------
+  // INIT
+  // ---------------------------------------------------
   ngOnInit(): void {
     this.activatedRoute.data.subscribe(({ machine }) => {
       this.machine = machine;
+
       if (machine) {
         this.updateForm(machine);
+
+        // load subcategories when editing
+        if (machine.categoryId) {
+          this.loadSubcategories(machine.categoryId);
+        }
       }
 
       this.loadRelationshipsOptions();
     });
   }
 
-  previousState(): void {
-    window.history.back();
+  // ---------------------------------------------------
+  // LOAD DROPDOWNS
+  // ---------------------------------------------------
+  protected loadRelationshipsOptions(): void {
+    // USERS (ADMIN)
+    this.userService
+      .query()
+      .pipe(map(res => res.body ?? []))
+      .pipe(map(users => this.userService.addUserToCollectionIfMissing(users, this.machine?.user)))
+      .subscribe(users => (this.usersSharedCollection = users));
+
+    // CATEGORIES
+    this.categoryService.query().subscribe(res => {
+      this.categories = res.body ?? [];
+    });
   }
 
+  onCategoryChange(): void {
+    const categoryId = this.editForm.get('categoryId')!.value;
+
+    if (categoryId) {
+      this.loadSubcategories(categoryId);
+    } else {
+      this.subcategories = [];
+      this.editForm.get('subcategoryId')!.reset();
+    }
+  }
+
+  private loadSubcategories(categoryId: number): void {
+    this.subcategoryService.query({ 'categoryId.equals': categoryId }).subscribe(res => {
+      this.subcategories = res.body ?? [];
+    });
+  }
+
+  // ---------------------------------------------------
+  // SAVE
+  // ---------------------------------------------------
   save(): void {
     this.isSaving = true;
     const machine = this.machineFormService.getMachine(this.editForm);
+
     if (machine.id !== null) {
       this.subscribeToSaveResponse(this.machineService.update(machine));
     } else {
@@ -75,25 +127,24 @@ export class MachineUpdateComponent implements OnInit {
   }
 
   protected onSaveError(): void {
-    // Api for inheritance.
+    // handled by jhi-alert-error
   }
 
   protected onSaveFinalize(): void {
     this.isSaving = false;
   }
 
+  previousState(): void {
+    window.history.back();
+  }
+
+  // ---------------------------------------------------
+  // FORM
+  // ---------------------------------------------------
   protected updateForm(machine: IMachine): void {
     this.machine = machine;
     this.machineFormService.resetForm(this.editForm, machine);
 
-    this.usersSharedCollection = this.userService.addUserToCollectionIfMissing<IUser>(this.usersSharedCollection, machine.user);
-  }
-
-  protected loadRelationshipsOptions(): void {
-    this.userService
-      .query()
-      .pipe(map((res: HttpResponse<IUser[]>) => res.body ?? []))
-      .pipe(map((users: IUser[]) => this.userService.addUserToCollectionIfMissing<IUser>(users, this.machine?.user)))
-      .subscribe((users: IUser[]) => (this.usersSharedCollection = users));
+    this.usersSharedCollection = this.userService.addUserToCollectionIfMissing(this.usersSharedCollection, machine.user);
   }
 }

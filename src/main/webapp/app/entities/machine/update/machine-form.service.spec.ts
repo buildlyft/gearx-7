@@ -29,6 +29,7 @@ describe('Machine Form Service', () => {
             description: expect.any(Object),
             capacityTon: expect.any(Object),
             ratePerHour: expect.any(Object),
+            ratePerDay: expect.any(Object),
             minimumUsageHours: expect.any(Object),
             latitude: expect.any(Object),
             longitude: expect.any(Object),
@@ -37,6 +38,8 @@ describe('Machine Form Service', () => {
             serviceabilityRangeKm: expect.any(Object),
             status: expect.any(Object),
             createdDate: expect.any(Object),
+            categoryId: expect.any(Object),
+            subcategoryId: expect.any(Object),
             user: expect.any(Object),
           }),
         );
@@ -57,6 +60,7 @@ describe('Machine Form Service', () => {
             description: expect.any(Object),
             capacityTon: expect.any(Object),
             ratePerHour: expect.any(Object),
+            ratePerDay: expect.any(Object),
             minimumUsageHours: expect.any(Object),
             latitude: expect.any(Object),
             longitude: expect.any(Object),
@@ -65,6 +69,8 @@ describe('Machine Form Service', () => {
             serviceabilityRangeKm: expect.any(Object),
             status: expect.any(Object),
             createdDate: expect.any(Object),
+            categoryId: expect.any(Object),
+            subcategoryId: expect.any(Object),
             user: expect.any(Object),
           }),
         );

@@ -10,4 +10,6 @@ public interface MachineOperatorService {
     MachineOperatorDetailsDTO reassign(Long machineId, MachineOperatorDetailsDTO dto, List<MultipartFile> files);
 
     MachineOperatorDetailsDTO getByMachineId(Long machineId);
+
+    List<MachineOperatorDetailsDTO> getAllActiveOperators();
 }

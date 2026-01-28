@@ -13,6 +13,7 @@ export interface IMachine {
   description?: string | null;
   capacityTon?: number | null;
   ratePerHour?: number | null;
+  ratePerDay?: number | null;
   minimumUsageHours?: number | null;
   latitude?: number | null;
   longitude?: number | null;

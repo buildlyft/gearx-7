@@ -66,6 +66,29 @@ public class MachineOperatorServiceImpl implements MachineOperatorService {
         return buildResponse(operator);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<MachineOperatorDetailsDTO> getAllActiveOperators() {
+        log.info("Fetching all active machine operators");
+
+        List<MachineOperator> operators = operatorRepo.findAllByActiveTrue();
+
+        if (operators.isEmpty()) {
+            log.info("No active operators found");
+            return List.of();
+        }
+
+        log.info("Active operators fetched | count={}", operators.size());
+
+        return operators
+            .stream()
+            .map(operator -> {
+                log.trace("Building response for operatorId={}", operator.getId());
+                return buildResponse(operator);
+            })
+            .toList();
+    }
+
     /* ================= REASSIGN ================= */
 
     @Override

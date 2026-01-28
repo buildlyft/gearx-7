@@ -62,6 +62,18 @@ public class MachineOperatorResource {
         return ResponseEntity.ok(service.getByMachineId(machineId));
     }
 
+    @GetMapping("/active")
+    public ResponseEntity<List<MachineOperatorDetailsDTO>> getAllActiveMachineOperators() {
+        log.debug("REST request to GET all active machine operators");
+
+        // Assuming the service has a method to get all active machine operators
+        List<MachineOperatorDetailsDTO> activeOperators = service.getAllActiveOperators();
+
+        log.debug("REST response | activeOperatorsCount={}", activeOperators.size());
+
+        return ResponseEntity.ok(activeOperators);
+    }
+
     /**
      *
      * @param machineId
@@ -71,7 +83,7 @@ public class MachineOperatorResource {
     @PutMapping(value = "/machine/{machineId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<MachineOperatorDetailsDTO> reassign(
         @PathVariable Long machineId,
-        @RequestPart("data") MachineOperatorDetailsDTO dto,
+        @ModelAttribute MachineOperatorDetailsDTO dto,
         @RequestPart(value = "files", required = false) List<MultipartFile> files
     ) {
         log.info(

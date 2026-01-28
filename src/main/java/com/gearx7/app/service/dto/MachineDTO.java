@@ -41,6 +41,7 @@ public class MachineDTO implements Serializable {
     @NotNull
     private BigDecimal ratePerHour;
 
+    @NotNull
     private BigDecimal ratePerDay;
 
     private Integer minimumUsageHours;
@@ -73,8 +74,10 @@ public class MachineDTO implements Serializable {
 
     private BigDecimal totalDailyRate;
 
+    @NotNull
     private Long categoryId;
 
+    @NotNull
     private Long subcategoryId;
 
     private String warranty;

@@ -1,6 +1,7 @@
 package com.gearx7.app.repository;
 
 import com.gearx7.app.domain.MachineOperator;
+import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -16,4 +17,6 @@ public interface MachineOperatorRepository extends JpaRepository<MachineOperator
     Optional<MachineOperator> findByUserIdAndActiveTrue(Long userId);
 
     boolean existsByUserIdAndActiveTrue(Long userId);
+
+    List<MachineOperator> findAllByActiveTrue();
 }

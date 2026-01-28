@@ -27,7 +27,7 @@ type MachineFormRawValue = FormValueOf<IMachine>;
 
 type NewMachineFormRawValue = FormValueOf<NewMachine>;
 
-type MachineFormDefaults = Pick<NewMachine, 'id' | 'createdDate'>;
+type MachineFormDefaults = Pick<NewMachine, 'id' | 'createdDate' | 'categoryId' | 'subcategoryId'>;
 
 type MachineFormGroupContent = {
   id: FormControl<MachineFormRawValue['id'] | NewMachine['id']>;
@@ -40,6 +40,7 @@ type MachineFormGroupContent = {
   description: FormControl<MachineFormRawValue['description']>;
   capacityTon: FormControl<MachineFormRawValue['capacityTon']>;
   ratePerHour: FormControl<MachineFormRawValue['ratePerHour']>;
+  ratePerDay: FormControl<MachineFormRawValue['ratePerDay']>;
   minimumUsageHours: FormControl<MachineFormRawValue['minimumUsageHours']>;
   latitude: FormControl<MachineFormRawValue['latitude']>;
   longitude: FormControl<MachineFormRawValue['longitude']>;
@@ -83,6 +84,9 @@ export class MachineFormService {
       description: new FormControl(machineRawValue.description),
       capacityTon: new FormControl(machineRawValue.capacityTon),
       ratePerHour: new FormControl(machineRawValue.ratePerHour, {
+        validators: [Validators.required],
+      }),
+      ratePerDay: new FormControl(machineRawValue.ratePerDay, {
         validators: [Validators.required],
       }),
       minimumUsageHours: new FormControl(machineRawValue.minimumUsageHours),
@@ -132,6 +136,8 @@ export class MachineFormService {
     return {
       id: null,
       createdDate: currentTime,
+      categoryId: null,
+      subcategoryId: null,
     };
   }
 

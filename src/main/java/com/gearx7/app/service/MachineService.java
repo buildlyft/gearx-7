@@ -99,19 +99,6 @@ public class MachineService {
     }
 
     /**
-     * Update a machine.
-     *
-     * @param machineDTO the entity to save.
-     * @return the persisted entity.
-     */
-    public MachineDTO update(MachineDTO machineDTO) {
-        log.debug("Request to update Machine : {}", machineDTO);
-        Machine machine = machineMapper.toEntity(machineDTO);
-        machine = machineRepository.save(machine);
-        return machineMapper.toDto(machine);
-    }
-
-    /**
      * Partially update a machine.
      *
      * @param machineDTO the entity to update partially.
@@ -129,6 +116,19 @@ public class MachineService {
             })
             .map(machineRepository::save)
             .map(machineMapper::toDto);
+    }
+
+    /**
+     * Update a machine.
+     *
+     * @param machineDTO the entity to save.
+     * @return the persisted entity.
+     */
+    public MachineDTO update(MachineDTO machineDTO) {
+        log.debug("Request to update Machine : {}", machineDTO);
+        Machine machine = machineMapper.toEntity(machineDTO);
+        machine = machineRepository.save(machine);
+        return machineMapper.toDto(machine);
     }
 
     /**

@@ -11,6 +11,8 @@ export const sampleWithRequiredData: IMachine = {
   longitude: 23118.09,
   status: 'AVAILABLE',
   createdDate: dayjs('2025-07-14T02:17'),
+  categoryId: 10,
+  subcategoryId: 20,
 };
 
 export const sampleWithPartialData: IMachine = {
@@ -22,6 +24,7 @@ export const sampleWithPartialData: IMachine = {
   description: 'yuck',
   capacityTon: 19442,
   ratePerHour: 5969.05,
+  ratePerDay: 12000,
   minimumUsageHours: 24762,
   latitude: 3984.6,
   longitude: 21238.79,
@@ -29,6 +32,8 @@ export const sampleWithPartialData: IMachine = {
   serviceabilityRangeKm: 11003,
   status: 'NOT_AVAILABLE',
   createdDate: dayjs('2025-07-14T12:32'),
+  categoryId: 10,
+  subcategoryId: 20,
 };
 
 export const sampleWithFullData: IMachine = {
@@ -50,6 +55,8 @@ export const sampleWithFullData: IMachine = {
   serviceabilityRangeKm: 23914,
   status: 'NOT_AVAILABLE',
   createdDate: dayjs('2025-07-13T21:40'),
+  categoryId: 10,
+  subcategoryId: 20,
 };
 
 export const sampleWithNewData: NewMachine = {
@@ -60,6 +67,8 @@ export const sampleWithNewData: NewMachine = {
   longitude: 26098.39,
   status: 'AVAILABLE',
   createdDate: dayjs('2025-07-13T20:24'),
+  categoryId: 10,
+  subcategoryId: 20,
   id: null,
 };
 

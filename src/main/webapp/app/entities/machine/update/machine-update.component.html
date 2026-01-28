@@ -111,6 +111,21 @@
         </div>
 
         <div class="mb-3">
+          <label class="form-label" for="field_ratePerDay">Rate Per Day</label>
+          <input type="number" class="form-control" id="field_ratePerDay" formControlName="ratePerDay" />
+          @if (editForm.get('ratePerDay')!.invalid && (editForm.get('ratePerDay')!.dirty || editForm.get('ratePerDay')!.touched)) {
+            <div>
+              @if (editForm.get('ratePerDay')?.errors?.required) {
+                <small class="form-text text-danger">This field is required.</small>
+              }
+              <small class="form-text text-danger" [hidden]="!editForm.get('ratePerDay')?.errors?.number"
+                >This field should be a number.</small
+              >
+            </div>
+          }
+        </div>
+
+        <div class="mb-3">
           <label class="form-label" for="field_minimumUsageHours">Minimum Usage Hours</label>
           <input
             type="number"
@@ -231,36 +246,23 @@
         </div>
 
         <div class="mb-3">
-          <label class="form-label" for="field_categoryId">CategoryId</label>
-          <input
-            type="text"
-            class="form-control"
-            name="categoryId"
-            id="field_categoryId"
-            data-cy="categoryId"
-            formControlName="categoryId"
-          />
-          @if (editForm.get('categoryId')!.invalid && (editForm.get('categoryId')!.dirty || editForm.get('categoryId')!.touched)) {
-            <div>
-              @if (editForm.get('categoryId')?.errors?.required) {
-                <small class="form-text text-danger">This field is required.</small>
-              }
-            </div>
-          }
+          <label class="form-label">Category</label>
+          <select class="form-control" formControlName="categoryId" (change)="onCategoryChange()">
+            <option [ngValue]="null">-- Select Category --</option>
+            <option *ngFor="let c of categories" [ngValue]="c.id">
+              {{ c.id }}
+            </option>
+          </select>
         </div>
 
         <div class="mb-3">
-          <label class="form-label" for="field_subcategoryId">SubCategoryId</label>
-
-          <input type="text" class="form-control" id="field_subcategoryId" data-cy="subcategoryId" formControlName="subcategoryId" />
-
-          @if (editForm.get('subcategoryId')!.invalid && (editForm.get('subcategoryId')!.dirty || editForm.get('subcategoryId')!.touched)) {
-            <div>
-              @if (editForm.get('subcategoryId')?.errors?.required) {
-                <small class="form-text text-danger">This field is required.</small>
-              }
-            </div>
-          }
+          <label class="form-label">Sub Category</label>
+          <select class="form-control" formControlName="subcategoryId">
+            <option [ngValue]="null">-- Select Subcategory --</option>
+            <option *ngFor="let s of subcategories" [ngValue]="s.id">
+              {{ s.id }}
+            </option>
+          </select>
         </div>
 
         <div class="mb-3" *jhiHasAnyAuthority="'ROLE_ADMIN'">

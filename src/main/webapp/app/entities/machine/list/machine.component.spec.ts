@@ -54,7 +54,7 @@ describe('Machine Management Component', () => {
     jest.spyOn(service, 'query').mockReturnValue(
       of(
         new HttpResponse({
-          body: [{ id: 123 }],
+          body: [{ id: 123, categoryId: 10, subcategoryId: 20 }],
           headers,
         }),
       ),
@@ -67,7 +67,7 @@ describe('Machine Management Component', () => {
 
     // THEN
     expect(service.query).toHaveBeenCalled();
-    expect(comp.machines?.[0]).toEqual(expect.objectContaining({ id: 123 }));
+    expect(comp.machines?.[0]).toEqual(expect.objectContaining({ id: 123, categoryId: 10, subcategoryId: 20 }));
   });
 
   describe('trackId', () => {
