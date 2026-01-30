@@ -51,6 +51,7 @@ export class MachineUpdateComponent implements OnInit {
   // INIT
   // ---------------------------------------------------
   ngOnInit(): void {
+    this.loadRelationshipsOptions();
     this.activatedRoute.data.subscribe(({ machine }) => {
       this.machine = machine;
 
@@ -62,8 +63,6 @@ export class MachineUpdateComponent implements OnInit {
           this.loadSubcategories(machine.categoryId);
         }
       }
-
-      this.loadRelationshipsOptions();
     });
   }
 
@@ -85,13 +84,14 @@ export class MachineUpdateComponent implements OnInit {
   }
 
   onCategoryChange(): void {
-    const categoryId = this.editForm.get('categoryId')!.value;
+    const categoryId = Number(this.editForm.get('categoryId')!.value);
+    this.subcategories = [];
+    this.editForm.get('subcategoryId')!.setValue(null);
+    this.editForm.get('subcategoryId')!.markAsPristine();
+    this.editForm.get('subcategoryId')!.markAsUntouched();
 
     if (categoryId) {
       this.loadSubcategories(categoryId);
-    } else {
-      this.subcategories = [];
-      this.editForm.get('subcategoryId')!.reset();
     }
   }
 

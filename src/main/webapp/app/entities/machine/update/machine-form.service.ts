@@ -86,7 +86,7 @@ export class MachineFormService {
       ratePerHour: new FormControl(machineRawValue.ratePerHour, {
         validators: [Validators.required],
       }),
-      ratePerDay: new FormControl(machineRawValue.ratePerDay, {
+      ratePerDay: new FormControl(machineRawValue.ratePerDay ?? null, {
         validators: [Validators.required],
       }),
       minimumUsageHours: new FormControl(machineRawValue.minimumUsageHours),

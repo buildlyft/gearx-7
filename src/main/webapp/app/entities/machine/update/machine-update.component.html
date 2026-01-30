@@ -112,7 +112,7 @@
 
         <div class="mb-3">
           <label class="form-label" for="field_ratePerDay">Rate Per Day</label>
-          <input type="number" class="form-control" id="field_ratePerDay" formControlName="ratePerDay" />
+          <input type="number" class="form-control" id="field_ratePerDay" formControlName="ratePerDay" autocomplete="off" />
           @if (editForm.get('ratePerDay')!.invalid && (editForm.get('ratePerDay')!.dirty || editForm.get('ratePerDay')!.touched)) {
             <div>
               @if (editForm.get('ratePerDay')?.errors?.required) {
@@ -247,20 +247,20 @@
 
         <div class="mb-3">
           <label class="form-label">Category</label>
-          <select class="form-control" formControlName="categoryId" (change)="onCategoryChange()">
+          <select class="form-control" formControlName="categoryId" (change)="onCategoryChange()" autocomplete="off">
             <option [ngValue]="null">-- Select Category --</option>
-            <option *ngFor="let c of categories" [ngValue]="c.id">
-              {{ c.id }}
+            <option *ngFor="let c of categories" [value]="c.id">
+              {{ c.name }}
             </option>
           </select>
         </div>
 
         <div class="mb-3">
           <label class="form-label">Sub Category</label>
-          <select class="form-control" formControlName="subcategoryId">
+          <select class="form-control" formControlName="subcategoryId" [disabled]="!subcategories.length" autocomplete="off">
             <option [ngValue]="null">-- Select Subcategory --</option>
-            <option *ngFor="let s of subcategories" [ngValue]="s.id">
-              {{ s.id }}
+            <option *ngFor="let s of subcategories" [value]="s.id">
+              {{ s.name }}
             </option>
           </select>
         </div>
