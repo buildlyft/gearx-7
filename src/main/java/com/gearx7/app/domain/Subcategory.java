@@ -36,10 +36,23 @@ public class Subcategory implements Serializable {
     private String imageContentType;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JsonIgnoreProperties(value = { "subcategories" }, allowSetters = true)
+    @JsonIgnoreProperties(value = { "subcategories", "type" }, allowSetters = true)
+    @JoinColumn(name = "category_id")
+    @NotNull(message = "Category is required")
     private Category category;
 
+    @Column(name = "image_url", length = 2000)
+    private String imageUrl;
+
     // jhipster-needle-entity-add-field - JHipster will add fields here
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
 
     public Long getId() {
         return this.id;

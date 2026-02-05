@@ -91,4 +91,17 @@
         </addColumn>
     </changeSet>
 
+    <changeSet id="202602031452" author="ganesh">
+        <addNotNullConstraint
+            tableName="booking"
+            columnName="user_id"
+            columnDataType="bigint"/>
+
+        <addNotNullConstraint
+            tableName="booking"
+            columnName="machine_id"
+            columnDataType="bigint"/>
+    </changeSet>
+
+
 </databaseChangeLog>

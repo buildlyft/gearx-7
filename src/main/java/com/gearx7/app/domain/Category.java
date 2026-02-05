@@ -1,5 +1,6 @@
 package com.gearx7.app.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
@@ -41,12 +42,24 @@ public class Category implements Serializable {
     @JsonIgnoreProperties(value = { "category" }, allowSetters = true)
     private Set<Subcategory> subcategories = new HashSet<>();
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JsonIgnoreProperties(value = { "categories" }, allowSetters = true)
-    @JoinColumn(name = "type_id")
+    @JoinColumn(name = "type_id", nullable = false)
+    @NotNull(message = "Type is required")
     private Type type;
 
+    @Column(name = "image_url", length = 2000)
+    private String imageUrl;
+
     // jhipster-needle-entity-add-field - JHipster will add fields here
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
 
     public Type getType() {
         return this.type;

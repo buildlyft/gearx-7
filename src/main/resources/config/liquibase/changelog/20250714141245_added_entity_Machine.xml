@@ -191,4 +191,47 @@
 
     </changeSet>
 
+    <changeSet id="202602031345" author="Ganesh">
+
+        <!-- Add column -->
+        <addColumn tableName="machine">
+            <column name="type_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+
+        <!-- Add Foreign Key -->
+        <addForeignKeyConstraint
+            baseTableName="machine"
+            baseColumnNames="type_id"
+            constraintName="fk_machine_type"
+            referencedTableName="type"
+            referencedColumnNames="id"
+            onDelete="RESTRICT"/>
+
+    </changeSet>
+
+    <changeSet id="202602031348" author="Ganesh">
+
+        <!-- Make category_id NOT NULL -->
+        <addNotNullConstraint
+            tableName="machine"
+            columnName="user_id"
+            columnDataType="bigint"/>
+
+        <!-- Make category_id NOT NULL -->
+        <addNotNullConstraint
+            tableName="machine"
+            columnName="category_id"
+            columnDataType="bigint"/>
+
+        <!-- Make subcategory_id NOT NULL -->
+        <addNotNullConstraint
+            tableName="machine"
+            columnName="subcategory_id"
+            columnDataType="bigint"/>
+
+    </changeSet>
+
+
 </databaseChangeLog>

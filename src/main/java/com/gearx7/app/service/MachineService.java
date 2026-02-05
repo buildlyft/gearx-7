@@ -2,15 +2,11 @@ package com.gearx7.app.service;
 
 import com.gearx7.app.domain.Machine;
 import com.gearx7.app.domain.User;
-import com.gearx7.app.repository.CategoryRepository;
-import com.gearx7.app.repository.MachineRepository;
-import com.gearx7.app.repository.SubcategoryRepository;
-import com.gearx7.app.repository.UserRepository;
+import com.gearx7.app.repository.*;
 import com.gearx7.app.security.AuthoritiesConstants;
 import com.gearx7.app.security.SecurityUtils;
 import com.gearx7.app.service.dto.MachineDTO;
 import com.gearx7.app.service.mapper.MachineMapper;
-import com.gearx7.app.service.mapper.UserMapper;
 import com.gearx7.app.web.rest.errors.BadRequestAlertException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -18,7 +14,6 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import org.slf4j.Logger;
@@ -49,7 +44,7 @@ public class MachineService {
 
     private final UserRepository userRepository;
 
-    private final UserMapper userMapper;
+    private final TypeRepository typeRepository;
 
     public MachineService(
         MachineRepository machineRepository,
@@ -57,14 +52,14 @@ public class MachineService {
         CategoryRepository categoryRepository,
         SubcategoryRepository subCategoryRepository,
         UserRepository userRepository,
-        UserMapper userMapper
+        TypeRepository typeRepository
     ) {
         this.machineRepository = machineRepository;
         this.machineMapper = machineMapper;
         this.categoryRepository = categoryRepository;
         this.subCategoryRepository = subCategoryRepository;
         this.userRepository = userRepository;
-        this.userMapper = userMapper;
+        this.typeRepository = typeRepository;
     }
 
     /**
@@ -81,6 +76,8 @@ public class MachineService {
         if (!SecurityUtils.hasCurrentUserAnyOfAuthorities(AuthoritiesConstants.ADMIN, AuthoritiesConstants.PARTNER)) {
             throw new AccessDeniedException("You are not allowed to create a machine");
         }
+
+        validateHierarchy(machineDTO.getTypeId(), machineDTO.getCategoryId(), machineDTO.getSubcategoryId());
 
         Machine machine = machineMapper.toEntity(machineDTO);
 
@@ -160,8 +157,11 @@ public class MachineService {
      */
     @Transactional(readOnly = true)
     public Optional<MachineDTO> findOne(Long id) {
-        log.debug("Request to get Machine : {}", id);
-        return machineRepository.findOneWithEagerRelationships(id).map(machineMapper::toDto);
+        log.info("Request to get Machine : {}", id);
+
+        Optional<MachineDTO> results = machineRepository.findById(id).map(machineMapper::toDto);
+        log.info("Found Machine with id {} ", id);
+        return results;
     }
 
     /**
@@ -177,17 +177,19 @@ public class MachineService {
     /**
      * searching machines based on current user lat,lon around 10.0 KM
      *
+     * @param typeId
      * @param categoryId
      * @param subcategoryId
      * @param start
      * @param end
      * @param userLat
      * @param userLon
-     * @return
+     * @return list of machines matching criteria
      */
 
     @Transactional(readOnly = true)
     public List<MachineDTO> searchMachines(
+        Long typeId,
         Long categoryId,
         Long subcategoryId,
         Instant start,
@@ -198,8 +200,9 @@ public class MachineService {
         final double RADIUS_KM = 15.0;
 
         log.info(
-            "Searching within {} KM radius for categoryId={}, subcategoryId={}, start={}, end={}, lat={}, lon={}",
+            "Searching within {} KM radius for typeId={}, categoryId={}, subcategoryId={}, start={}, end={}, lat={}, lon={}",
             RADIUS_KM,
+            typeId,
             categoryId,
             subcategoryId,
             start,
@@ -208,68 +211,23 @@ public class MachineService {
             userLon
         );
 
-        if (!categoryRepository.existsById(categoryId)) {
-            log.error("Category not found with id: {}", categoryId);
-            throw new BadRequestAlertException("Category not found with id " + categoryId, "category", "categoryNotFound");
-        }
+        validateHierarchy(typeId, categoryId, subcategoryId);
+        validateLocation(userLat, userLon);
 
-        if (!subCategoryRepository.existsById(subcategoryId)) {
-            log.error("Subcategory not found: {}", subcategoryId);
-            throw new BadRequestAlertException("Subcategory not found with id " + subcategoryId, "subcategory", "subcategoryNotFound");
-        }
+        BoundingBox box = calculateBoundingBox(userLat, userLon, RADIUS_KM);
 
-        if (!subCategoryRepository.existsByIdAndCategoryId(subcategoryId, categoryId)) {
-            log.error("Subcategory {} does not belong to Category {}", subcategoryId, categoryId);
-            throw new BadRequestAlertException(
-                "Subcategory does not belong to selected category",
-                "subcategory",
-                "invalidCategorySubcategory"
-            );
-        }
+        List<Machine> machines = machineRepository.searchWithinRadius(
+            subcategoryId,
+            userLat,
+            userLon,
+            box.minLat,
+            box.maxLat,
+            box.minLon,
+            box.maxLon,
+            RADIUS_KM
+        );
 
-        if (userLat < -90 || userLat > 90 || userLon < -180 || userLon > 180) {
-            throw new BadRequestAlertException("Invalid latitude or longitude", "machine", "invalidLocation");
-        }
-
-        List<Machine> machines = machineRepository.searchWithinRadius(categoryId, subcategoryId, userLat, userLon, RADIUS_KM);
-
-        log.info("{} machines found within {} KM radius", machines.size(), RADIUS_KM);
-
-        List<MachineDTO> availableMachines = new ArrayList<>();
-
-        LocalDate startDate = start.atZone(ZoneOffset.UTC).toLocalDate();
-        LocalDate endDate = end.atZone(ZoneOffset.UTC).toLocalDate();
-        boolean isSameDay = startDate.equals(endDate);
-
-        for (Machine machine : machines) {
-            MachineDTO dto = machineMapper.toDto(machine);
-
-            if (isSameDay) {
-                long hours = ChronoUnit.HOURS.between(start, end);
-                if (hours <= 0) hours = 1;
-
-                if (machine.getMinimumUsageHours() != null && hours < machine.getMinimumUsageHours()) {
-                    hours = machine.getMinimumUsageHours();
-                }
-
-                dto.setTotalHourlyRate(machine.getRatePerHour().multiply(BigDecimal.valueOf(hours)).setScale(2, RoundingMode.HALF_UP));
-                dto.setTotalDailyRate(null);
-            } else {
-                long days = ChronoUnit.DAYS.between(startDate, endDate) + 1;
-
-                BigDecimal ratePerDay = machine.getRatePerDay() != null
-                    ? machine.getRatePerDay()
-                    : machine.getRatePerHour().multiply(BigDecimal.valueOf(24));
-
-                dto.setTotalDailyRate(ratePerDay.multiply(BigDecimal.valueOf(days)).setScale(2, RoundingMode.HALF_UP));
-                dto.setTotalHourlyRate(null);
-            }
-
-            availableMachines.add(dto);
-        }
-
-        log.info("Total {} machines returned to controller", availableMachines.size());
-        return availableMachines;
+        return machines.stream().map(machine -> calculatePricing(machine, start, end)).toList();
     }
 
     private User getCurrentLoggedInUser() {
@@ -296,5 +254,77 @@ public class MachineService {
         }
 
         return partner;
+    }
+
+    private void validateHierarchy(Long typeId, Long categoryId, Long subcategoryId) {
+        if (!typeRepository.existsById(typeId)) throw new BadRequestAlertException("Type not found", "type", "typeNotFound");
+
+        if (!categoryRepository.existsByIdAndTypeId(categoryId, typeId)) throw new BadRequestAlertException(
+            "Invalid Category for Type",
+            "category",
+            "invalidTypeCategory"
+        );
+
+        if (!subCategoryRepository.existsByIdAndCategoryId(subcategoryId, categoryId)) throw new BadRequestAlertException(
+            "Invalid Subcategory for Category",
+            "subcategory",
+            "invalidCategorySubcategory"
+        );
+    }
+
+    private void validateLocation(Double lat, Double lon) {
+        if (lat < -90 || lat > 90 || lon < -180 || lon > 180) throw new BadRequestAlertException(
+            "Invalid coordinates",
+            "machine",
+            "invalidLocation"
+        );
+    }
+
+    private BoundingBox calculateBoundingBox(double lat, double lon, double radiusKm) {
+        double latRadius = radiusKm / 111.0;
+        double lonRadius = radiusKm / (111.0 * Math.cos(Math.toRadians(lat)));
+
+        return new BoundingBox(lat - latRadius, lat + latRadius, lon - lonRadius, lon + lonRadius);
+    }
+
+    private record BoundingBox(double minLat, double maxLat, double minLon, double maxLon) {}
+
+    private MachineDTO calculatePricing(Machine machine, Instant start, Instant end) {
+        MachineDTO dto = machineMapper.toDto(machine);
+
+        LocalDate startDate = start.atZone(ZoneOffset.UTC).toLocalDate();
+        LocalDate endDate = end.atZone(ZoneOffset.UTC).toLocalDate();
+
+        boolean isSameDay = startDate.equals(endDate);
+
+        if (isSameDay) {
+            long hours = Math.max(1, ChronoUnit.HOURS.between(start, end));
+
+            if (machine.getMinimumUsageHours() != null) {
+                hours = Math.max(hours, machine.getMinimumUsageHours());
+            }
+
+            BigDecimal hourlyTotal = machine.getRatePerHour().multiply(BigDecimal.valueOf(hours));
+
+            if (machine.getRatePerDay() != null && hourlyTotal.compareTo(machine.getRatePerDay()) > 0) {
+                dto.setTotalDailyRate(machine.getRatePerDay().setScale(2, RoundingMode.HALF_UP));
+                dto.setTotalHourlyRate(null);
+            } else {
+                dto.setTotalHourlyRate(hourlyTotal.setScale(2, RoundingMode.HALF_UP));
+                dto.setTotalDailyRate(null);
+            }
+        } else {
+            long days = ChronoUnit.DAYS.between(startDate, endDate) + 1;
+
+            BigDecimal ratePerDay = machine.getRatePerDay() != null
+                ? machine.getRatePerDay()
+                : machine.getRatePerHour().multiply(BigDecimal.valueOf(24));
+
+            dto.setTotalDailyRate(ratePerDay.multiply(BigDecimal.valueOf(days)).setScale(2, RoundingMode.HALF_UP));
+
+            dto.setTotalHourlyRate(null);
+        }
+
+        return dto;
     }
 }

@@ -43,35 +43,53 @@ public interface MachineRepository extends JpaRepository<Machine, Long> {
     Optional<Machine> findOneWithToOneRelationships(@Param("id") Long id);
 
     @Query(
-        """
-        SELECT m
-        FROM Machine m
-        WHERE m.status = com.gearx7.app.domain.enumeration.MachineStatus.AVAILABLE
-        AND m.category.id = :categoryId
-        AND m.subcategory.id = :subcategoryId
-        AND (
-            6371 * acos(
-                cos(radians(:userLat)) *
-                cos(radians(m.latitude)) *
-                cos(radians(m.longitude) - radians(:userLon)) +
-                sin(radians(:userLat)) *
-                sin(radians(m.latitude))
-            )
-        ) <= :radiusKm
-        """
-    ) //  If distance ≤ radius → machine included , If distance > radius → ignored
+        value = """
+            SELECT *
+            FROM machine m
+            WHERE m.status = 'AVAILABLE'
+            AND m.subcategory_id = :subcategoryId
+            AND m.latitude BETWEEN :minLat AND :maxLat
+            AND m.longitude BETWEEN :minLon AND :maxLon
+            AND (
+                6371 * acos(
+                    cos(radians(:userLat)) *
+                    cos(radians(m.latitude)) *
+                    cos(radians(m.longitude) - radians(:userLon)) +
+                    sin(radians(:userLat)) *
+                    sin(radians(m.latitude))
+                )
+            ) <= :radiusKm
+        """,
+        nativeQuery = true
+    )
     List<Machine> searchWithinRadius(
-        @Param("categoryId") Long categoryId,
         @Param("subcategoryId") Long subcategoryId,
         @Param("userLat") double userLat,
         @Param("userLon") double userLon,
+        @Param("minLat") double minLat,
+        @Param("maxLat") double maxLat,
+        @Param("minLon") double minLon,
+        @Param("maxLon") double maxLon,
         @Param("radiusKm") double radiusKm
     );
 
     Optional<Machine> findById(Long id);
+
     /*
     Optional<MachineOperator> findByIdAndActiveTrue(Long machineId);
 
     boolean existsByIdAndActiveTrue(Long machineId);
 */
+    @Query(
+        """
+            select distinct m
+            from Machine m
+            left join fetch m.user
+            left join fetch m.category
+            left join fetch m.subcategory
+            left join fetch m.operators o
+            where m.id = :id
+        """
+    )
+    Optional<Machine> findOneWithAllRelationships(@Param("id") Long id);
 }

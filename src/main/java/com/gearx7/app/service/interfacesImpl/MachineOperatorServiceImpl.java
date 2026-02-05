@@ -110,6 +110,10 @@ public class MachineOperatorServiceImpl implements MachineOperatorService {
     @Override
     @Transactional(readOnly = true)
     public MachineOperatorDetailsDTO getByMachineId(Long machineId) {
+        machineRepo
+            .findById(machineId)
+            .orElseThrow(() -> new NotFoundAlertException("Machine not found with id : " + machineId, "Machine", "MachineNotFound"));
+
         MachineOperator operator = operatorRepo
             .findByMachineIdAndActiveTrue(machineId)
             .orElseThrow(() ->
@@ -212,10 +216,10 @@ public class MachineOperatorServiceImpl implements MachineOperatorService {
 
     private void validateNewAssignment(Long machineId, Long userId) {
         if (operatorRepo.existsByMachineIdAndActiveTrue(machineId)) {
-            throw new BadRequestAlertException("Machine already has operator", "MachineOperator", "machineBusy");
+            throw new BadRequestAlertException("Machine already has operator", "MachineOperator", "Machine already has operator");
         }
         if (operatorRepo.existsByUserIdAndActiveTrue(userId)) {
-            throw new BadRequestAlertException("Operator already assigned", "MachineOperator", "operatorBusy");
+            throw new BadRequestAlertException("Operator already assigned", "MachineOperator", "Operator already assigned");
         }
     }
 

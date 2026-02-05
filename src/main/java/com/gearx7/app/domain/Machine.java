@@ -93,6 +93,12 @@ public class Machine implements Serializable {
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JsonIgnoreProperties(value = { "categories" }, allowSetters = true)
+    @JoinColumn(name = "type_id", nullable = false)
+    @NotNull(message = "Type is required")
+    private Type typeEntity;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JsonIgnoreProperties(value = { "subcategories" }, allowSetters = true)
     private Category category;
 
@@ -125,6 +131,14 @@ public class Machine implements Serializable {
     @OneToMany(mappedBy = "machine", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JsonIgnoreProperties(value = { "machine", "uploadedBy", "operator" }, allowSetters = true)
     private List<VehicleDocument> documents = new ArrayList<>();
+
+    public Type getTypeEntity() {
+        return typeEntity;
+    }
+
+    public void setTypeEntity(Type typeEntity) {
+        this.typeEntity = typeEntity;
+    }
 
     public List<MachineOperator> getOperators() {
         return operators;

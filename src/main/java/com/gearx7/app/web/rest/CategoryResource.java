@@ -1,10 +1,13 @@
 package com.gearx7.app.web.rest;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gearx7.app.domain.Category;
 import com.gearx7.app.domain.Subcategory;
 import com.gearx7.app.repository.CategoryRepository;
 import com.gearx7.app.repository.SubcategoryRepository;
 import com.gearx7.app.service.CategoryService;
+import com.gearx7.app.service.dto.CategoryDTO;
 import com.gearx7.app.web.rest.errors.BadRequestAlertException;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -14,18 +17,21 @@ import java.util.List;
 import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import tech.jhipster.web.util.HeaderUtil;
 import tech.jhipster.web.util.PaginationUtil;
 
 /**
- * REST controller for managing {@link com.gearx7.app.domain.Category}.
+ * REST controller for managing {@link Category}.
  */
 @RestController
 @RequestMapping("/api/categories")
@@ -57,17 +63,22 @@ public class CategoryResource {
     /**
      * {@code POST  /categories} : Create a new category.
      *
-     * @param category the category to create.
+     * @param categoryDTO the category to create.
+     * @param image the image file to upload.
      * @return the {@link ResponseEntity} with status {@code 201 (Created)} and with body the new category, or with status {@code 400 (Bad Request)} if the category has already an ID.
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
-    @PostMapping("")
-    public ResponseEntity<Category> createCategory(@Valid @RequestBody Category category) throws URISyntaxException {
-        log.debug("REST request to save Category : {}", category);
-        if (category.getId() != null) {
+    @PostMapping(value = "", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<CategoryDTO> createCategory(
+        @Valid @RequestPart("category") CategoryDTO categoryDTO,
+        @RequestPart("file") MultipartFile image
+    ) throws URISyntaxException, JsonProcessingException {
+        log.debug("REST request to save Category : {}", categoryDTO);
+
+        if (categoryDTO.getId() != null) {
             throw new BadRequestAlertException("A new category cannot already have an ID", ENTITY_NAME, "idexists");
         }
-        Category result = categoryService.save(category);
+        CategoryDTO result = categoryService.save(categoryDTO, image);
         return ResponseEntity
             .created(new URI("/api/categories/" + result.getId()))
             .headers(HeaderUtil.createEntityCreationAlert(applicationName, false, ENTITY_NAME, result.getId().toString()))
@@ -84,29 +95,30 @@ public class CategoryResource {
      * {@code PUT  /categories/:id} : Updates an existing category.
      *
      * @param id the id of the category to save.
-     * @param category the category to update.
+     * @param image the category to update.
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the updated category,
      * or with status {@code 400 (Bad Request)} if the category is not valid,
      * or with status {@code 500 (Internal Server Error)} if the category couldn't be updated.
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
-    @PutMapping("/{id}")
-    public ResponseEntity<Category> updateCategory(
+    @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<CategoryDTO> updateCategory(
         @PathVariable(value = "id", required = false) final Long id,
-        @Valid @RequestBody Category category
+        @Valid @RequestPart("category") CategoryDTO categoryDTO,
+        @RequestPart(required = false, value = "file") MultipartFile image
     ) throws URISyntaxException {
-        log.debug("REST request to update Category : {}, {}", id, category);
-        if (category.getId() == null) {
+        log.debug("REST request to update Category : {}, {}", id, categoryDTO);
+        if (categoryDTO.getId() == null) {
             throw new BadRequestAlertException("Invalid id", ENTITY_NAME, "idnull");
         }
-        if (!Objects.equals(id, category.getId())) {
+        if (!Objects.equals(id, categoryDTO.getId())) {
             throw new BadRequestAlertException("Invalid ID", ENTITY_NAME, "idinvalid");
         }
 
-        Category result = categoryService.update(category);
+        CategoryDTO result = categoryService.update(categoryDTO, image);
         return ResponseEntity
             .ok()
-            .headers(HeaderUtil.createEntityUpdateAlert(applicationName, false, ENTITY_NAME, category.getId().toString()))
+            .headers(HeaderUtil.createEntityUpdateAlert(applicationName, false, ENTITY_NAME, result.getId().toString()))
             .body(result);
     }
 
@@ -149,9 +161,9 @@ public class CategoryResource {
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of categories in body.
      */
     @GetMapping("")
-    public ResponseEntity<List<Category>> getAllCategories(@org.springdoc.core.annotations.ParameterObject Pageable pageable) {
+    public ResponseEntity<List<CategoryDTO>> getAllCategories(@ParameterObject Pageable pageable) {
         log.debug("REST request to get a page of Categories");
-        Page<Category> page = categoryService.findAll(pageable);
+        Page<CategoryDTO> page = categoryService.findAll(pageable);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
         return ResponseEntity.ok().headers(headers).body(page.getContent());
     }
@@ -163,9 +175,9 @@ public class CategoryResource {
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the category, or with status {@code 404 (Not Found)}.
      */
     @GetMapping("/{id}")
-    public ResponseEntity<Category> getCategory(@PathVariable("id") Long id) {
+    public ResponseEntity<CategoryDTO> getCategory(@PathVariable("id") Long id) {
         log.debug("REST request to get Category : {}", id);
-        Category category = categoryService.findOne(id);
+        CategoryDTO category = categoryService.findOne(id);
         return ResponseEntity.ok(category);
     }
 

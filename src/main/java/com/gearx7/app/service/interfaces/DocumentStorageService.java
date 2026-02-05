@@ -6,4 +6,8 @@ public interface DocumentStorageService {
     String uploadMachineDocument(MultipartFile file, Long machineId);
 
     String uploadOperatorDocument(MultipartFile file, Long operatorId);
+
+    String uploadCategoryImage(MultipartFile file, Long categoryId);
+
+    String uploadSubcategoryImage(MultipartFile file, Long subcategoryId);
 }

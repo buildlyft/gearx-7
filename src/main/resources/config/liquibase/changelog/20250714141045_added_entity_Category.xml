@@ -73,4 +73,17 @@
             constraintName="fk_category_type"/>
     </changeSet>
 
+    <changeSet id="202602031448" author="ganesh">
+        <addNotNullConstraint
+            tableName="category"
+            columnName="type_id"
+            columnDataType="bigint"/>
+    </changeSet>
+
+    <changeSet id="202602041200" author="Ganesh">
+        <addColumn tableName="category">
+            <column name="image_url" type="varchar(2000)"/>
+        </addColumn>
+    </changeSet>
+
 </databaseChangeLog>

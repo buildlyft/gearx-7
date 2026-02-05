@@ -1,6 +1,8 @@
 package com.gearx7.app.web.rest;
 
+import com.gearx7.app.domain.Category;
 import com.gearx7.app.domain.Type;
+import com.gearx7.app.repository.TypeRepository;
 import com.gearx7.app.service.interfaces.TypeService;
 import jakarta.validation.Valid;
 import java.net.URI;
@@ -19,7 +21,10 @@ public class TypeResource {
 
     private final TypeService typeService;
 
-    public TypeResource(TypeService typeService) {
+    private final TypeRepository typeRepository;
+
+    public TypeResource(TypeService typeService, TypeRepository typeRepository) {
+        this.typeRepository = typeRepository;
         this.typeService = typeService;
     }
 
@@ -71,6 +76,14 @@ public class TypeResource {
         Type type = typeService.getTypeById(id);
         log.info("Fetched Type : {}", type);
         return ResponseEntity.ok(type);
+    }
+
+    @GetMapping("/{typeId}/categories")
+    public ResponseEntity<List<Category>> getCategoriesByTypeId(@PathVariable("typeId") Long typeId) {
+        log.info("REST request to get Categories for Type id : {}", typeId);
+        List<Category> categories = typeService.getCategoriesByTypeId(typeId);
+        log.info("Returning {} categories for Type id : {}", categories.size(), typeId);
+        return ResponseEntity.ok(categories);
     }
 
     /**

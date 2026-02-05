@@ -1,15 +1,10 @@
 package com.gearx7.app.service.dto;
 
-import com.gearx7.app.domain.MachineOperator;
-import com.gearx7.app.domain.VehicleDocument;
 import com.gearx7.app.domain.enumeration.MachineStatus;
-import jakarta.persistence.Column;
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 
 /**
@@ -74,10 +69,13 @@ public class MachineDTO implements Serializable {
 
     private BigDecimal totalDailyRate;
 
-    @NotNull
+    @NotNull(message = "Type is required")
+    private Long typeId;
+
+    @NotNull(message = "Category is required")
     private Long categoryId;
 
-    @NotNull
+    @NotNull(message = "Subcategory is required")
     private Long subcategoryId;
 
     private String warranty;
@@ -92,24 +90,12 @@ public class MachineDTO implements Serializable {
 
     private String insuranceNo;
 
-    private List<VehicleDocument> documents = new ArrayList<>();
-
-    private List<MachineOperator> operators;
-
-    public List<VehicleDocument> getDocuments() {
-        return documents;
+    public Long getTypeId() {
+        return typeId;
     }
 
-    public void setDocuments(List<VehicleDocument> documents) {
-        this.documents = documents;
-    }
-
-    public List<MachineOperator> getOperators() {
-        return operators;
-    }
-
-    public void setOperators(List<MachineOperator> operators) {
-        this.operators = operators;
+    public void setTypeId(Long typeId) {
+        this.typeId = typeId;
     }
 
     public String getWarranty() {

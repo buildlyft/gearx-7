@@ -1,6 +1,8 @@
 package com.gearx7.app.service.interfacesImpl;
 
+import com.gearx7.app.domain.Category;
 import com.gearx7.app.domain.Type;
+import com.gearx7.app.repository.CategoryRepository;
 import com.gearx7.app.repository.TypeRepository;
 import com.gearx7.app.service.interfaces.TypeService;
 import com.gearx7.app.web.rest.errors.BadRequestAlertException;
@@ -19,8 +21,11 @@ public class TypeServiceImpl implements TypeService {
 
     private final TypeRepository typeRepository;
 
-    public TypeServiceImpl(TypeRepository typeRepository) {
+    private final CategoryRepository categoryRepository;
+
+    public TypeServiceImpl(TypeRepository typeRepository, CategoryRepository categoryRepository) {
         this.typeRepository = typeRepository;
+        this.categoryRepository = categoryRepository;
     }
 
     /**Create a new Type
@@ -118,6 +123,20 @@ public class TypeServiceImpl implements TypeService {
         log.info("Type with id {} deleted successfully", id);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<Category> getCategoriesByTypeId(Long typeId) {
+        log.debug("Request to get Categories for Type id: {}", typeId);
+
+        List<Category> categories = categoryRepository.findByTypeId(typeId);
+
+        if (categories.isEmpty() && !typeRepository.existsById(typeId)) {
+            throw new NotFoundAlertException("Type not found with given id: " + typeId, "type", "TypeIdNotFound");
+        }
+
+        return categories;
+    }
+
     /**
      * Get Type by id
      * @param id
@@ -132,7 +151,7 @@ public class TypeServiceImpl implements TypeService {
             .findByIdWithCategories(id)
             .orElseThrow(() -> {
                 log.error("Type not found with id {}", id);
-                return new NotFoundAlertException("Type not found", "type", "notfound");
+                throw new NotFoundAlertException("Type not found with given id: " + id, "type", "TypeIdNotFound");
             });
     }
 

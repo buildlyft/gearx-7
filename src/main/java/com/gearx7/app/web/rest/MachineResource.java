@@ -1,30 +1,20 @@
 package com.gearx7.app.web.rest;
 
-import com.gearx7.app.domain.User;
 import com.gearx7.app.repository.MachineRepository;
 import com.gearx7.app.repository.UserRepository;
-import com.gearx7.app.security.AuthoritiesConstants;
-import com.gearx7.app.security.SecurityUtils;
 import com.gearx7.app.service.MachineService;
 import com.gearx7.app.service.dto.MachineDTO;
-import com.gearx7.app.service.dto.UserDTO;
 import com.gearx7.app.service.mapper.UserMapper;
 import com.gearx7.app.web.rest.errors.BadRequestAlertException;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.file.AccessDeniedException;
 import java.time.Instant;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.time.temporal.ChronoUnit;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -35,10 +25,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import tech.jhipster.web.util.HeaderUtil;
@@ -207,8 +195,7 @@ public class MachineResource {
     @GetMapping("/{id}")
     public ResponseEntity<MachineDTO> getMachine(@PathVariable("id") Long id) {
         log.debug("REST request to get Machine : {}", id);
-        Optional<MachineDTO> machineDTO = machineService.findOne(id);
-        return ResponseUtil.wrapOrNotFound(machineDTO);
+        return ResponseUtil.wrapOrNotFound(machineService.findOne(id));
     }
 
     /**
@@ -229,6 +216,7 @@ public class MachineResource {
 
     @GetMapping("/search")
     public ResponseEntity<List<MachineDTO>> searchMachines(
+        @RequestParam Long typeId,
         @RequestParam Long categoryId,
         @RequestParam Long subcategoryId,
         @RequestParam String startDate,
@@ -237,7 +225,8 @@ public class MachineResource {
         @RequestParam Double lon // here pass radius from API Request
     ) {
         log.info(
-            "REST request to Search Machines received: categoryId={}, subcategoryId={}, startDate={}, endDate={}, lat={}, lon={}",
+            "REST request to Search Machines received: typeId={}, categoryId={}, subcategoryId={}, startDate={}, endDate={}, lat={}, lon={}",
+            typeId,
             categoryId,
             subcategoryId,
             startDate,
@@ -246,29 +235,20 @@ public class MachineResource {
             lon
         );
 
+        if (typeId == null || categoryId == null || subcategoryId == null) {
+            throw new BadRequestAlertException("Type, Category and Subcategory are required", ENTITY_NAME, "missingParams");
+        }
+
+        if (lat == null || lon == null) {
+            throw new BadRequestAlertException("Location coordinates are required", ENTITY_NAME, "missingLocation");
+        }
+
         // Parse start and end dates - handle multiple formats
         Instant startDateTime = parseDateTime(startDate);
         Instant endDateTime = parseDateTime(endDate);
+        validateDates(startDateTime, endDateTime);
 
-        Instant now = Instant.now();
-
-        if (startDateTime.isBefore(now)) {
-            log.warn("Start date {} is in past", startDateTime);
-            throw new BadRequestAlertException("Start date must be today or a future date", "machine", "startDateInPast");
-        }
-
-        if (endDateTime.isBefore(now)) {
-            log.warn("End date {} is in past", endDateTime);
-            throw new BadRequestAlertException("End date must be today or a future date", "machine", "endDateInPast");
-        }
-
-        if (!startDateTime.isBefore(endDateTime)) {
-            log.error("Invalid date range. startDate={} endDate={}", startDateTime, endDateTime);
-            throw new BadRequestAlertException("Start date must be before end date", "machine", "invalidDateRange");
-        }
-        log.debug("Date validation success, calling service...");
-
-        List<MachineDTO> machines = machineService.searchMachines(categoryId, subcategoryId, startDateTime, endDateTime, lat, lon);
+        List<MachineDTO> machines = machineService.searchMachines(typeId, categoryId, subcategoryId, startDateTime, endDateTime, lat, lon);
 
         if (machines == null || machines.isEmpty()) {
             log.info("Search completed. No machines found.");
@@ -311,5 +291,15 @@ public class MachineResource {
                 );
             }
         }
+    }
+
+    private void validateDates(Instant start, Instant end) {
+        Instant now = Instant.now();
+
+        if (start.isBefore(now)) throw new BadRequestAlertException("Start date must be future", ENTITY_NAME, "startDateInPast");
+
+        if (end.isBefore(now)) throw new BadRequestAlertException("End date must be future", ENTITY_NAME, "endDateInPast");
+
+        if (!start.isBefore(end)) throw new BadRequestAlertException("Start date must be before end date", ENTITY_NAME, "invalidDateRange");
     }
 }

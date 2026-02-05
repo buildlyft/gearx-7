@@ -2,6 +2,7 @@ package com.gearx7.app.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.io.Serializable;
 import java.time.Instant;
@@ -44,7 +45,7 @@ public class MachineOperator implements Serializable {
 
     @Column(name = "address")
     @Size(min = 2, max = 225)
-    public String address;
+    private String address;
 
     @Column(name = "active")
     private Boolean active = true;

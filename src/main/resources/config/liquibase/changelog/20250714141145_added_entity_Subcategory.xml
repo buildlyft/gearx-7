@@ -57,4 +57,21 @@
             <!-- jhipster-needle-liquibase-add-loadcolumn - JHipster (and/or extensions) can add load columns here -->
         </loadData>
     </changeSet>
+
+    <changeSet id="202602031407" author="Ganesh">
+
+        <addNotNullConstraint
+            tableName="subcategory"
+            columnName="category_id"
+            columnDataType="bigint"/>
+
+    </changeSet>
+
+    <changeSet id="202602040100" author="Ganesh">
+        <addColumn tableName="subcategory">
+            <column name="image_url" type="varchar(2000)"/>
+        </addColumn>
+
+    </changeSet>
+
 </databaseChangeLog>

@@ -108,6 +108,13 @@ public class VehicleDocServiceImpl implements VehicleDocService {
     public VehicleDocumentResponseDTO getMachineDocuments(Long machineId) {
         log.info("SERVICE START | Fetch machine documents | machineId={}", machineId);
 
+        machineRepository
+            .findById(machineId)
+            .orElseThrow(() -> {
+                log.error("Machine not found | machineId={}", machineId);
+                return new NotFoundAlertException("Machine not found with id " + machineId, "machine", "machineNotFound");
+            });
+
         List<VehicleDocumentDTO> docs = vehicleDocumentRepository
             .findAllByMachineId(machineId)
             .stream()
