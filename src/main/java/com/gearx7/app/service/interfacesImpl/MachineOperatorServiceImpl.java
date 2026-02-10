@@ -2,14 +2,9 @@ package com.gearx7.app.service.interfacesImpl;
 
 import com.gearx7.app.domain.Machine;
 import com.gearx7.app.domain.MachineOperator;
-import com.gearx7.app.domain.User;
-import com.gearx7.app.domain.VehicleDocument;
 import com.gearx7.app.repository.MachineOperatorRepository;
 import com.gearx7.app.repository.MachineRepository;
-import com.gearx7.app.repository.UserRepository;
-import com.gearx7.app.repository.VehicleDocumentRepository;
 import com.gearx7.app.service.dto.MachineOperatorDetailsDTO;
-import com.gearx7.app.service.dto.OperatorDocumentDTO;
 import com.gearx7.app.service.interfaces.DocumentStorageService;
 import com.gearx7.app.service.interfaces.MachineOperatorService;
 import com.gearx7.app.web.rest.errors.BadRequestAlertException;
@@ -30,105 +25,128 @@ public class MachineOperatorServiceImpl implements MachineOperatorService {
 
     private final MachineOperatorRepository operatorRepo;
     private final MachineRepository machineRepo;
-    private final UserRepository userRepo;
-    private final VehicleDocumentRepository documentRepo;
     private final DocumentStorageService storageService;
 
     public MachineOperatorServiceImpl(
         MachineOperatorRepository operatorRepo,
         MachineRepository machineRepo,
-        UserRepository userRepo,
-        VehicleDocumentRepository documentRepo,
         DocumentStorageService storageService
     ) {
         this.operatorRepo = operatorRepo;
         this.machineRepo = machineRepo;
-        this.userRepo = userRepo;
-        this.documentRepo = documentRepo;
         this.storageService = storageService;
     }
 
-    /* ================= CREATE ================= */
+    /* ============================================================
+                            CREATE
+       ============================================================ */
 
     @Override
-    public MachineOperatorDetailsDTO create(MachineOperatorDetailsDTO dto, List<MultipartFile> files) {
-        log.info("Create operator | machineId={} userId={}", dto.getMachineId(), dto.getUserId());
+    public MachineOperatorDetailsDTO create(MachineOperatorDetailsDTO dto, MultipartFile file) {
+        log.info("Request to create operator | machineId={}", dto.getMachineId());
 
-        Machine machine = getMachine(dto.getMachineId());
-        User user = getUser(dto.getUserId());
+        Machine machine = getMachineOrThrow(dto.getMachineId());
 
-        validateNewAssignment(machine.getId(), user.getId());
+        validateNewAssignment(machine.getId());
 
-        MachineOperator operator = saveOperator(machine, user, dto);
+        MachineOperator operator = buildOperator(machine, dto);
 
-        saveDocuments(operator, machine, user, files);
+        operator = operatorRepo.save(operator);
 
-        return buildResponse(operator);
+        log.debug("Operator saved | operatorId={}", operator.getId());
+
+        attachDocumentIfPresent(operator, file);
+
+        log.info("Operator successfully created | operatorId={} machineId={}", operator.getId(), machine.getId());
+
+        return mapToDTO(operator);
+    }
+
+    /* ============================================================
+                            REASSIGN
+       ============================================================ */
+
+    @Override
+    public MachineOperatorDetailsDTO reassign(Long machineId, MachineOperatorDetailsDTO dto, MultipartFile file) {
+        log.info("Request to reassign operator | machineId={}", machineId);
+
+        Machine machine = getMachineOrThrow(machineId);
+
+        deactivateExistingAssignments(machineId);
+
+        MachineOperator operator = buildOperator(machine, dto);
+
+        operator = operatorRepo.save(operator);
+
+        log.debug("New operator assigned | operatorId={}", operator.getId());
+
+        attachDocumentIfPresent(operator, file);
+
+        return mapToDTO(operator);
+    }
+
+    /* ============================================================
+                                GET
+       ============================================================ */
+
+    @Override
+    @Transactional(readOnly = true)
+    public MachineOperatorDetailsDTO getByMachineId(Long machineId) {
+        log.debug("Fetching active operator | machineId={}", machineId);
+
+        MachineOperator operator = operatorRepo
+            .findByMachineIdAndActiveTrue(machineId)
+            .orElseThrow(() ->
+                new NotFoundAlertException("No active operator for machine id : " + machineId, "MachineOperator", "OperatorNotFound")
+            );
+
+        return mapToDTO(operator);
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<MachineOperatorDetailsDTO> getAllActiveOperators() {
-        log.info("Fetching all active machine operators");
+        log.debug("Fetching all active operators");
 
         List<MachineOperator> operators = operatorRepo.findAllByActiveTrue();
 
-        if (operators.isEmpty()) {
-            log.info("No active operators found");
-            return List.of();
-        }
+        log.debug("Active operators found | count={}", operators.size());
 
-        log.info("Active operators fetched | count={}", operators.size());
-
-        return operators
-            .stream()
-            .map(operator -> {
-                log.trace("Building response for operatorId={}", operator.getId());
-                return buildResponse(operator);
-            })
-            .toList();
+        return operators.stream().map(this::mapToDTO).toList();
     }
 
-    /* ================= REASSIGN ================= */
+    /* ============================================================
+                          INTERNAL HELPERS
+       ============================================================ */
 
-    @Override
-    public MachineOperatorDetailsDTO reassign(Long machineId, MachineOperatorDetailsDTO dto, List<MultipartFile> files) {
-        Machine machine = getMachine(machineId);
-        User user = getUser(dto.getUserId());
-
-        deactivateExistingAssignments(machineId, user.getId());
-
-        MachineOperator operator = saveOperator(machine, user, dto);
-
-        saveDocuments(operator, machine, user, files);
-
-        return buildResponse(operator);
-    }
-
-    /* ================= GET ================= */
-
-    @Override
-    @Transactional(readOnly = true)
-    public MachineOperatorDetailsDTO getByMachineId(Long machineId) {
-        machineRepo
+    private Machine getMachineOrThrow(Long machineId) {
+        return machineRepo
             .findById(machineId)
-            .orElseThrow(() -> new NotFoundAlertException("Machine not found with id : " + machineId, "Machine", "MachineNotFound"));
-
-        MachineOperator operator = operatorRepo
-            .findByMachineIdAndActiveTrue(machineId)
-            .orElseThrow(() ->
-                new NotFoundAlertException("No active operator for machine id :" + machineId, "MachineOperator", "OperatorNotFound")
-            );
-
-        return buildResponse(operator);
+            .orElseThrow(() -> {
+                log.error("Machine not found | machineId={}", machineId);
+                return new NotFoundAlertException("Machine not found", "Machine", "MachineNotFound");
+            });
     }
 
-    /* ================= INTERNAL ================= */
+    private void validateNewAssignment(Long machineId) {
+        if (operatorRepo.existsByMachineIdAndActiveTrue(machineId)) {
+            log.warn("Machine already has active operator | machineId={}", machineId);
+            throw new BadRequestAlertException("Machine already has operator", "MachineOperator", "MachineAlreadyHasOperator");
+        }
+    }
 
-    private MachineOperator saveOperator(Machine machine, User user, MachineOperatorDetailsDTO dto) {
+    private void deactivateExistingAssignments(Long machineId) {
+        operatorRepo
+            .findByMachineIdAndActiveTrue(machineId)
+            .ifPresent(existing -> {
+                existing.setActive(false);
+                log.info("Previous operator deactivated | operatorId={}", existing.getId());
+            });
+    }
+
+    private MachineOperator buildOperator(Machine machine, MachineOperatorDetailsDTO dto) {
         MachineOperator operator = new MachineOperator();
         operator.setMachine(machine);
-        operator.setUser(user);
         operator.setDriverName(dto.getDriverName());
         operator.setOperatorContact(dto.getOperatorContact());
         operator.setAddress(dto.getAddress());
@@ -136,95 +154,36 @@ public class MachineOperatorServiceImpl implements MachineOperatorService {
         operator.setActive(true);
         operator.setCreatedAt(Instant.now());
 
-        return operatorRepo.save(operator);
+        return operator;
     }
 
-    private void saveDocuments(MachineOperator operator, Machine machine, User user, List<MultipartFile> files) {
-        if (files == null || files.isEmpty()) return;
-
-        for (MultipartFile file : files) {
-            String docType = extractDocType(file.getOriginalFilename());
-            String url = storageService.uploadOperatorDocument(file, operator.getId());
-
-            VehicleDocument doc = new VehicleDocument();
-            doc.setOperator(operator);
-            doc.setMachine(machine);
-            doc.setDocType(docType);
-            doc.setFileKey(url);
-            doc.setContentType(file.getContentType());
-            doc.setUploadedBy(user);
-            doc.setUploadedAt(Instant.now());
-
-            documentRepo.save(doc);
+    private void attachDocumentIfPresent(MachineOperator operator, MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            log.debug("No document provided for operatorId={}", operator.getId());
+            return;
         }
+        log.debug("Uploading document for operatorId={}", operator.getId());
+
+        String url = storageService.uploadOperatorDocument(file, operator.getId());
+
+        operator.setDocUrl(url);
+        operatorRepo.save(operator);
+
+        log.info("Document uploaded | operatorId={} docUrl={}", operator.getId(), url);
     }
-
-    private String extractDocType(String filename) {
-        if (filename == null) return "UNKNOWN";
-
-        String name = filename.contains(".") ? filename.substring(0, filename.lastIndexOf('.')) : filename;
-
-        return name.trim().toUpperCase().replaceAll("[^A-Z0-9]+", "_");
-    }
-
-    private MachineOperatorDetailsDTO buildResponse(MachineOperator operator) {
-        MachineOperatorDetailsDTO dto = mapToDTO(operator);
-
-        List<VehicleDocument> docs = documentRepo.findByOperatorId(operator.getId());
-
-        dto.setDocuments(mapDocuments(docs));
-        return dto;
-    }
-
-    /* ================= MAPPERS ================= */
 
     private MachineOperatorDetailsDTO mapToDTO(MachineOperator operator) {
         MachineOperatorDetailsDTO dto = new MachineOperatorDetailsDTO();
+
         dto.setOperatorId(operator.getId());
         dto.setMachineId(operator.getMachine().getId());
-        dto.setUserId(operator.getUser().getId());
         dto.setDriverName(operator.getDriverName());
         dto.setOperatorContact(operator.getOperatorContact());
         dto.setAddress(operator.getAddress());
         dto.setLicenseIssueDate(operator.getLicenseIssueDate());
         dto.setCreatedAt(operator.getCreatedAt());
+        dto.setDocUrl(operator.getDocUrl());
+
         return dto;
-    }
-
-    private List<OperatorDocumentDTO> mapDocuments(List<VehicleDocument> docs) {
-        return docs
-            .stream()
-            .map(doc -> {
-                OperatorDocumentDTO dto = new OperatorDocumentDTO();
-                dto.setDocumentId(doc.getId());
-                dto.setDocType(doc.getDocType());
-                dto.setUrl(doc.getFileKey());
-                return dto;
-            })
-            .toList();
-    }
-
-    /* ================= HELPERS ================= */
-
-    private Machine getMachine(Long id) {
-        return machineRepo.findById(id).orElseThrow(() -> new NotFoundAlertException("Machine not found", "Machine", "MachineNotFound"));
-    }
-
-    private User getUser(Long id) {
-        return userRepo.findById(id).orElseThrow(() -> new NotFoundAlertException("User not found", "User", "UserNotFound"));
-    }
-
-    private void validateNewAssignment(Long machineId, Long userId) {
-        if (operatorRepo.existsByMachineIdAndActiveTrue(machineId)) {
-            throw new BadRequestAlertException("Machine already has operator", "MachineOperator", "Machine already has operator");
-        }
-        if (operatorRepo.existsByUserIdAndActiveTrue(userId)) {
-            throw new BadRequestAlertException("Operator already assigned", "MachineOperator", "Operator already assigned");
-        }
-    }
-
-    private void deactivateExistingAssignments(Long machineId, Long userId) {
-        operatorRepo.findByMachineIdAndActiveTrue(machineId).ifPresent(op -> op.setActive(false));
-        operatorRepo.findByUserIdAndActiveTrue(userId).ifPresent(op -> op.setActive(false));
     }
 }

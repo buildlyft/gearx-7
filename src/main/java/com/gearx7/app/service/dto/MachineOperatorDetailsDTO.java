@@ -13,7 +13,6 @@ public class MachineOperatorDetailsDTO implements Serializable {
 
     private Long operatorId; // response
     private Long machineId; // request + response
-    private Long userId; // request
 
     /* ===== Operator Info ===== */
 
@@ -22,7 +21,7 @@ public class MachineOperatorDetailsDTO implements Serializable {
     private String address;
     private LocalDate licenseIssueDate;
 
-    private List<OperatorDocumentDTO> documents;
+    private String docUrl;
 
     /* ===== Metadata ===== */
 
@@ -30,12 +29,12 @@ public class MachineOperatorDetailsDTO implements Serializable {
 
     // getters & setters
 
-    public List<OperatorDocumentDTO> getDocuments() {
-        return documents;
+    public String getDocUrl() {
+        return docUrl;
     }
 
-    public void setDocuments(List<OperatorDocumentDTO> documents) {
-        this.documents = documents;
+    public void setDocUrl(String docUrl) {
+        this.docUrl = docUrl;
     }
 
     public Long getOperatorId() {
@@ -52,14 +51,6 @@ public class MachineOperatorDetailsDTO implements Serializable {
 
     public void setMachineId(Long machineId) {
         this.machineId = machineId;
-    }
-
-    public Long getUserId() {
-        return userId;
-    }
-
-    public void setUserId(Long userId) {
-        this.userId = userId;
     }
 
     public String getDriverName() {
@@ -110,8 +101,6 @@ public class MachineOperatorDetailsDTO implements Serializable {
             operatorId +
             ", machineId=" +
             machineId +
-            ", userId=" +
-            userId +
             ", driverName='" +
             driverName +
             '\'' +

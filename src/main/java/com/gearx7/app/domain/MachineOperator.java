@@ -2,12 +2,10 @@ package com.gearx7.app.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.io.Serializable;
 import java.time.Instant;
 import java.time.LocalDate;
-import java.util.List;
 
 @Entity
 @Table(name = "machine_operator")
@@ -29,19 +27,11 @@ public class MachineOperator implements Serializable {
     @JsonIgnoreProperties(value = { "document", "operator", "subcategory", "category", "user" }, allowSetters = true)
     private Machine machine;
 
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
-
     @Column(name = "operator_contact")
     private String operatorContact;
 
     @Column(name = "license_issue_date")
     private LocalDate licenseIssueDate;
-
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "operator", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonIgnoreProperties(value = { "machine", "operator" }, allowSetters = true)
-    private List<VehicleDocument> vehicleDocument;
 
     @Column(name = "address")
     @Size(min = 2, max = 225)
@@ -52,6 +42,17 @@ public class MachineOperator implements Serializable {
 
     @Column(name = "created_at")
     private Instant createdAt;
+
+    @Column(name = "doc_url")
+    private String docUrl;
+
+    public String getDocUrl() {
+        return docUrl;
+    }
+
+    public void setDocUrl(String docUrl) {
+        this.docUrl = docUrl;
+    }
 
     public Instant getCreatedAt() {
         return createdAt;
@@ -93,14 +94,6 @@ public class MachineOperator implements Serializable {
         this.machine = machine;
     }
 
-    public User getUser() {
-        return user;
-    }
-
-    public void setUser(User user) {
-        this.user = user;
-    }
-
     public String getOperatorContact() {
         return operatorContact;
     }
@@ -115,14 +108,6 @@ public class MachineOperator implements Serializable {
 
     public void setLicenseIssueDate(LocalDate licenseIssueDate) {
         this.licenseIssueDate = licenseIssueDate;
-    }
-
-    public List<VehicleDocument> getVehicleDocument() {
-        return vehicleDocument;
-    }
-
-    public void setVehicleDocument(List<VehicleDocument> vehicleDocument) {
-        this.vehicleDocument = vehicleDocument;
     }
 
     public String getAddress() {

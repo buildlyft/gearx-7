@@ -138,4 +138,35 @@
         </addColumn>
     </changeSet>
 
+    <changeSet id="202602101450" author="Ganesh">
+
+        <preConditions onFail="MARK_RAN">
+            <columnExists
+                tableName="machine_operator"
+                columnName="user_id"/>
+        </preConditions>
+
+        <!-- 1. Drop composite unique constraint -->
+        <dropUniqueConstraint
+            tableName="machine_operator"
+            constraintName="uk_machine_operator_active_user"/>
+
+        <!-- 2. Drop foreign key -->
+        <dropForeignKeyConstraint
+            baseTableName="machine_operator"
+            constraintName="fk_machine_operator_user"/>
+
+        <!-- 3. Drop column -->
+        <dropColumn
+            tableName="machine_operator"
+            columnName="user_id"/>
+
+    </changeSet>
+
+    <changeSet id="202602101422" author="Ganesh">
+        <addColumn tableName="machine_operator">
+            <column name="doc_url" type="varchar(1000)"/>
+        </addColumn>
+    </changeSet>
+
 </databaseChangeLog>

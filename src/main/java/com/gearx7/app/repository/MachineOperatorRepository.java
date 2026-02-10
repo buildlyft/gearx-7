@@ -14,9 +14,5 @@ public interface MachineOperatorRepository extends JpaRepository<MachineOperator
     //  Check if machine already has an active operator
     boolean existsByMachineIdAndActiveTrue(Long machineId);
 
-    Optional<MachineOperator> findByUserIdAndActiveTrue(Long userId);
-
-    boolean existsByUserIdAndActiveTrue(Long userId);
-
     List<MachineOperator> findAllByActiveTrue();
 }

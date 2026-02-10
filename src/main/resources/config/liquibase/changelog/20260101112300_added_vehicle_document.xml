@@ -103,23 +103,24 @@
 
     </changeSet>
 
-    <!--<changeSet id="20260204153-add-active-column-machine-operator" author="Ganesh">
+    <changeSet id="202602101632" author="Ganesh">
 
-        <comment>
-            Add active flag to support operator reassignment without deletion
-        </comment>
+        <preConditions onFail="MARK_RAN">
+            <columnExists
+                tableName="vehicle_document"
+                columnName="operator_id"/>
+        </preConditions>
 
-        <addColumn tableName="machine_operator">
-            <column name="active" type="boolean" defaultValueBoolean="true">
-                <constraints nullable="false"/>
-            </column>
-        </addColumn>
+        <!-- Drop FK  -->
+        <dropForeignKeyConstraint
+            baseTableName="vehicle_document"
+            constraintName="fk_vehicle_document_operator"/>
 
-        <update tableName="machine_operator">
-            <column name="active" valueBoolean="true"/>
-            <where>active IS NULL</where>
-        </update>
+        <!-- Then drop column -->
+        <dropColumn
+            tableName="vehicle_document"
+            columnName="operator_id"/>
 
-    </changeSet>-->
+    </changeSet>
 
 </databaseChangeLog>

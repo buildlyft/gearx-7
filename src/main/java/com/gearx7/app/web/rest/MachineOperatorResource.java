@@ -34,16 +34,11 @@ public class MachineOperatorResource {
     @PostMapping(value = "/create_and_assign", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<MachineOperatorDetailsDTO> createOperatorAndAssignToMachine(
         @ModelAttribute MachineOperatorDetailsDTO dto,
-        @RequestParam(value = "files", required = false) List<MultipartFile> files
+        @RequestParam(value = "file", required = false) MultipartFile file
     ) {
-        log.info(
-            "REST CREATE operator | machineId={} userId={} files={}",
-            dto.getMachineId(),
-            dto.getUserId(),
-            files != null ? files.size() : 0
-        );
+        log.info("REST CREATE operator | machineId={} filePresent={}", dto.getMachineId(), file != null && !file.isEmpty());
 
-        MachineOperatorDetailsDTO result = service.create(dto, files);
+        MachineOperatorDetailsDTO result = service.create(dto, file);
 
         log.info("REST Operator created successfully | operatorId={} machineId={}", result.getOperatorId(), result.getMachineId());
 
@@ -84,14 +79,10 @@ public class MachineOperatorResource {
     public ResponseEntity<MachineOperatorDetailsDTO> reassign(
         @PathVariable Long machineId,
         @ModelAttribute MachineOperatorDetailsDTO dto,
-        @RequestPart(value = "files", required = false) List<MultipartFile> files
+        @RequestPart(value = "files", required = false) MultipartFile file
     ) {
-        log.info(
-            "REST REASSIGN operator request | machineId={} userId={} files={}",
-            machineId,
-            dto.getUserId(),
-            files != null ? files.size() : 0
-        );
-        return ResponseEntity.ok(service.reassign(machineId, dto, files));
+        log.info("REST REASSIGN operator | machineId={} filePresent={}", machineId, file != null && !file.isEmpty());
+
+        return ResponseEntity.ok(service.reassign(machineId, dto, file));
     }
 }

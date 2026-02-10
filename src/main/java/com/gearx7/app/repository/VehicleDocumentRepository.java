@@ -12,7 +12,7 @@ public interface VehicleDocumentRepository extends JpaRepository<VehicleDocument
     boolean existsByMachineIdAndDocType(Long machineId, String docType);
 
     // get All VehicleDocuments by MachineId
-    List<VehicleDocument> findAllByMachineId(Long machineId);
+    List<VehicleDocument> findAllByMachineIdAndOperatorIsNull(Long machineId);
 
     List<VehicleDocument> findByOperatorId(Long operatorId);
 

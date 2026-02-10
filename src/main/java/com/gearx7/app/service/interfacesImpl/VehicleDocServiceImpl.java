@@ -116,7 +116,7 @@ public class VehicleDocServiceImpl implements VehicleDocService {
             });
 
         List<VehicleDocumentDTO> docs = vehicleDocumentRepository
-            .findAllByMachineId(machineId)
+            .findAllByMachineIdAndOperatorIsNull(machineId)
             .stream()
             .map(doc -> toDTO(doc, false))
             .toList();
