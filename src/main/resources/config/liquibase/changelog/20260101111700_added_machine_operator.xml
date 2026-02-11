@@ -169,4 +169,19 @@
         </addColumn>
     </changeSet>
 
+    <changeSet id="202602111200" author="Ganesh">
+
+        <preConditions onFail="MARK_RAN">
+            <uniqueConstraintExists
+                tableName="machine_operator"
+                constraintName="uk_machine_operator_active_machine"/>
+        </preConditions>
+
+        <dropUniqueConstraint
+            tableName="machine_operator"
+            constraintName="uk_machine_operator_active_machine"/>
+
+    </changeSet>
+
+
 </databaseChangeLog>

@@ -136,12 +136,7 @@ public class MachineOperatorServiceImpl implements MachineOperatorService {
     }
 
     private void deactivateExistingAssignments(Long machineId) {
-        operatorRepo
-            .findByMachineIdAndActiveTrue(machineId)
-            .ifPresent(existing -> {
-                existing.setActive(false);
-                log.info("Previous operator deactivated | operatorId={}", existing.getId());
-            });
+        operatorRepo.deactivateAllActiveByMachineId(machineId);
     }
 
     private MachineOperator buildOperator(Machine machine, MachineOperatorDetailsDTO dto) {

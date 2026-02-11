@@ -22,10 +22,10 @@ public class VehicleDocument implements Serializable {
     @JsonIgnoreProperties(value = { "documents", "operator" }, allowSetters = true)
     private Machine machine;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "operator_id")
-    @JsonIgnoreProperties(value = { "vehicleDocument", "machine" }, allowSetters = true)
-    private MachineOperator operator;
+    //    @ManyToOne(fetch = FetchType.LAZY)
+    //    @JoinColumn(name = "operator_id")
+    //    @JsonIgnoreProperties(value = { "vehicleDocument", "machine" }, allowSetters = true)
+    //    private MachineOperator operator;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "uploaded_by")
@@ -56,13 +56,13 @@ public class VehicleDocument implements Serializable {
     @Column(name = "expires_at")
     private Instant expiresAt;
 
-    public MachineOperator getOperator() {
-        return operator;
-    }
-
-    public void setOperator(MachineOperator operator) {
-        this.operator = operator;
-    }
+    //    public MachineOperator getOperator() {
+    //        return operator;
+    //    }
+    //
+    //    public void setOperator(MachineOperator operator) {
+    //        this.operator = operator;
+    //    }
 
     public void setId(Long id) {
         this.id = id;
@@ -164,8 +164,8 @@ public class VehicleDocument implements Serializable {
             id +
             ", machine=" +
             machine +
-            ", operator=" +
-            operator +
+            //            ", operator=" +
+            //            operator +
             ", uploadedBy=" +
             uploadedBy +
             ", docType='" +

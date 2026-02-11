@@ -1,5 +1,6 @@
 package com.gearx7.app.service.dto;
 
+import jakarta.validation.constraints.Size;
 import java.io.Serializable;
 import java.time.Instant;
 import java.time.LocalDate;

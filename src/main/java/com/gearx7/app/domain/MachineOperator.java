@@ -33,8 +33,7 @@ public class MachineOperator implements Serializable {
     @Column(name = "license_issue_date")
     private LocalDate licenseIssueDate;
 
-    @Column(name = "address")
-    @Size(min = 2, max = 225)
+    @Column(name = "address", length = 1000)
     private String address;
 
     @Column(name = "active")
@@ -44,6 +43,7 @@ public class MachineOperator implements Serializable {
     private Instant createdAt;
 
     @Column(name = "doc_url")
+    @Size(min = 5, max = 1000)
     private String docUrl;
 
     public String getDocUrl() {
