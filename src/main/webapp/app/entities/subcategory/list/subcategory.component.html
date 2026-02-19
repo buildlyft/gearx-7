@@ -56,14 +56,21 @@
                 <fa-icon class="p-1" icon="sort"></fa-icon>
               </div>
             </th>
-            <th scope="col" jhiSortBy="image">
+            <!--<th scope="col" jhiSortBy="image">
               <div class="d-flex">
                 <span>Image</span>
 
                 <fa-icon class="p-1" icon="sort"></fa-icon>
               </div>
+            </th>-->
+            <th scope="col" jhiSortBy="imageUrl">
+              <div class="d-flex">
+                <span>Image URL</span>
+                <fa-icon class="p-1" icon="sort"></fa-icon>
+              </div>
             </th>
-            <th scope="col" jhiSortBy="category.id">
+
+            <th scope="col" jhiSortBy="categoryId">
               <div class="d-flex">
                 <span>Category</span>
                 <fa-icon class="p-1" icon="sort"></fa-icon>
@@ -80,17 +87,22 @@
               </td>
               <td>{{ subcategory.name }}</td>
               <td>{{ subcategory.description }}</td>
-              <td>
+              <!--<td>
                 @if (subcategory.image) {
                   <a (click)="openFile(subcategory.image, subcategory.imageContentType)">Open</a>
                   <span>{{ subcategory.imageContentType }}, {{ byteSize(subcategory.image) }}</span>
                 }
+              </td>-->
+              <td>
+                <a *ngIf="subcategory.imageUrl" [href]="subcategory.imageUrl" target="_blank">
+                  {{ subcategory.imageUrl }}
+                </a>
               </td>
               <td>
-                @if (subcategory.category) {
-                  <div>
-                    <a [routerLink]="['/category', subcategory.category.id, 'view']">{{ subcategory.category.id }}</a>
-                  </div>
+                @if (subcategory.categoryId) {
+                  <a [routerLink]="['/category', subcategory.categoryId, 'view']">
+                    {{ subcategory.categoryId }}
+                  </a>
                 }
               </td>
               <td class="text-end">
@@ -99,7 +111,7 @@
                     <fa-icon icon="eye"></fa-icon>
                     <span class="d-none d-md-inline">View</span>
                   </a>
-
+                  <!--                  <a (click)="openFile(subcategory.image, subcategory.imageContentType)">Open</a>-->
                   <a [routerLink]="['/subcategory', subcategory.id, 'edit']" class="btn btn-primary btn-sm" data-cy="entityEditButton">
                     <fa-icon icon="pencil-alt"></fa-icon>
                     <span class="d-none d-md-inline">Edit</span>

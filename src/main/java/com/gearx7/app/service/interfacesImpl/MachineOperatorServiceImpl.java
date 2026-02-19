@@ -175,10 +175,17 @@ public class MachineOperatorServiceImpl implements MachineOperatorService {
         dto.setDriverName(operator.getDriverName());
         dto.setOperatorContact(operator.getOperatorContact());
         dto.setAddress(operator.getAddress());
+        dto.setActive(operator.getActive());
         dto.setLicenseIssueDate(operator.getLicenseIssueDate());
         dto.setCreatedAt(operator.getCreatedAt());
         dto.setDocUrl(operator.getDocUrl());
 
         return dto;
+    }
+
+    @Override
+    public void delete(Long machineId) {
+        log.debug("Request to delete MachineOperator : {}", machineId);
+        operatorRepo.deleteById(machineId);
     }
 }

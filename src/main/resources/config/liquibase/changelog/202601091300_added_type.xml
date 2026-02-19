@@ -29,4 +29,10 @@
 
     </changeSet>
 
+    <changeSet id="202602101700" author="Ganesh">
+        <addColumn tableName="type">
+            <column name="image_url" type="varchar(2000)"/>
+        </addColumn>
+    </changeSet>
+
 </databaseChangeLog>

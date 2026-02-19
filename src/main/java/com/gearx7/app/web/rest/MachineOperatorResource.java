@@ -1,14 +1,19 @@
 package com.gearx7.app.web.rest;
 
+import com.gearx7.app.repository.MachineOperatorRepository;
 import com.gearx7.app.service.dto.MachineOperatorDetailsDTO;
 import com.gearx7.app.service.interfaces.MachineOperatorService;
+import com.gearx7.app.web.rest.errors.BadRequestAlertException;
 import java.util.List;
+import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import tech.jhipster.web.util.HeaderUtil;
 
 @RestController
 @RequestMapping("/api/machine-operators")
@@ -18,8 +23,16 @@ public class MachineOperatorResource {
 
     private final MachineOperatorService service;
 
-    public MachineOperatorResource(MachineOperatorService service) {
+    private MachineOperatorRepository machineOperatorRepository;
+
+    private static final String ENTITY_NAME = "machineOperator";
+
+    @Value("${jhipster.clientApp.name}")
+    private String applicationName;
+
+    public MachineOperatorResource(MachineOperatorService service, MachineOperatorRepository machineOperatorRepository) {
         this.service = service;
+        this.machineOperatorRepository = machineOperatorRepository;
     }
 
     /**
@@ -84,5 +97,34 @@ public class MachineOperatorResource {
         log.info("REST REASSIGN operator | machineId={} filePresent={}", machineId, file != null && !file.isEmpty());
 
         return ResponseEntity.ok(service.reassign(machineId, dto, file));
+    }
+
+    /**
+     *
+     * @param id operatorId
+     * @return 204 No Content if deleted successfully
+     */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteMachineOperator(@PathVariable("id") Long id) {
+        log.info("REST request to delete MachineOperator : {}", id);
+
+        if (id == null) {
+            log.error("Delete failed. Operator ID is null");
+            throw new BadRequestAlertException("Invalid operatorId", ENTITY_NAME, "idnull");
+        }
+
+        if (!machineOperatorRepository.existsById(id)) {
+            log.warn("MachineOperator not found with ID : {}", id);
+            throw new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound");
+        }
+
+        service.delete(id);
+
+        log.info("MachineOperator deleted successfully with ID : {}", id);
+
+        return ResponseEntity
+            .noContent()
+            .headers(HeaderUtil.createEntityDeletionAlert(applicationName, false, ENTITY_NAME, id.toString()))
+            .build();
     }
 }

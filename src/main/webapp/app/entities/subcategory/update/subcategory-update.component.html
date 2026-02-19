@@ -37,7 +37,7 @@
           />
         </div>
 
-        <div class="mb-3">
+        <!--<div class="mb-3">
           <label class="form-label" for="field_image">Image</label>
           <div>
             @if (editForm.get('image')!.value) {
@@ -64,21 +64,35 @@
             id="field_imageContentType"
             formControlName="imageContentType"
           />
+        </div>-->
+        <div class="mb-3">
+          <label class="form-label">Subcategory Image</label>
+
+          <input type="file" id="file_image" accept="image/*" class="form-control" (change)="onFileChange($event)" />
+
+          <!-- New Selected Image Preview -->
+          <div *ngIf="previewUrl" class="mt-3">
+            <label>Image Preview:</label>
+            <br />
+            <img [src]="previewUrl" alt="Preview" class="img-thumbnail" style="max-height: 200px" />
+          </div>
+
+          <!-- Existing Image Preview (Edit Mode) -->
+          <div *ngIf="!previewUrl && editForm.get('imageUrl')?.value" class="mt-3">
+            <label>Current Image:</label>
+            <br />
+            <img [src]="editForm.get('imageUrl')?.value" class="img-thumbnail" style="max-height: 200px" />
+          </div>
         </div>
 
         <div class="mb-3">
-          <label class="form-label" for="field_category">Category</label>
-          <select
-            class="form-control"
-            id="field_category"
-            data-cy="category"
-            name="category"
-            formControlName="category"
-            [compareWith]="compareCategory"
-          >
-            <option [ngValue]="null"></option>
-            @for (categoryOption of categoriesSharedCollection; track $index) {
-              <option [ngValue]="categoryOption">{{ categoryOption.id }}</option>
+          <label class="form-label" for="field_categoryId">Category</label>
+          <select class="form-control" id="field_categoryId" data-cy="categoryId" formControlName="categoryId">
+            <option [ngValue]="null">-- Select Category --</option>
+            @for (category of categories; track $index) {
+              <option [ngValue]="category.id">
+                {{ category.name }}
+              </option>
             }
           </select>
         </div>

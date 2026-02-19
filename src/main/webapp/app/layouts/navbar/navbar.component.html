@@ -103,6 +103,31 @@
                   <span>Subcategory</span>
                 </a>
               </li>
+              <li>
+                <a
+                  class="dropdown-item"
+                  routerLink="/type"
+                  routerLinkActive="active"
+                  [routerLinkActiveOptions]="{ exact: true }"
+                  (click)="collapseNavbar()"
+                >
+                  <fa-icon icon="asterisk" [fixedWidth]="true"></fa-icon>
+                  <span>Type</span>
+                </a>
+              </li>
+              <li>
+                <a
+                  class="dropdown-item"
+                  routerLink="/machine-operator"
+                  routerLinkActive="active"
+                  [routerLinkActiveOptions]="{ exact: true }"
+                  (click)="collapseNavbar()"
+                >
+                  <fa-icon icon="asterisk" [fixedWidth]="true"></fa-icon>
+                  <span>Machine Operator</span>
+                </a>
+              </li>
+
               <!-- jhipster-needle-add-entity-to-menu - JHipster will add entities to the menu here -->
             </ul>
           </li>

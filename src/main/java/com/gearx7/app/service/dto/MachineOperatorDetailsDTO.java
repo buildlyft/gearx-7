@@ -20,6 +20,7 @@ public class MachineOperatorDetailsDTO implements Serializable {
     private String driverName;
     private String operatorContact;
     private String address;
+    private Boolean active;
     private LocalDate licenseIssueDate;
 
     private String docUrl;
@@ -29,6 +30,14 @@ public class MachineOperatorDetailsDTO implements Serializable {
     private Instant createdAt;
 
     // getters & setters
+
+    public Boolean getActive() {
+        return active;
+    }
+
+    public void setActive(Boolean active) {
+        this.active = active;
+    }
 
     public String getDocUrl() {
         return docUrl;
@@ -111,8 +120,13 @@ public class MachineOperatorDetailsDTO implements Serializable {
             ", address='" +
             address +
             '\'' +
+            ", active=" +
+            active +
             ", licenseIssueDate=" +
             licenseIssueDate +
+            ", docUrl='" +
+            docUrl +
+            '\'' +
             ", createdAt=" +
             createdAt +
             '}'

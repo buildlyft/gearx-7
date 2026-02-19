@@ -98,6 +98,31 @@ public class CloudinaryDocumentStorageServiceImpl implements DocumentStorageServ
         return upload(file, folder, "OPERATOR", operatorId);
     }
 
+    @Override
+    public String uploadTypeImage(MultipartFile file, Long typeId) {
+        validate(file);
+
+        String folder = "gearx-7/types/type-" + typeId + "/image";
+
+        try {
+            log.debug("Uploading type image | typeId={}", typeId);
+
+            Map<?, ?> result = cloudinary
+                .uploader()
+                .upload(file.getBytes(), ObjectUtils.asMap("folder", folder, "resource_type", "image", "overwrite", true));
+
+            String secureUrl = result.get("secure_url").toString();
+
+            log.info("Type image uploaded successfully | typeId={} | url={}", typeId, secureUrl);
+
+            return secureUrl;
+        } catch (IOException e) {
+            log.error("Cloudinary upload failed | typeId={}", typeId, e);
+
+            throw new BadRequestAlertException("Type image upload failed", "type", "cloudinaryUploadFailed");
+        }
+    }
+
     /* ================= COMMON UPLOAD LOGIC ================= */
 
     private String upload(MultipartFile file, String folder, String type, Long ownerId) {

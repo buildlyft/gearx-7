@@ -20,9 +20,10 @@ type SubcategoryFormGroupContent = {
   id: FormControl<ISubcategory['id'] | NewSubcategory['id']>;
   name: FormControl<ISubcategory['name']>;
   description: FormControl<ISubcategory['description']>;
-  image: FormControl<ISubcategory['image']>;
-  imageContentType: FormControl<ISubcategory['imageContentType']>;
-  category: FormControl<ISubcategory['category']>;
+  /*   image: FormControl<ISubcategory['image']>;
+  imageContentType: FormControl<ISubcategory['imageContentType']>; */
+  imageUrl: FormControl<ISubcategory['imageUrl']>;
+  categoryId: FormControl<ISubcategory['categoryId']>;
 };
 
 export type SubcategoryFormGroup = FormGroup<SubcategoryFormGroupContent>;
@@ -46,9 +47,12 @@ export class SubcategoryFormService {
         validators: [Validators.required],
       }),
       description: new FormControl(subcategoryRawValue.description),
-      image: new FormControl(subcategoryRawValue.image),
-      imageContentType: new FormControl(subcategoryRawValue.imageContentType),
-      category: new FormControl(subcategoryRawValue.category),
+      /*  image: new FormControl(subcategoryRawValue.image),
+      imageContentType: new FormControl(subcategoryRawValue.imageContentType), */
+      imageUrl: new FormControl(subcategoryRawValue.imageUrl),
+      categoryId: new FormControl(subcategoryRawValue.categoryId, {
+        validators: [Validators.required],
+      }),
     });
   }
 

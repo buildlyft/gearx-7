@@ -17,6 +17,8 @@ import { CategoryService } from 'app/entities/category/service/category.service'
 import { SubcategoryService } from 'app/entities/subcategory/service/subcategory.service';
 import { ICategory } from 'app/entities/category/category.model';
 import { ISubcategory } from 'app/entities/subcategory/subcategory.model';
+import { TypeService } from 'app/entities/type/service/type.service';
+import { IType } from 'app/entities/type/type.model';
 
 @Component({
   standalone: true,
@@ -25,14 +27,15 @@ import { ISubcategory } from 'app/entities/subcategory/subcategory.model';
   imports: [SharedModule, FormsModule, ReactiveFormsModule],
 })
 export class MachineUpdateComponent implements OnInit {
+  types: IType[] = [];
+  categories: ICategory[] = [];
+  subcategories: ISubcategory[] = [];
+
   isSaving = false;
   machine: IMachine | null = null;
 
   machineStatusValues = Object.keys(MachineStatus);
-
   usersSharedCollection: IUser[] = [];
-  categories: ICategory[] = [];
-  subcategories: ISubcategory[] = [];
 
   editForm: MachineFormGroup = this.machineFormService.createMachineFormGroup();
 
@@ -43,52 +46,84 @@ export class MachineUpdateComponent implements OnInit {
     protected activatedRoute: ActivatedRoute,
     protected categoryService: CategoryService,
     protected subcategoryService: SubcategoryService,
+    protected typeService: TypeService,
   ) {}
 
   compareUser = (o1: IUser | null, o2: IUser | null): boolean => this.userService.compareUser(o1, o2);
 
-  // ---------------------------------------------------
+  // =====================================================
   // INIT
-  // ---------------------------------------------------
+  // =====================================================
   ngOnInit(): void {
-    this.loadRelationshipsOptions();
+    this.loadUsers();
+    this.loadTypes();
+
     this.activatedRoute.data.subscribe(({ machine }) => {
       this.machine = machine;
 
       if (machine) {
         this.updateForm(machine);
 
-        // load subcategories when editing
-        if (machine.categoryId) {
-          this.loadSubcategories(machine.categoryId);
+        if (machine.typeId) {
+          this.loadCategories(machine.typeId);
+
+          if (machine.categoryId) {
+            this.loadSubcategories(machine.categoryId);
+          }
         }
       }
     });
   }
 
-  // ---------------------------------------------------
-  // LOAD DROPDOWNS
-  // ---------------------------------------------------
-  protected loadRelationshipsOptions(): void {
-    // USERS (ADMIN)
+  // =====================================================
+  // LOAD INITIAL DATA
+  // =====================================================
+  private loadUsers(): void {
     this.userService
       .query()
       .pipe(map(res => res.body ?? []))
       .pipe(map(users => this.userService.addUserToCollectionIfMissing(users, this.machine?.user)))
       .subscribe(users => (this.usersSharedCollection = users));
+  }
 
-    // CATEGORIES
-    this.categoryService.query().subscribe(res => {
+  private loadTypes(): void {
+    this.typeService.query().subscribe(res => {
+      this.types = res.body ?? [];
+    });
+  }
+
+  // =====================================================
+  // TYPE CHANGE → LOAD CATEGORIES
+  // =====================================================
+  onTypeChange(): void {
+    const typeId = Number(this.editForm.get('typeId')!.value);
+
+    // Reset lower dropdowns
+    this.categories = [];
+    this.subcategories = [];
+
+    this.editForm.get('categoryId')!.setValue(null);
+    this.editForm.get('subcategoryId')!.setValue(null);
+
+    if (typeId) {
+      this.loadCategories(typeId);
+    }
+  }
+
+  private loadCategories(typeId: number): void {
+    this.categoryService.getCategoriesByType(typeId).subscribe(res => {
       this.categories = res.body ?? [];
     });
   }
 
+  // =====================================================
+  // CATEGORY CHANGE → LOAD SUBCATEGORIES
+  // =====================================================
   onCategoryChange(): void {
     const categoryId = Number(this.editForm.get('categoryId')!.value);
+
     this.subcategories = [];
     this.editForm.get('subcategoryId')!.setValue(null);
-    this.editForm.get('subcategoryId')!.markAsPristine();
-    this.editForm.get('subcategoryId')!.markAsUntouched();
 
     if (categoryId) {
       this.loadSubcategories(categoryId);
@@ -96,14 +131,14 @@ export class MachineUpdateComponent implements OnInit {
   }
 
   private loadSubcategories(categoryId: number): void {
-    this.subcategoryService.query({ 'categoryId.equals': categoryId }).subscribe(res => {
+    this.subcategoryService.getSubcategoriesByCategory(categoryId).subscribe(res => {
       this.subcategories = res.body ?? [];
     });
   }
 
-  // ---------------------------------------------------
+  // =====================================================
   // SAVE
-  // ---------------------------------------------------
+  // =====================================================
   save(): void {
     this.isSaving = true;
     const machine = this.machineFormService.getMachine(this.editForm);
@@ -116,31 +151,19 @@ export class MachineUpdateComponent implements OnInit {
   }
 
   protected subscribeToSaveResponse(result: Observable<HttpResponse<IMachine>>): void {
-    result.pipe(finalize(() => this.onSaveFinalize())).subscribe({
-      next: () => this.onSaveSuccess(),
-      error: () => this.onSaveError(),
+    result.pipe(finalize(() => (this.isSaving = false))).subscribe({
+      next: () => this.previousState(),
+      error: () => {},
     });
-  }
-
-  protected onSaveSuccess(): void {
-    this.previousState();
-  }
-
-  protected onSaveError(): void {
-    // handled by jhi-alert-error
-  }
-
-  protected onSaveFinalize(): void {
-    this.isSaving = false;
   }
 
   previousState(): void {
     window.history.back();
   }
 
-  // ---------------------------------------------------
-  // FORM
-  // ---------------------------------------------------
+  // =====================================================
+  // FORM UPDATE
+  // =====================================================
   protected updateForm(machine: IMachine): void {
     this.machine = machine;
     this.machineFormService.resetForm(this.editForm, machine);

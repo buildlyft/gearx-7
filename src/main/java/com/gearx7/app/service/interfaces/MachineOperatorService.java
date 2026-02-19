@@ -12,4 +12,6 @@ public interface MachineOperatorService {
     MachineOperatorDetailsDTO getByMachineId(Long machineId);
 
     List<MachineOperatorDetailsDTO> getAllActiveOperators();
+
+    void delete(Long machineId);
 }

@@ -27,7 +27,7 @@ type MachineFormRawValue = FormValueOf<IMachine>;
 
 type NewMachineFormRawValue = FormValueOf<NewMachine>;
 
-type MachineFormDefaults = Pick<NewMachine, 'id' | 'createdDate' | 'categoryId' | 'subcategoryId'>;
+type MachineFormDefaults = Pick<NewMachine, 'id' | 'createdDate' | 'typeId' | 'categoryId' | 'subcategoryId'>;
 
 type MachineFormGroupContent = {
   id: FormControl<MachineFormRawValue['id'] | NewMachine['id']>;
@@ -49,6 +49,8 @@ type MachineFormGroupContent = {
   serviceabilityRangeKm: FormControl<MachineFormRawValue['serviceabilityRangeKm']>;
   status: FormControl<MachineFormRawValue['status']>;
   createdDate: FormControl<MachineFormRawValue['createdDate']>;
+  mfgDate: FormControl<MachineFormRawValue['mfgDate']>;
+  typeId: FormControl<MachineFormRawValue['typeId']>;
   categoryId: FormControl<MachineFormRawValue['categoryId']>;
   subcategoryId: FormControl<MachineFormRawValue['subcategoryId']>;
   user: FormControl<MachineFormRawValue['user']>;
@@ -105,6 +107,10 @@ export class MachineFormService {
       createdDate: new FormControl(machineRawValue.createdDate, {
         validators: [Validators.required],
       }),
+      mfgDate: new FormControl(machineRawValue.mfgDate),
+      typeId: new FormControl(machineRawValue.typeId, {
+        validators: [Validators.required],
+      }),
       categoryId: new FormControl(machineRawValue.categoryId, {
         validators: [Validators.required],
       }),
@@ -136,6 +142,7 @@ export class MachineFormService {
     return {
       id: null,
       createdDate: currentTime,
+      typeId: null,
       categoryId: null,
       subcategoryId: null,
     };

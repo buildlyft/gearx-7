@@ -10,4 +10,6 @@ public interface DocumentStorageService {
     String uploadCategoryImage(MultipartFile file, Long categoryId);
 
     String uploadSubcategoryImage(MultipartFile file, Long subcategoryId);
+
+    String uploadTypeImage(MultipartFile file, Long typeId);
 }

@@ -1,0 +1,38 @@
+<div *ngIf="machineOperator">
+  <h2>Machine Operator</h2>
+
+  <dl class="row">
+    <dt>Machine ID</dt>
+    <dd>{{ machineOperator.machineId }}</dd>
+
+    <dt>Driver</dt>
+    <dd>{{ machineOperator.driverName }}</dd>
+
+    <dt>Contact</dt>
+    <dd>{{ machineOperator.operatorContact }}</dd>
+
+    <dt>Address</dt>
+    <dd>{{ machineOperator.address }}</dd>
+
+    <dt>Status</dt>
+    <dd>
+      <span class="badge" [ngClass]="machineOperator.active ? 'bg-success' : 'bg-danger'">
+        {{ machineOperator.active ? 'Active' : 'Inactive' }}
+      </span>
+    </dd>
+
+    <dt>License Date</dt>
+    <dd>{{ machineOperator.licenseIssueDate }}</dd>
+
+    <dt *ngIf="machineOperator.docUrl">Document</dt>
+    <dd *ngIf="machineOperator.docUrl">
+      <a [href]="machineOperator.docUrl" target="_blank"> View Document </a>
+    </dd>
+  </dl>
+
+  <button (click)="previousState()" class="btn btn-info">Back</button>
+
+  <button type="button" [routerLink]="['/machine-operator', machineOperator.machineId, 'edit']" class="btn btn-primary">
+    <fa-icon icon="pencil-alt"></fa-icon>&nbsp;<span>Edit</span>
+  </button>
+</div>

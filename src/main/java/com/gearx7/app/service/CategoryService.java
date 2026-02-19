@@ -76,7 +76,7 @@ public class CategoryService {
 
         log.info("Category created successfully | id={}", finalCategory.getId());
 
-        return categoryMapper.toDto(saved);
+        return categoryMapper.toDto(finalCategory);
     }
 
     /**

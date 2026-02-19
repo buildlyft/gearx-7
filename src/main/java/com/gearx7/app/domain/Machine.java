@@ -132,6 +132,17 @@ public class Machine implements Serializable {
     @JsonIgnoreProperties(value = { "machine", "uploadedBy", "operator" }, allowSetters = true)
     private List<VehicleDocument> documents = new ArrayList<>();
 
+    @Column(name = "mfg_date")
+    private Long mfgDate;
+
+    public Long getMfgDate() {
+        return mfgDate;
+    }
+
+    public void setMfgDate(Long mfgDate) {
+        this.mfgDate = mfgDate;
+    }
+
     public Type getTypeEntity() {
         return typeEntity;
     }
@@ -501,40 +512,87 @@ public class Machine implements Serializable {
         return getClass().hashCode();
     }
 
-    // prettier-ignore
     @Override
     public String toString() {
-        return "Machine{" +
-            "id=" + getId() +
-            ", brand='" + getBrand() + "'" +
-            ", type='" + getType() + "'" +
-            ", tag='" + getTag() + "'" +
-            ", model='" + getModel() + "'" +
-            ", vinNumber='" + getVinNumber() + "'" +
-            ", chassisNumber='" + getChassisNumber() + "'" +
-            ", description='" + getDescription() + "'" +
-            ", capacityTon=" + getCapacityTon() +
-            ", ratePerHour=" + getRatePerHour() +
-            ", ratePerDay=" + getRatePerDay() +
-            ", minimumUsageHours=" + getMinimumUsageHours() +
-            ", latitude=" + getLatitude() +
-            ", longitude=" + getLongitude() +
-            ", transportationCharge=" + getTransportationCharge() +
-            ", driverBatta=" + getDriverBatta() +
-            ", serviceabilityRangeKm=" + getServiceabilityRangeKm() +
-            ", status='" + getStatus() + "'" +
-            ", createdDate='" + getCreatedDate() + "'" +
-            ", user='" + getUser() + "'" +
-            ", category='" + getCategory() + "'" +
-            ", subcategory='" + getSubcategory() + "'" +
-            ", warranty='" + getWarranty() + "'" +
-            ", driverName='" + getDriverName() + "'" +
-            ", adharNo='" + getAdharNo() + "'" +
-            ", age='" + getAge() + "'" +
-            ", licenseNo='" + getLicenseNo() + "'" +
-            ", insuranceNo='" + getInsuranceNo() + "'" +
-            ", operator='" + getOperators() + "'" +
-            ", documents='" + getDocuments() + "'" +
-            "}";
+        return (
+            "Machine{" +
+            "id=" +
+            id +
+            ", brand='" +
+            brand +
+            '\'' +
+            ", type='" +
+            type +
+            '\'' +
+            ", tag='" +
+            tag +
+            '\'' +
+            ", model='" +
+            model +
+            '\'' +
+            ", vinNumber='" +
+            vinNumber +
+            '\'' +
+            ", chassisNumber='" +
+            chassisNumber +
+            '\'' +
+            ", description='" +
+            description +
+            '\'' +
+            ", capacityTon=" +
+            capacityTon +
+            ", ratePerHour=" +
+            ratePerHour +
+            ", ratePerDay=" +
+            ratePerDay +
+            ", minimumUsageHours=" +
+            minimumUsageHours +
+            ", latitude=" +
+            latitude +
+            ", longitude=" +
+            longitude +
+            ", transportationCharge=" +
+            transportationCharge +
+            ", driverBatta=" +
+            driverBatta +
+            ", serviceabilityRangeKm=" +
+            serviceabilityRangeKm +
+            ", status=" +
+            status +
+            ", createdDate=" +
+            createdDate +
+            ", user=" +
+            user +
+            ", typeEntity=" +
+            typeEntity +
+            ", category=" +
+            category +
+            ", subcategory=" +
+            subcategory +
+            ", warranty='" +
+            warranty +
+            '\'' +
+            ", driverName='" +
+            driverName +
+            '\'' +
+            ", adharNo='" +
+            adharNo +
+            '\'' +
+            ", age=" +
+            age +
+            ", licenseNo='" +
+            licenseNo +
+            '\'' +
+            ", insuranceNo='" +
+            insuranceNo +
+            '\'' +
+            ", operators=" +
+            operators +
+            ", documents=" +
+            documents +
+            ", mfgDate=" +
+            mfgDate +
+            '}'
+        );
     }
 }

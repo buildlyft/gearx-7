@@ -10,6 +10,7 @@ import com.gearx7.app.service.mapper.MachineMapper;
 import com.gearx7.app.web.rest.errors.BadRequestAlertException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
@@ -230,6 +231,21 @@ public class MachineService {
         return machines.stream().map(machine -> calculatePricing(machine, start, end)).toList();
     }
 
+    @Transactional(readOnly = true)
+    public List<MachineDTO> findMachinesWithoutOperator() {
+        log.info("Request to fetch Machines without active operator");
+
+        List<Machine> machines = machineRepository.findMachinesWithoutOperator();
+
+        if (machines.isEmpty()) {
+            log.info("No machines found without active operator");
+        } else {
+            log.info("Found {} machines without active operator", machines.size());
+        }
+
+        return machineMapper.toDto(machines);
+    }
+
     private User getCurrentLoggedInUser() {
         String login = SecurityUtils.getCurrentUserLogin().orElseThrow(() -> new IllegalStateException("No logged-in user"));
 
@@ -298,7 +314,9 @@ public class MachineService {
         boolean isSameDay = startDate.equals(endDate);
 
         if (isSameDay) {
-            long hours = Math.max(1, ChronoUnit.HOURS.between(start, end));
+            long totalSeconds = Duration.between(start, end).getSeconds();
+            long hours = (long) Math.ceil(totalSeconds / 3600.0);
+            hours = Math.max(1, hours);
 
             if (machine.getMinimumUsageHours() != null) {
                 hours = Math.max(hours, machine.getMinimumUsageHours());
@@ -313,16 +331,6 @@ public class MachineService {
                 dto.setTotalHourlyRate(hourlyTotal.setScale(2, RoundingMode.HALF_UP));
                 dto.setTotalDailyRate(null);
             }
-        } else {
-            long days = ChronoUnit.DAYS.between(startDate, endDate) + 1;
-
-            BigDecimal ratePerDay = machine.getRatePerDay() != null
-                ? machine.getRatePerDay()
-                : machine.getRatePerHour().multiply(BigDecimal.valueOf(24));
-
-            dto.setTotalDailyRate(ratePerDay.multiply(BigDecimal.valueOf(days)).setScale(2, RoundingMode.HALF_UP));
-
-            dto.setTotalHourlyRate(null);
         }
 
         return dto;

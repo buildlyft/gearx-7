@@ -9,9 +9,11 @@ import java.net.URI;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/types")
@@ -42,11 +44,11 @@ public class TypeResource {
      * {@code 201 (Created)} and with body the new Type, or with status
      * {@code 400 (Bad Request)} if the Type has already an ID.
      */
-    @PostMapping("")
+    @PostMapping(value = "", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
-    public ResponseEntity<Type> createType(@Valid @RequestBody Type type) {
+    public ResponseEntity<Type> createType(@Valid @RequestPart("type") Type type, @RequestPart("image") MultipartFile image) {
         log.info("REST request to Create Type : {}", type);
-        Type result = typeService.createType(type);
+        Type result = typeService.createType(type, image);
         log.info("Type is created successfully with id : {}", result.getId());
         return ResponseEntity.created(URI.create("/api/types/" + result.getId())).body(result);
     }
@@ -92,11 +94,15 @@ public class TypeResource {
      * if given type is valid update and return updated type else throw error
      */
 
-    @PutMapping("/{id}")
+    @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
-    public ResponseEntity<Type> updateType(@PathVariable(required = true, name = "id") Long id, @Valid @RequestBody Type type) {
+    public ResponseEntity<Type> updateType(
+        @PathVariable(required = true, name = "id") Long id,
+        @Valid @RequestPart("type") Type type,
+        @RequestPart(value = "image", required = false) MultipartFile image
+    ) {
         log.info("REST request to update Type with id {} : {} ", id, type);
-        Type updatedType = typeService.updateType(id, type);
+        Type updatedType = typeService.updateType(id, type, image);
         log.info("Type updated successfully with id: {}", id);
         return ResponseEntity.ok(updatedType);
     }

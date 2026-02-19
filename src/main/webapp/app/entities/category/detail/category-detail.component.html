@@ -23,7 +23,18 @@
           <dd>
             <span>{{ category.description }}</span>
           </dd>
-          <dt><span>Image</span></dt>
+          <dt><span>Type ID</span></dt>
+          <dd>
+            <span>{{ category.typeId }}</span>
+          </dd>
+          <dt><span>Image URL</span></dt>
+          <dd>
+            <a *ngIf="category.imageUrl" [href]="category.imageUrl" target="_blank">
+              {{ category.imageUrl }}
+            </a>
+          </dd>
+
+          <!--<dt><span>Image</span></dt>
           <dd>
             @if (category.image) {
               <div>
@@ -31,7 +42,7 @@
                 {{ category.imageContentType }}, {{ byteSize(category.image) }}
               </div>
             }
-          </dd>
+          </dd>-->
         </dl>
 
         <button type="submit" (click)="previousState()" class="btn btn-info" data-cy="entityDetailsBackButton">

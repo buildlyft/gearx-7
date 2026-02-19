@@ -31,6 +31,20 @@ export class SubcategoryService {
     });
   }
 
+  createMultipart(formData: FormData) {
+    return this.http.post<ISubcategory>(this.resourceUrl, formData, { observe: 'response' });
+  }
+
+  updateMultipart(id: number, formData: FormData) {
+    return this.http.put<ISubcategory>(`${this.resourceUrl}/${id}`, formData, { observe: 'response' });
+  }
+
+  getSubcategoriesByCategory(categoryId: number): Observable<EntityArrayResponseType> {
+    return this.http.get<ISubcategory[]>(`${this.applicationConfigService.getEndpointFor('api/categories')}/${categoryId}/subcategories`, {
+      observe: 'response',
+    });
+  }
+
   partialUpdate(subcategory: PartialUpdateSubcategory): Observable<EntityResponseType> {
     return this.http.patch<ISubcategory>(`${this.resourceUrl}/${this.getSubcategoryIdentifier(subcategory)}`, subcategory, {
       observe: 'response',

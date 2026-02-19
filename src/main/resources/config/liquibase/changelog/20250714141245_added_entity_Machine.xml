@@ -233,5 +233,11 @@
 
     </changeSet>
 
+    <changeSet id="202602171200" author="Ganesh">
+        <addColumn tableName="machine">
+            <column name="mfg_date" type="bigint"/>
+        </addColumn>
+    </changeSet>
+
 
 </databaseChangeLog>

@@ -1,0 +1,77 @@
+<div class="d-flex justify-content-center">
+  <div class="col-8">
+    <form name="editForm" role="form" novalidate (ngSubmit)="save()" [formGroup]="editForm">
+      <h2>Assign Operator</h2>
+
+      <div>
+        <!-- Machine -->
+        <div class="mb-3">
+          <label class="form-label">Machine</label>
+
+          <select class="form-control" formControlName="machineId">
+            <option [ngValue]="null">Select Machine</option>
+
+            <option *ngFor="let m of machines" [ngValue]="m.id">{{ m.brand }} {{ m.model }}</option>
+          </select>
+
+          <small class="text-danger" *ngIf="editForm.get('machineId')?.invalid && editForm.get('machineId')?.touched">
+            Machine is required
+          </small>
+        </div>
+
+        <!-- Driver Name -->
+        <div class="mb-3">
+          <label class="form-label">Driver Name</label>
+          <input type="text" class="form-control" formControlName="driverName" />
+
+          <small class="text-danger" *ngIf="editForm.get('driverName')?.invalid && editForm.get('driverName')?.touched">
+            Driver name is required
+          </small>
+        </div>
+
+        <!-- Contact -->
+        <div class="mb-3">
+          <label class="form-label">Contact</label>
+          <input type="text" class="form-control" formControlName="operatorContact" />
+        </div>
+
+        <!-- Address -->
+        <div class="mb-3">
+          <label class="form-label">Address</label>
+          <textarea class="form-control" rows="3" formControlName="address"></textarea>
+        </div>
+
+        <!-- Active -->
+        <div class="mb-3">
+          <label class="form-label me-2">Active</label>
+          <input type="checkbox" formControlName="active" class="form-check-input" />
+        </div>
+
+        <!-- License Date -->
+        <div class="mb-3">
+          <label class="form-label">License Issue Date</label>
+          <input type="date" class="form-control" formControlName="licenseIssueDate" />
+        </div>
+
+        <!-- File Upload -->
+        <div class="mb-3">
+          <label class="form-label">Upload License Document</label>
+          <input type="file" class="form-control" (change)="onFileChange($event)" />
+        </div>
+      </div>
+
+      <!-- Buttons -->
+      <div>
+        <button type="button" class="btn btn-secondary" (click)="previousState()">
+          <fa-icon icon="ban"></fa-icon>
+          <span>Cancel</span>
+        </button>
+
+        <button type="submit" class="btn btn-primary" [disabled]="editForm.invalid || isSaving">
+          <fa-icon icon="save"></fa-icon>
+          <span>Save</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

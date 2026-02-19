@@ -26,12 +26,23 @@ public class Type {
     @JsonIgnoreProperties(value = { "type" }, allowSetters = true)
     private Set<Category> categories = new HashSet<>();
 
+    @Column(name = "image_url", length = 2000)
+    private String imageUrl;
+
     @PrePersist
     @PreUpdate
     private void normalize() {
         if (typeName != null) {
             typeName = typeName.trim();
         }
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
     }
 
     public Long getId() {

@@ -21,6 +21,20 @@ export class CategoryService {
     protected applicationConfigService: ApplicationConfigService,
   ) {}
 
+  createMultipart(formData: FormData) {
+    return this.http.post<ICategory>(this.resourceUrl, formData, { observe: 'response' });
+  }
+
+  updateMultipart(id: number, formData: FormData) {
+    return this.http.put<ICategory>(`${this.resourceUrl}/${id}`, formData, { observe: 'response' });
+  }
+
+  getCategoriesByType(typeId: number): Observable<EntityArrayResponseType> {
+    return this.http.get<ICategory[]>(`${this.applicationConfigService.getEndpointFor('api/types')}/${typeId}/categories`, {
+      observe: 'response',
+    });
+  }
+
   create(category: NewCategory): Observable<EntityResponseType> {
     return this.http.post<ICategory>(this.resourceUrl, category, { observe: 'response' });
   }

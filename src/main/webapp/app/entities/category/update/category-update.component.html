@@ -37,33 +37,66 @@
           />
         </div>
 
+        <!--        <div class="mb-3">-->
+        <!--          <label class="form-label" for="field_image">Image</label>-->
+        <!--          <div>-->
+        <!--            @if (editForm.get('image')!.value) {-->
+        <!--              <div class="form-text text-danger clearfix">-->
+        <!--                <a class="pull-start" (click)="openFile(editForm.get('image')!.value!, editForm.get('imageContentType')!.value!)">Open</a-->
+        <!--                ><br />-->
+        <!--                <span class="pull-start">{{ editForm.get('imageContentType')!.value }}, {{ byteSize(editForm.get('image')!.value!) }}</span>-->
+        <!--                <button-->
+        <!--                  type="button"-->
+        <!--                  (click)="editForm.patchValue({ image: undefined, imageContentType: undefined })"-->
+        <!--                  class="btn btn-secondary btn-xs pull-end"-->
+        <!--                >-->
+        <!--                  <fa-icon icon="times"></fa-icon>-->
+        <!--                </button>-->
+        <!--              </div>-->
+        <!--            }-->
+        <!--            <input type="file" id="file_image" data-cy="image" (change)="setFileData($event, 'image', false)" />-->
+        <!--          </div>-->
+        <!--          <input type="hidden" class="form-control" name="image" id="field_image" data-cy="image" formControlName="image" />-->
+        <!--          <input-->
+        <!--            type="hidden"-->
+        <!--            class="form-control"-->
+        <!--            name="imageContentType"-->
+        <!--            id="field_imageContentType"-->
+        <!--            formControlName="imageContentType"-->
+        <!--          />-->
+        <!--        </div>-->
+
         <div class="mb-3">
-          <label class="form-label" for="field_image">Image</label>
-          <div>
-            @if (editForm.get('image')!.value) {
-              <div class="form-text text-danger clearfix">
-                <a class="pull-start" (click)="openFile(editForm.get('image')!.value!, editForm.get('imageContentType')!.value!)">Open</a
-                ><br />
-                <span class="pull-start">{{ editForm.get('imageContentType')!.value }}, {{ byteSize(editForm.get('image')!.value!) }}</span>
-                <button
-                  type="button"
-                  (click)="editForm.patchValue({ image: undefined, imageContentType: undefined })"
-                  class="btn btn-secondary btn-xs pull-end"
-                >
-                  <fa-icon icon="times"></fa-icon>
-                </button>
-              </div>
-            }
-            <input type="file" id="file_image" data-cy="image" (change)="setFileData($event, 'image', false)" />
+          <label class="form-label">Type</label>
+          <select class="form-control" formControlName="typeId">
+            <option [ngValue]="null">Select Type</option>
+            <option *ngFor="let type of types" [ngValue]="type.id">
+              {{ type.typeName }}
+            </option>
+          </select>
+
+          <small class="text-danger" *ngIf="editForm.get('typeId')?.invalid && editForm.get('typeId')?.touched"> Type is required </small>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Image</label>
+
+          <input type="file" id="file_image" accept="image/*" class="form-control" (change)="onFileChange($event)" />
+
+          <!-- Preview -->
+          <!-- New Selected Image Preview -->
+          <div *ngIf="previewUrl" class="mt-3">
+            <label>Image Preview:</label>
+            <br />
+            <img [src]="previewUrl" class="img-thumbnail" style="max-height: 200px" />
           </div>
-          <input type="hidden" class="form-control" name="image" id="field_image" data-cy="image" formControlName="image" />
-          <input
-            type="hidden"
-            class="form-control"
-            name="imageContentType"
-            id="field_imageContentType"
-            formControlName="imageContentType"
-          />
+
+          <!-- Existing Image Preview (Edit Mode) -->
+          <div *ngIf="!previewUrl && editForm.get('imageUrl')?.value" class="mt-3">
+            <label>Current Image:</label>
+            <br />
+            <img [src]="editForm.get('imageUrl')?.value" class="img-thumbnail" style="max-height: 200px" />
+          </div>
         </div>
       </div>
 

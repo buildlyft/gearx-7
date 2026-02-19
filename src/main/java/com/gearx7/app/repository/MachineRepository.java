@@ -92,4 +92,16 @@ public interface MachineRepository extends JpaRepository<Machine, Long> {
         """
     )
     Optional<Machine> findOneWithAllRelationships(@Param("id") Long id);
+
+    @Query(
+        """
+        select m from Machine m
+        where not exists (
+            select mo.id from MachineOperator mo
+            where mo.machine = m
+            and mo.active = true
+        )
+        """
+    )
+    List<Machine> findMachinesWithoutOperator();
 }

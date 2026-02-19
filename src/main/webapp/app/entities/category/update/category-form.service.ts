@@ -20,8 +20,10 @@ type CategoryFormGroupContent = {
   id: FormControl<ICategory['id'] | NewCategory['id']>;
   name: FormControl<ICategory['name']>;
   description: FormControl<ICategory['description']>;
-  image: FormControl<ICategory['image']>;
-  imageContentType: FormControl<ICategory['imageContentType']>;
+  //   image: FormControl<ICategory['image']>;
+  //   imageContentType: FormControl<ICategory['imageContentType']>;
+  typeId: FormControl<ICategory['typeId']>;
+  imageUrl: FormControl<ICategory['imageUrl']>;
 };
 
 export type CategoryFormGroup = FormGroup<CategoryFormGroupContent>;
@@ -45,8 +47,12 @@ export class CategoryFormService {
         validators: [Validators.required],
       }),
       description: new FormControl(categoryRawValue.description),
-      image: new FormControl(categoryRawValue.image),
-      imageContentType: new FormControl(categoryRawValue.imageContentType),
+      //       image: new FormControl(categoryRawValue.image),
+      //       imageContentType: new FormControl(categoryRawValue.imageContentType),
+      typeId: new FormControl(categoryRawValue.typeId ?? null, {
+        validators: [Validators.required],
+      }),
+      imageUrl: new FormControl(categoryRawValue.imageUrl),
     });
   }
 

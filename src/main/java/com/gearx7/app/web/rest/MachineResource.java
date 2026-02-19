@@ -214,6 +214,27 @@ public class MachineResource {
             .build();
     }
 
+    @GetMapping("/without-operator")
+    public ResponseEntity<List<MachineDTO>> getMachinesWithoutOperator() {
+        log.info("REST request to get Machines without active operator");
+
+        try {
+            List<MachineDTO> list = machineService.findMachinesWithoutOperator();
+
+            if (list == null || list.isEmpty()) {
+                log.info("REST response: No machines available without operator");
+                return ResponseEntity.noContent().build();
+            }
+
+            log.info("REST response: {} machines returned without operator", list.size());
+
+            return ResponseEntity.ok(list);
+        } catch (Exception ex) {
+            log.error("Error while fetching machines without operator", ex);
+            throw ex;
+        }
+    }
+
     @GetMapping("/search")
     public ResponseEntity<List<MachineDTO>> searchMachines(
         @RequestParam Long typeId,

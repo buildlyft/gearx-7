@@ -90,6 +90,16 @@ public class MachineDTO implements Serializable {
 
     private String insuranceNo;
 
+    private Long mfgDate;
+
+    public Long getMfgDate() {
+        return mfgDate;
+    }
+
+    public void setMfgDate(Long mfgDate) {
+        this.mfgDate = mfgDate;
+    }
+
     public Long getTypeId() {
         return typeId;
     }
@@ -436,6 +446,8 @@ public class MachineDTO implements Serializable {
             totalHourlyRate +
             ", totalDailyRate=" +
             totalDailyRate +
+            ", typeId=" +
+            typeId +
             ", categoryId=" +
             categoryId +
             ", subcategoryId=" +
@@ -457,6 +469,8 @@ public class MachineDTO implements Serializable {
             ", insuranceNo='" +
             insuranceNo +
             '\'' +
+            ", mfgDate=" +
+            mfgDate +
             '}'
         );
     }

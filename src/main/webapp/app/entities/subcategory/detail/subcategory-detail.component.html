@@ -23,7 +23,7 @@
           <dd>
             <span>{{ subcategory.description }}</span>
           </dd>
-          <dt><span>Image</span></dt>
+          <!--<dt><span>Image</span></dt>
           <dd>
             @if (subcategory.image) {
               <div>
@@ -31,13 +31,19 @@
                 {{ subcategory.imageContentType }}, {{ byteSize(subcategory.image) }}
               </div>
             }
+          </dd>-->
+          <dt><span>Image URL</span></dt>
+          <dd>
+            <a *ngIf="subcategory.imageUrl" [href]="subcategory.imageUrl" target="_blank">
+              {{ subcategory.imageUrl }}
+            </a>
           </dd>
           <dt><span>Category</span></dt>
           <dd>
-            @if (subcategory.category) {
-              <div>
-                <a [routerLink]="['/category', subcategory.category.id, 'view']">{{ subcategory.category.id }}</a>
-              </div>
+            @if (subcategory.categoryId) {
+              <a [routerLink]="['/category', subcategory.categoryId, 'view']">
+                {{ subcategory.categoryId }}
+              </a>
             }
           </dd>
         </dl>

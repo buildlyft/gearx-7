@@ -11,6 +11,8 @@ export const sampleWithRequiredData: IMachine = {
   longitude: 23118.09,
   status: 'AVAILABLE',
   createdDate: dayjs('2025-07-14T02:17'),
+  mfgDate: 2022,
+  typeId: 1,
   categoryId: 10,
   subcategoryId: 20,
 };
@@ -32,6 +34,8 @@ export const sampleWithPartialData: IMachine = {
   serviceabilityRangeKm: 11003,
   status: 'NOT_AVAILABLE',
   createdDate: dayjs('2025-07-14T12:32'),
+  mfgDate: 2022,
+  typeId: 1,
   categoryId: 10,
   subcategoryId: 20,
 };
@@ -55,6 +59,8 @@ export const sampleWithFullData: IMachine = {
   serviceabilityRangeKm: 23914,
   status: 'NOT_AVAILABLE',
   createdDate: dayjs('2025-07-13T21:40'),
+  mfgDate: 2022,
+  typeId: 1,
   categoryId: 10,
   subcategoryId: 20,
 };
@@ -67,6 +73,8 @@ export const sampleWithNewData: NewMachine = {
   longitude: 26098.39,
   status: 'AVAILABLE',
   createdDate: dayjs('2025-07-13T20:24'),
+  mfgDate: 2022,
+  typeId: 1,
   categoryId: 10,
   subcategoryId: 20,
   id: null,

@@ -9,7 +9,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 import { AlertError } from 'app/shared/alert/alert-error.model';
 import { EventManager, EventWithContent } from 'app/core/util/event-manager.service';
-import { DataUtils, FileLoadError } from 'app/core/util/data-util.service';
+//import { DataUtils, FileLoadError } from 'app/core/util/data-util.service';
 import { ICategory } from 'app/entities/category/category.model';
 import { CategoryService } from 'app/entities/category/service/category.service';
 import { SubcategoryService } from '../service/subcategory.service';
@@ -25,13 +25,16 @@ import { SubcategoryFormService, SubcategoryFormGroup } from './subcategory-form
 export class SubcategoryUpdateComponent implements OnInit {
   isSaving = false;
   subcategory: ISubcategory | null = null;
+  selectedFile?: File;
+  previewUrl: string | ArrayBuffer | null = null;
 
-  categoriesSharedCollection: ICategory[] = [];
+  //  Simple category list
+  categories: ICategory[] = [];
 
   editForm: SubcategoryFormGroup = this.subcategoryFormService.createSubcategoryFormGroup();
 
   constructor(
-    protected dataUtils: DataUtils,
+    //  protected dataUtils: DataUtils,
     protected eventManager: EventManager,
     protected subcategoryService: SubcategoryService,
     protected subcategoryFormService: SubcategoryFormService,
@@ -39,20 +42,17 @@ export class SubcategoryUpdateComponent implements OnInit {
     protected activatedRoute: ActivatedRoute,
   ) {}
 
-  compareCategory = (o1: ICategory | null, o2: ICategory | null): boolean => this.categoryService.compareCategory(o1, o2);
-
   ngOnInit(): void {
     this.activatedRoute.data.subscribe(({ subcategory }) => {
       this.subcategory = subcategory;
       if (subcategory) {
         this.updateForm(subcategory);
       }
-
-      this.loadRelationshipsOptions();
+      this.loadCategories(); // ✅ simple loading
     });
   }
 
-  byteSize(base64String: string): string {
+  /* byteSize(base64String: string): string {
     return this.dataUtils.byteSize(base64String);
   }
 
@@ -65,7 +65,7 @@ export class SubcategoryUpdateComponent implements OnInit {
       error: (err: FileLoadError) =>
         this.eventManager.broadcast(new EventWithContent<AlertError>('gearx7App.error', { message: err.message })),
     });
-  }
+  } */
 
   previousState(): void {
     window.history.back();
@@ -73,11 +73,29 @@ export class SubcategoryUpdateComponent implements OnInit {
 
   save(): void {
     this.isSaving = true;
+
     const subcategory = this.subcategoryFormService.getSubcategory(this.editForm);
+    const formData = new FormData();
+
+    // JSON part
+    formData.append('subcategory', new Blob([JSON.stringify(subcategory)], { type: 'application/json' }));
+
+    // File part
+    if (this.selectedFile) {
+      formData.append('file', this.selectedFile);
+    }
+
     if (subcategory.id !== null) {
-      this.subscribeToSaveResponse(this.subcategoryService.update(subcategory));
+      this.subscribeToSaveResponse(this.subcategoryService.updateMultipart(subcategory.id, formData));
     } else {
-      this.subscribeToSaveResponse(this.subcategoryService.create(subcategory));
+      // Image required while creating
+      if (!this.selectedFile) {
+        alert('Image is required while creating Subcategory');
+        this.isSaving = false;
+        return;
+      }
+
+      this.subscribeToSaveResponse(this.subcategoryService.createMultipart(formData));
     }
   }
 
@@ -88,12 +106,27 @@ export class SubcategoryUpdateComponent implements OnInit {
     });
   }
 
+  onFileChange(event: any): void {
+    const file = event.target.files?.[0];
+
+    if (file) {
+      this.selectedFile = file;
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        this.previewUrl = reader.result;
+      };
+
+      reader.readAsDataURL(file);
+    }
+  }
+
   protected onSaveSuccess(): void {
     this.previousState();
   }
 
   protected onSaveError(): void {
-    // Api for inheritance.
+    // for override
   }
 
   protected onSaveFinalize(): void {
@@ -104,21 +137,17 @@ export class SubcategoryUpdateComponent implements OnInit {
     this.subcategory = subcategory;
     this.subcategoryFormService.resetForm(this.editForm, subcategory);
 
-    this.categoriesSharedCollection = this.categoryService.addCategoryToCollectionIfMissing<ICategory>(
-      this.categoriesSharedCollection,
-      subcategory.category,
-    );
+    // Show existing image in preview (edit mode)
+    if (subcategory.imageUrl) {
+      this.previewUrl = subcategory.imageUrl;
+    }
   }
 
-  protected loadRelationshipsOptions(): void {
+  //  Clean category loader
+  protected loadCategories(): void {
     this.categoryService
       .query()
       .pipe(map((res: HttpResponse<ICategory[]>) => res.body ?? []))
-      .pipe(
-        map((categories: ICategory[]) =>
-          this.categoryService.addCategoryToCollectionIfMissing<ICategory>(categories, this.subcategory?.category),
-        ),
-      )
-      .subscribe((categories: ICategory[]) => (this.categoriesSharedCollection = categories));
+      .subscribe((categories: ICategory[]) => (this.categories = categories));
   }
 }

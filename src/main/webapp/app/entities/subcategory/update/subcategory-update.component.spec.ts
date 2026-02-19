@@ -89,7 +89,7 @@ describe('Subcategory Management Update Component', () => {
       const saveSubject = new Subject<HttpResponse<ISubcategory>>();
       const subcategory = { id: 123 };
       jest.spyOn(subcategoryFormService, 'getSubcategory').mockReturnValue(subcategory);
-      jest.spyOn(subcategoryService, 'update').mockReturnValue(saveSubject);
+      jest.spyOn(subcategoryService, 'updateMultipart').mockReturnValue(saveSubject);
       jest.spyOn(comp, 'previousState');
       activatedRoute.data = of({ subcategory });
       comp.ngOnInit();
@@ -103,7 +103,7 @@ describe('Subcategory Management Update Component', () => {
       // THEN
       expect(subcategoryFormService.getSubcategory).toHaveBeenCalled();
       expect(comp.previousState).toHaveBeenCalled();
-      expect(subcategoryService.update).toHaveBeenCalledWith(expect.objectContaining(subcategory));
+      expect(subcategoryService.updateMultipart).toHaveBeenCalled();
       expect(comp.isSaving).toEqual(false);
     });
 
@@ -112,7 +112,7 @@ describe('Subcategory Management Update Component', () => {
       const saveSubject = new Subject<HttpResponse<ISubcategory>>();
       const subcategory = { id: 123 };
       jest.spyOn(subcategoryFormService, 'getSubcategory').mockReturnValue({ id: null });
-      jest.spyOn(subcategoryService, 'create').mockReturnValue(saveSubject);
+      jest.spyOn(subcategoryService, 'createMultipart').mockReturnValue(saveSubject);
       jest.spyOn(comp, 'previousState');
       activatedRoute.data = of({ subcategory: null });
       comp.ngOnInit();
@@ -125,7 +125,7 @@ describe('Subcategory Management Update Component', () => {
 
       // THEN
       expect(subcategoryFormService.getSubcategory).toHaveBeenCalled();
-      expect(subcategoryService.create).toHaveBeenCalled();
+      expect(subcategoryService.createMultipart).toHaveBeenCalled();
       expect(comp.isSaving).toEqual(false);
       expect(comp.previousState).toHaveBeenCalled();
     });
@@ -134,7 +134,7 @@ describe('Subcategory Management Update Component', () => {
       // GIVEN
       const saveSubject = new Subject<HttpResponse<ISubcategory>>();
       const subcategory = { id: 123 };
-      jest.spyOn(subcategoryService, 'update').mockReturnValue(saveSubject);
+      jest.spyOn(subcategoryService, 'updateMultipart').mockReturnValue(saveSubject);
       jest.spyOn(comp, 'previousState');
       activatedRoute.data = of({ subcategory });
       comp.ngOnInit();
@@ -145,7 +145,7 @@ describe('Subcategory Management Update Component', () => {
       saveSubject.error('This is an error!');
 
       // THEN
-      expect(subcategoryService.update).toHaveBeenCalled();
+      expect(subcategoryService.updateMultipart).toHaveBeenCalled();
       expect(comp.isSaving).toEqual(false);
       expect(comp.previousState).not.toHaveBeenCalled();
     });

@@ -1,0 +1,64 @@
+<div>
+  <h2 id="page-heading">
+    <span>Types</span>
+
+    <div class="d-flex justify-content-end">
+      <button class="btn btn-info me-2" (click)="load()" [disabled]="isLoading">
+        <fa-icon icon="sync" [spin]="isLoading"></fa-icon>
+        <span>Refresh list</span>
+      </button>
+
+      <button class="btn btn-primary" [routerLink]="['/type/new']">
+        <fa-icon icon="plus"></fa-icon>
+        <span>Create a new Type</span>
+      </button>
+    </div>
+  </h2>
+
+  <table class="table table-striped" *ngIf="types && types.length > 0">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Type Name</th>
+        <th>Image URL</th>
+        <th></th>
+      </tr>
+    </thead>
+
+    <tbody>
+      <tr *ngFor="let type of types; trackBy: trackId">
+        <td>
+          <a [routerLink]="['/type', type.id, 'view']">
+            {{ type.id }}
+          </a>
+        </td>
+
+        <td>{{ type.typeName }}</td>
+        <td class="text-break" style="max-width: 350px">
+          <a *ngIf="type.imageUrl" [href]="type.imageUrl" target="_blank" rel="noopener noreferrer">
+            {{ type.imageUrl }}
+          </a>
+        </td>
+
+        <td class="text-end">
+          <a [routerLink]="['/type', type.id, 'view']" class="btn btn-info btn-sm me-1">
+            <fa-icon icon="eye"></fa-icon>
+            View
+          </a>
+
+          <a [routerLink]="['/type', type.id, 'edit']" class="btn btn-primary btn-sm me-1">
+            <fa-icon icon="pencil-alt"></fa-icon>
+            Edit
+          </a>
+
+          <button (click)="delete(type)" class="btn btn-danger btn-sm">
+            <fa-icon icon="times"></fa-icon>
+            Delete
+          </button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div *ngIf="types?.length === 0" class="alert alert-warning">No Types found</div>
+</div>

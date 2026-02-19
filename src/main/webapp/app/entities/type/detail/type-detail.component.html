@@ -1,0 +1,21 @@
+<div *ngIf="type">
+  <h2>Type</h2>
+
+  <dl class="row">
+    <dt>ID</dt>
+    <dd>{{ type.id }}</dd>
+
+    <dt>Type Name</dt>
+    <dd>{{ type.typeName }}</dd>
+    <dt>Image URL</dt>
+    <dd>
+      <a *ngIf="type.imageUrl" [href]="type.imageUrl" target="_blank" rel="noopener noreferrer">
+        {{ type.imageUrl }}
+      </a>
+    </dd>
+  </dl>
+
+  <button (click)="previousState()" class="btn btn-info">Back</button>
+
+  <button [routerLink]="['/type', type.id, 'edit']" class="btn btn-primary">Edit</button>
+</div>

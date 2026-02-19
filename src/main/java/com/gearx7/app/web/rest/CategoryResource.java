@@ -1,7 +1,6 @@
 package com.gearx7.app.web.rest;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gearx7.app.domain.Category;
 import com.gearx7.app.domain.Subcategory;
 import com.gearx7.app.repository.CategoryRepository;

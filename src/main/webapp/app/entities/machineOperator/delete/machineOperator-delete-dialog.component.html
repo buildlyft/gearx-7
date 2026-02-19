@@ -1,0 +1,19 @@
+<div>
+  <h4 id="jhi-delete-machineOperator-heading">Confirm delete operation</h4>
+
+  <div class="alert alert-warning">
+    <p>Are you sure you want to deactivate this Machine Operator?</p>
+
+    <ul *ngIf="machineOperator">
+      <li><strong>Driver Name:</strong> {{ machineOperator.driverName }}</li>
+      <li><strong>Machine ID:</strong> {{ machineOperator.machineId }}</li>
+      <li><strong>Contact:</strong> {{ machineOperator.operatorContact }}</li>
+    </ul>
+  </div>
+
+  <div class="d-flex justify-content-end gap-2">
+    <button type="button" class="btn btn-secondary" (click)="cancel()">Cancel</button>
+
+    <button type="button" class="btn btn-danger" (click)="confirmDelete(machineOperator!.operatorId)">Deactivate</button>
+  </div>
+</div>

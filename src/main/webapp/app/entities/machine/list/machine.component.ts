@@ -15,6 +15,8 @@ import { ASC, DESC, SORT, ITEM_DELETED_EVENT, DEFAULT_SORT_DATA } from 'app/conf
 import { IMachine } from '../machine.model';
 import { EntityArrayResponseType, MachineService } from '../service/machine.service';
 import { MachineDeleteDialogComponent } from '../delete/machine-delete-dialog.component';
+import { TypeService } from 'app/entities/type/service/type.service';
+import { IType } from 'app/entities/type/type.model';
 
 @Component({
   standalone: true,
@@ -33,6 +35,7 @@ import { MachineDeleteDialogComponent } from '../delete/machine-delete-dialog.co
   ],
 })
 export class MachineComponent implements OnInit {
+  types: IType[] = [];
   machines?: IMachine[];
   isLoading = false;
 
@@ -48,12 +51,17 @@ export class MachineComponent implements OnInit {
     protected activatedRoute: ActivatedRoute,
     public router: Router,
     protected modalService: NgbModal,
+    protected typeService: TypeService,
   ) {}
 
   trackId = (_index: number, item: IMachine): number => this.machineService.getMachineIdentifier(item);
 
   ngOnInit(): void {
     this.load();
+
+    this.typeService.query().subscribe(res => {
+      this.types = res.body ?? [];
+    });
   }
 
   delete(machine: IMachine): void {
@@ -149,5 +157,12 @@ export class MachineComponent implements OnInit {
     } else {
       return [predicate + ',' + ascendingQueryParam];
     }
+  }
+
+  getTypeName(typeId: number | null | undefined): string {
+    if (!typeId) {
+      return '';
+    }
+    return this.types.find(t => t.id === typeId)?.typeName ?? '';
   }
 }

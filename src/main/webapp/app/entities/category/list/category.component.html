@@ -56,10 +56,24 @@
                 <fa-icon class="p-1" icon="sort"></fa-icon>
               </div>
             </th>
-            <th scope="col" jhiSortBy="image">
+            <th scope="col" jhiSortBy="typeId">
+              <div class="d-flex">
+                <span>Type ID</span>
+                <fa-icon class="p-1" icon="sort"></fa-icon>
+              </div>
+            </th>
+
+            <!--<th scope="col" jhiSortBy="image">
               <div class="d-flex">
                 <span>Image</span>
 
+                <fa-icon class="p-1" icon="sort"></fa-icon>
+              </div>
+            </th>-->
+
+            <th scope="col" jhiSortBy="imageUrl">
+              <div class="d-flex">
+                <span>Image URL</span>
                 <fa-icon class="p-1" icon="sort"></fa-icon>
               </div>
             </th>
@@ -74,11 +88,17 @@
               </td>
               <td>{{ category.name }}</td>
               <td>{{ category.description }}</td>
-              <td>
+              <td>{{ category.typeId }}</td>
+              <!--<td>
                 @if (category.image) {
                   <a (click)="openFile(category.image, category.imageContentType)">Open</a>
                   <span>{{ category.imageContentType }}, {{ byteSize(category.image) }}</span>
                 }
+              </td>-->
+              <td>
+                <a *ngIf="category.imageUrl" [href]="category.imageUrl" target="_blank">
+                  {{ category.imageUrl }}
+                </a>
               </td>
               <td class="text-end">
                 <div class="btn-group">

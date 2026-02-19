@@ -81,6 +81,12 @@ export class MachineService {
     return o1 && o2 ? this.getMachineIdentifier(o1) === this.getMachineIdentifier(o2) : o1 === o2;
   }
 
+  queryWithoutOperator(): Observable<EntityArrayResponseType> {
+    return this.http
+      .get<RestMachine[]>(`${this.resourceUrl}/without-operator`, { observe: 'response' })
+      .pipe(map(res => this.convertResponseArrayFromServer(res)));
+  }
+
   addMachineToCollectionIfMissing<Type extends Pick<IMachine, 'id'>>(
     machineCollection: Type[],
     ...machinesToCheck: (Type | null | undefined)[]

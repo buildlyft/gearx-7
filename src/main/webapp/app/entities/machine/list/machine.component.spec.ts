@@ -9,6 +9,7 @@ import { MachineService } from '../service/machine.service';
 
 import { MachineComponent } from './machine.component';
 import SpyInstance = jest.SpyInstance;
+import { TypeService } from 'app/entities/type/service/type.service';
 
 describe('Machine Management Component', () => {
   let comp: MachineComponent;
@@ -24,6 +25,12 @@ describe('Machine Management Component', () => {
         MachineComponent,
       ],
       providers: [
+        {
+          provide: TypeService,
+          useValue: {
+            query: jest.fn().mockReturnValue(of(new HttpResponse({ body: [{ id: 1, typeName: 'Excavator' }] }))),
+          },
+        },
         {
           provide: ActivatedRoute,
           useValue: {
@@ -54,7 +61,7 @@ describe('Machine Management Component', () => {
     jest.spyOn(service, 'query').mockReturnValue(
       of(
         new HttpResponse({
-          body: [{ id: 123, categoryId: 10, subcategoryId: 20 }],
+          body: [{ id: 123, typeId: 1, categoryId: 10, subcategoryId: 20 }],
           headers,
         }),
       ),
@@ -67,7 +74,7 @@ describe('Machine Management Component', () => {
 
     // THEN
     expect(service.query).toHaveBeenCalled();
-    expect(comp.machines?.[0]).toEqual(expect.objectContaining({ id: 123, categoryId: 10, subcategoryId: 20 }));
+    expect(comp.machines?.[0]).toEqual(expect.objectContaining({ id: 123, typeId: 1, categoryId: 10, subcategoryId: 20 }));
   });
 
   describe('trackId', () => {

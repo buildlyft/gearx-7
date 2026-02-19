@@ -246,6 +246,29 @@
         </div>
 
         <div class="mb-3">
+          <label class="form-label" for="field_mfgDate">Manufacturing Year</label>
+          <input type="number" class="form-control" name="mfgDate" id="field_mfgDate" data-cy="mfgDate" formControlName="mfgDate" />
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Type Name</label>
+          <select class="form-control" formControlName="typeId" (change)="onTypeChange()">
+            <option [ngValue]="null">-- Select Type --</option>
+            <option *ngFor="let t of types" [value]="t.id">
+              {{ t.typeName }}
+            </option>
+          </select>
+
+          @if (editForm.get('typeId')!.invalid && (editForm.get('typeId')!.dirty || editForm.get('typeId')!.touched)) {
+            <div>
+              @if (editForm.get('typeId')?.errors?.required) {
+                <small class="form-text text-danger">This field is required.</small>
+              }
+            </div>
+          }
+        </div>
+
+        <div class="mb-3">
           <label class="form-label">Category</label>
           <select class="form-control" formControlName="categoryId" (change)="onCategoryChange()" autocomplete="off">
             <option [ngValue]="null">-- Select Category --</option>
@@ -266,7 +289,6 @@
         </div>
 
         <div class="mb-3" *jhiHasAnyAuthority="'ROLE_ADMIN'">
-          >
           <label class="form-label" for="field_user">User</label>
           <select class="form-control" id="field_user" data-cy="user" name="user" formControlName="user" [compareWith]="compareUser">
             <option [ngValue]="null"></option>

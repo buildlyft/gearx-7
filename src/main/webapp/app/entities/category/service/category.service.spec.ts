@@ -60,6 +60,34 @@ describe('Category Service', () => {
       expect(expectedResult).toMatchObject(expected);
     });
 
+    it('should create a Category using multipart', () => {
+      const formData = new FormData();
+      const returnedFromService = { ...requireRestSample };
+      const expected = { ...sampleWithRequiredData };
+
+      service.createMultipart(formData).subscribe(resp => (expectedResult = resp.body));
+
+      const req = httpMock.expectOne({ method: 'POST' });
+      expect(req.request.body instanceof FormData).toBe(true);
+
+      req.flush(returnedFromService);
+      expect(expectedResult).toMatchObject(expected);
+    });
+
+    it('should update a Category using multipart', () => {
+      const formData = new FormData();
+      const returnedFromService = { ...requireRestSample };
+      const expected = { ...sampleWithRequiredData };
+
+      service.updateMultipart(123, formData).subscribe(resp => (expectedResult = resp.body));
+
+      const req = httpMock.expectOne({ method: 'PUT' });
+      expect(req.request.body instanceof FormData).toBe(true);
+
+      req.flush(returnedFromService);
+      expect(expectedResult).toMatchObject(expected);
+    });
+
     it('should partial update a Category', () => {
       const patchObject = { ...sampleWithPartialData };
       const returnedFromService = { ...requireRestSample };

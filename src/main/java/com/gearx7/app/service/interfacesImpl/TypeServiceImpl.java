@@ -4,6 +4,7 @@ import com.gearx7.app.domain.Category;
 import com.gearx7.app.domain.Type;
 import com.gearx7.app.repository.CategoryRepository;
 import com.gearx7.app.repository.TypeRepository;
+import com.gearx7.app.service.interfaces.DocumentStorageService;
 import com.gearx7.app.service.interfaces.TypeService;
 import com.gearx7.app.web.rest.errors.BadRequestAlertException;
 import com.gearx7.app.web.rest.errors.NotFoundAlertException;
@@ -12,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 @Transactional
@@ -23,9 +25,16 @@ public class TypeServiceImpl implements TypeService {
 
     private final CategoryRepository categoryRepository;
 
-    public TypeServiceImpl(TypeRepository typeRepository, CategoryRepository categoryRepository) {
+    private final DocumentStorageService documentStorageService;
+
+    public TypeServiceImpl(
+        TypeRepository typeRepository,
+        CategoryRepository categoryRepository,
+        DocumentStorageService documentStorageService
+    ) {
         this.typeRepository = typeRepository;
         this.categoryRepository = categoryRepository;
+        this.documentStorageService = documentStorageService;
     }
 
     /**Create a new Type
@@ -36,8 +45,8 @@ public class TypeServiceImpl implements TypeService {
      */
 
     @Override
-    public Type createType(Type type) {
-        log.info("Request to create Type: {}", type);
+    public Type createType(Type type, MultipartFile file) {
+        log.info("Request to create Type | name={}", type.getTypeName());
         if (type.getId() != null) {
             log.error("Attempted to create a new Type with existing ID: {}", type.getId());
             throw new BadRequestAlertException("New type cannot already have an ID", "type", "idexists");
@@ -53,10 +62,19 @@ public class TypeServiceImpl implements TypeService {
             log.error("Attempted to create a duplicate Type with name: {}", type.getTypeName());
             throw new BadRequestAlertException("Type already exists", "type", "duplicate");
         }
+
+        if (file == null || file.isEmpty()) {
+            throw new BadRequestAlertException("Image is required while creating type", "type", "imageRequired");
+        }
+
         type.setTypeName(normalized);
+        type.setImageUrl("temp");
         Type savedType = typeRepository.save(type);
-        log.info("Type created successfully with ID: {}", savedType.getId());
-        return savedType;
+        String imageUrl = documentStorageService.uploadTypeImage(file, savedType.getId());
+        savedType.setImageUrl(imageUrl);
+        Type finalType = typeRepository.save(savedType);
+        log.info("Type created successfully | id={} | Name={}", finalType.getId(), finalType.getTypeName());
+        return finalType;
     }
 
     /**
@@ -66,11 +84,11 @@ public class TypeServiceImpl implements TypeService {
      */
 
     @Override
-    public Type updateType(Long id, Type type) {
+    public Type updateType(Long id, Type type, MultipartFile file) {
         log.info("Request to update Type with ID {} : {}", id, type);
 
         if (type.getId() != null && !type.getId().equals(id)) {
-            throw new BadRequestAlertException("Invalid ID", "type", "idinvalid");
+            throw new BadRequestAlertException("Invalid ID", "type", "idInvalid");
         }
 
         Type existingType = getTypeById(id);
@@ -82,17 +100,20 @@ public class TypeServiceImpl implements TypeService {
             throw new BadRequestAlertException("Type name cannot be blank", "type", "blank");
         }
 
-        if (existingName.equalsIgnoreCase(newName)) {
-            log.info("No update needed. Type name unchanged for id {}", id);
-            return existingType;
+        // Only check duplicate if name is changed
+        if (!existingName.equalsIgnoreCase(newName)) {
+            if (typeRepository.existsByTypeNameIgnoreCase(newName)) {
+                throw new BadRequestAlertException("Type already exists", "type", "duplicate");
+            }
+
+            existingType.setTypeName(newName);
         }
 
-        // DUPLICATE CHECK
-        if (typeRepository.existsByTypeNameIgnoreCase(newName)) {
-            log.error("Duplicate Type name found during update: {}", type.getTypeName());
-            throw new BadRequestAlertException("Type already exists", "type", "duplicate");
+        if (file != null && !file.isEmpty()) {
+            log.debug("Uploading new image for Type | id={}", id);
+            String imageUrl = documentStorageService.uploadTypeImage(file, id);
+            existingType.setImageUrl(imageUrl);
         }
-        existingType.setTypeName(newName);
 
         Type updatedType = typeRepository.save(existingType);
         log.info("Type with ID {} updated successfully", existingType.getId());

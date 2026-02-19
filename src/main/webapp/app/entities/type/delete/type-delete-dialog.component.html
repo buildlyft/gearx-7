@@ -1,0 +1,15 @@
+@if (type) {
+  <form (ngSubmit)="confirmDelete(type.id!)">
+    <div class="modal-header">
+      <h4>Confirm delete</h4>
+      <button type="button" class="btn-close" (click)="cancel()"></button>
+    </div>
+
+    <div class="modal-body">Are you sure you want to delete Type {{ type.id }}?</div>
+
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" (click)="cancel()">Cancel</button>
+      <button type="submit" class="btn btn-danger">Delete</button>
+    </div>
+  </form>
+}

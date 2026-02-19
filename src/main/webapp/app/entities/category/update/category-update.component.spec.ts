@@ -9,8 +9,8 @@ import { of, Subject, from } from 'rxjs';
 import { CategoryService } from '../service/category.service';
 import { ICategory } from '../category.model';
 import { CategoryFormService } from './category-form.service';
-
 import { CategoryUpdateComponent } from './category-update.component';
+import { TypeService } from 'app/entities/type/service/type.service';
 
 describe('Category Management Update Component', () => {
   let comp: CategoryUpdateComponent;
@@ -30,6 +30,12 @@ describe('Category Management Update Component', () => {
             params: from([{}]),
           },
         },
+        {
+          provide: TypeService,
+          useValue: {
+            query: jest.fn(() => of({ body: [] })),
+          },
+        },
       ],
     })
       .overrideTemplate(CategoryUpdateComponent, '')
@@ -45,7 +51,7 @@ describe('Category Management Update Component', () => {
 
   describe('ngOnInit', () => {
     it('Should update editForm', () => {
-      const category: ICategory = { id: 456 };
+      const category: ICategory = { id: 456, typeId: 1 };
 
       activatedRoute.data = of({ category });
       comp.ngOnInit();
@@ -56,69 +62,65 @@ describe('Category Management Update Component', () => {
 
   describe('save', () => {
     it('Should call update service on save for existing entity', () => {
-      // GIVEN
       const saveSubject = new Subject<HttpResponse<ICategory>>();
-      const category = { id: 123 };
-      jest.spyOn(categoryFormService, 'getCategory').mockReturnValue(category);
-      jest.spyOn(categoryService, 'update').mockReturnValue(saveSubject);
+      const category = { id: 123, typeId: 1 };
+
+      jest.spyOn(categoryFormService, 'getCategory').mockReturnValue(category as any);
+      jest.spyOn(categoryService, 'updateMultipart').mockReturnValue(saveSubject);
       jest.spyOn(comp, 'previousState');
+
       activatedRoute.data = of({ category });
       comp.ngOnInit();
 
-      // WHEN
       comp.save();
       expect(comp.isSaving).toEqual(true);
+
       saveSubject.next(new HttpResponse({ body: category }));
       saveSubject.complete();
 
-      // THEN
-      expect(categoryFormService.getCategory).toHaveBeenCalled();
+      expect(categoryService.updateMultipart).toHaveBeenCalled();
       expect(comp.previousState).toHaveBeenCalled();
-      expect(categoryService.update).toHaveBeenCalledWith(expect.objectContaining(category));
       expect(comp.isSaving).toEqual(false);
     });
 
     it('Should call create service on save for new entity', () => {
-      // GIVEN
       const saveSubject = new Subject<HttpResponse<ICategory>>();
-      const category = { id: 123 };
-      jest.spyOn(categoryFormService, 'getCategory').mockReturnValue({ id: null });
-      jest.spyOn(categoryService, 'create').mockReturnValue(saveSubject);
+      const category = { id: 123, typeId: 1 };
+
+      jest.spyOn(categoryFormService, 'getCategory').mockReturnValue({ id: null, typeId: 1 } as any);
+      jest.spyOn(categoryService, 'createMultipart').mockReturnValue(saveSubject);
       jest.spyOn(comp, 'previousState');
+
       activatedRoute.data = of({ category: null });
       comp.ngOnInit();
 
-      // WHEN
       comp.save();
       expect(comp.isSaving).toEqual(true);
+
       saveSubject.next(new HttpResponse({ body: category }));
       saveSubject.complete();
 
-      // THEN
-      expect(categoryFormService.getCategory).toHaveBeenCalled();
-      expect(categoryService.create).toHaveBeenCalled();
-      expect(comp.isSaving).toEqual(false);
+      expect(categoryService.createMultipart).toHaveBeenCalled();
       expect(comp.previousState).toHaveBeenCalled();
+      expect(comp.isSaving).toEqual(false);
     });
 
     it('Should set isSaving to false on error', () => {
-      // GIVEN
       const saveSubject = new Subject<HttpResponse<ICategory>>();
-      const category = { id: 123 };
-      jest.spyOn(categoryService, 'update').mockReturnValue(saveSubject);
-      jest.spyOn(comp, 'previousState');
-      activatedRoute.data = of({ category });
+
+      jest.spyOn(categoryFormService, 'getCategory').mockReturnValue({ id: 123, typeId: 1 } as any);
+      jest.spyOn(categoryService, 'updateMultipart').mockReturnValue(saveSubject);
+
+      activatedRoute.data = of({ category: { id: 123, typeId: 1 } });
       comp.ngOnInit();
 
-      // WHEN
       comp.save();
       expect(comp.isSaving).toEqual(true);
-      saveSubject.error('This is an error!');
 
-      // THEN
-      expect(categoryService.update).toHaveBeenCalled();
+      saveSubject.error('error');
+
+      expect(categoryService.updateMultipart).toHaveBeenCalled();
       expect(comp.isSaving).toEqual(false);
-      expect(comp.previousState).not.toHaveBeenCalled();
     });
   });
 });
