@@ -317,10 +317,9 @@ public class MachineResource {
     private void validateDates(Instant start, Instant end) {
         Instant now = Instant.now();
 
-        if (start.isBefore(now)) throw new BadRequestAlertException("Start date must be future", ENTITY_NAME, "startDateInPast");
+        //   if (start.isBefore(now)) throw new BadRequestAlertException("Start date must be future", ENTITY_NAME, "startDateInPast");
 
         if (end.isBefore(now)) throw new BadRequestAlertException("End date must be future", ENTITY_NAME, "endDateInPast");
-
-        if (!start.isBefore(end)) throw new BadRequestAlertException("Start date must be before end date", ENTITY_NAME, "invalidDateRange");
+        //  if (!start.isBefore(end)) throw new BadRequestAlertException("Start date must be before end date", ENTITY_NAME, "invalidDateRange");
     }
 }
