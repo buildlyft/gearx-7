@@ -16,7 +16,12 @@ import org.springframework.stereotype.Repository;
  */
 @Repository
 public interface BookingRepository extends JpaRepository<Booking, Long> {
-    @Query("select booking from Booking booking where booking.user.login = ?#{authentication.name}")
+    @Query(
+        value = "select booking from Booking booking " +
+        "left join fetch booking.machine " +
+        "where booking.user.login = ?#{authentication.name}",
+        countQuery = "select count(booking) from Booking booking where booking.user.login = ?#{authentication.name}"
+    )
     Page<Booking> findByUserIsCurrentUser(Pageable pageable);
 
     default Optional<Booking> findOneWithEagerRelationships(Long id) {
@@ -32,15 +37,15 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     }
 
     @Query(
-        value = "select booking from Booking booking left join fetch booking.user",
+        value = "select distinct booking from Booking booking " + "left join fetch booking.machine",
         countQuery = "select count(booking) from Booking booking"
     )
     Page<Booking> findAllWithToOneRelationships(Pageable pageable);
 
-    @Query("select booking from Booking booking left join fetch booking.user")
+    @Query("select booking from Booking booking " + "left join fetch booking.machine")
     List<Booking> findAllWithToOneRelationships();
 
-    @Query("select booking from Booking booking left join fetch booking.user where booking.id =:id")
+    @Query("select booking from Booking booking " + "left join fetch booking.machine " + "where booking.id = :id")
     Optional<Booking> findOneWithToOneRelationships(@Param("id") Long id);
 
     Page<Booking> findByMachineUserLogin(String ownerLogin, Pageable pageable);

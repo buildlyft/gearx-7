@@ -1,0 +1,76 @@
+<div>
+  <h2 id="page-heading">
+    <span>Vehicle Documents</span>
+
+    <div class="d-flex justify-content-end">
+      <!-- Refresh Button (Same as MachineOperator) -->
+      <button class="btn btn-info me-2" (click)="loadAll()" [disabled]="isLoading">
+        <fa-icon icon="sync" [spin]="isLoading"></fa-icon>
+        <span>Refresh list</span>
+      </button>
+
+      <!-- Create / Upload Button (Same as Assign Operator) -->
+      <button class="btn btn-primary" [routerLink]="['/vehicle-document/new']" *ngIf="isAdminOrPartner">
+        <fa-icon icon="plus"></fa-icon>
+        <span>Upload Documents</span>
+      </button>
+    </div>
+  </h2>
+
+  <!-- Loading -->
+  <div *ngIf="isLoading" class="alert alert-info">Loading documents...</div>
+
+  <!-- Table -->
+  <div class="table-responsive" *ngIf="documents && documents.length > 0">
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Doc Type</th>
+          <th>File Name</th>
+          <th>Content Type</th>
+          <th>Size</th>
+          <th>Uploaded By</th>
+          <th>Uploaded At</th>
+          <th class="text-end">Actions</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr *ngFor="let doc of documents; trackBy: trackId">
+          <td>{{ doc.id }}</td>
+          <td>{{ doc.docType }}</td>
+          <td>{{ doc.fileName }}</td>
+          <td>{{ doc.contentType }}</td>
+          <td>{{ doc.size }} bytes</td>
+          <td>{{ doc.uploadedBy }}</td>
+          <td>{{ doc.uploadedAt | date: 'medium' }}</td>
+
+          <!-- Actions (EXACT same style as MachineOperator) -->
+          <td class="text-end">
+            <!-- View -->
+            <a [routerLink]="['/vehicle-document', doc.id, 'view']" class="btn btn-info btn-sm me-1">
+              <fa-icon icon="eye"></fa-icon>
+              View
+            </a>
+
+            <!-- Edit -->
+            <a *ngIf="isAdminOrPartner" [routerLink]="['/vehicle-document', doc.id, 'edit']" class="btn btn-primary btn-sm me-1">
+              <fa-icon icon="pencil-alt"></fa-icon>
+              Edit
+            </a>
+
+            <!-- Delete -->
+            <button *ngIf="isAdminOrPartner" (click)="delete(doc.id)" class="btn btn-danger btn-sm">
+              <fa-icon icon="times"></fa-icon>
+              Delete
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- No Data -->
+  <div *ngIf="!isLoading && documents?.length === 0" class="alert alert-warning">No Vehicle Documents found</div>
+</div>

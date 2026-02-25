@@ -1,0 +1,26 @@
+<div *ngIf="document">
+  <h2>Vehicle Document</h2>
+
+  <dl class="row">
+    <dt class="col-sm-3">Type</dt>
+    <dd class="col-sm-9">{{ document.docType }}</dd>
+
+    <dt class="col-sm-3">File Name</dt>
+    <dd class="col-sm-9">{{ document.fileName }}</dd>
+
+    <dt class="col-sm-3">Size</dt>
+    <dd class="col-sm-9">{{ document.size }} bytes</dd>
+
+    <dt class="col-sm-3">Uploaded By</dt>
+    <dd class="col-sm-9">{{ document.uploadedBy }}</dd>
+
+    <dt class="col-sm-3">Uploaded At</dt>
+    <dd class="col-sm-9">
+      {{ document.uploadedAt | date: 'medium' }}
+    </dd>
+  </dl>
+
+  <button (click)="previousState()" class="btn btn-info me-2">Back</button>
+
+  <button *ngIf="document?.id" [routerLink]="['/vehicle-document', document.id, 'edit']" class="btn btn-primary">Edit</button>
+</div>

@@ -107,31 +107,38 @@ public class CategoryService {
     /**
      * Partially update a category.
      *
-     * @param category the entity to update partially.
+     * @param categoryDTO the entity to update.
+     * @Param MultiPartFile to image update
      * @return the persisted entity.
      */
-    public Category partialUpdate(Category category) {
-        log.debug("Request to partially update Category : {}", category);
+    public CategoryDTO partialUpdate(CategoryDTO categoryDTO, MultipartFile file) {
+        log.info("Service: Partial update started | categoryId={}", categoryDTO.getId());
 
-        Category existing = getCategoryOrThrow(category.getId());
+        Category existing = getCategoryOrThrow(categoryDTO.getId());
+        log.debug("Existing category fetched | id={} | currentState={}", existing.getId(), existing);
 
-        if (category.getName() != null) {
-            existing.setName(category.getName());
+        if (categoryDTO.getName() != null) {
+            log.debug("Updating name | old={} | new={}", existing.getName(), categoryDTO.getName());
+            existing.setName(categoryDTO.getName());
         }
-        if (category.getDescription() != null) {
-            existing.setDescription(category.getDescription());
+        if (categoryDTO.getDescription() != null) {
+            log.debug("Updating description");
+            existing.setDescription(categoryDTO.getDescription());
         }
-        if (category.getImage() != null) {
-            existing.setImage(category.getImage());
+        if (categoryDTO.getTypeId() != null) {
+            log.debug("Updating type | newTypeId={}", categoryDTO.getTypeId());
+            existing.setType(resolveType(categoryDTO.getTypeId()));
         }
-        if (category.getImageContentType() != null) {
-            existing.setImageContentType(category.getImageContentType());
-        }
-        if (category.getType() != null) {
-            existing.setType(resolveType(category.getId()));
+        if (file != null && !file.isEmpty()) {
+            log.info("Uploading new image for category | id={}", existing.getId());
+            String imageUrl = documentStorageService.uploadCategoryImage(file, existing.getId());
+            existing.setImageUrl(imageUrl);
+            log.debug("Image updated | newUrl={}", imageUrl);
         }
 
-        return categoryRepository.save(existing);
+        Category saved = categoryRepository.save(existing);
+        log.info("SERVICE : Partial update completed successfully | id={}", saved.getId());
+        return categoryMapper.toDto(saved);
     }
 
     /**

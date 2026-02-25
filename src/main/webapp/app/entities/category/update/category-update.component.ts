@@ -73,20 +73,21 @@ export class CategoryUpdateComponent implements OnInit {
 
   save(): void {
     this.isSaving = true;
+
     const category = this.categoryFormService.getCategory(this.editForm);
 
     const formData = new FormData();
-
     formData.append('category', new Blob([JSON.stringify(category)], { type: 'application/json' }));
 
-    // USE selectedFile (NOT document.getElementById)
     if (this.selectedFile) {
-      formData.append('file', this.selectedFile);
+      formData.append('image', this.selectedFile);
     }
 
     if (category.id !== null) {
-      this.subscribeToSaveResponse(this.categoryService.updateMultipart(category.id, formData));
+      // Partial update (PATCH)
+      this.subscribeToSaveResponse(this.categoryService.patchMultipart(category.id, formData));
     } else {
+      // Create requires image
       if (!this.selectedFile) {
         alert('Image is required while creating Category');
         this.isSaving = false;
@@ -96,17 +97,17 @@ export class CategoryUpdateComponent implements OnInit {
     }
   }
 
-  onFileChange(event: any): void {
-    const file = event.target.files?.[0];
+  onFileChange(event: Event): void {
+    const input = event.target as HTMLInputElement;
 
-    if (file) {
+    if (input.files && input.files.length > 0) {
+      const file = input.files[0];
       this.selectedFile = file;
 
       const reader = new FileReader();
       reader.onload = () => {
         this.previewUrl = reader.result;
       };
-
       reader.readAsDataURL(file);
     }
   }

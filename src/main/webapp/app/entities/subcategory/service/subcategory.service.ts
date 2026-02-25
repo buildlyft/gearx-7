@@ -39,6 +39,12 @@ export class SubcategoryService {
     return this.http.put<ISubcategory>(`${this.resourceUrl}/${id}`, formData, { observe: 'response' });
   }
 
+  patchMultipart(id: number, formData: FormData) {
+    return this.http.patch<ISubcategory>(`${this.resourceUrl}/${id}`, formData, {
+      observe: 'response',
+    });
+  }
+
   getSubcategoriesByCategory(categoryId: number): Observable<EntityArrayResponseType> {
     return this.http.get<ISubcategory[]>(`${this.applicationConfigService.getEndpointFor('api/categories')}/${categoryId}/subcategories`, {
       observe: 'response',

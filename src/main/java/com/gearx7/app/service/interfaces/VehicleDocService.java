@@ -20,4 +20,14 @@ public interface VehicleDocService {
      * Get all machine documents (admin/global view)
      */
     List<VehicleDocumentResponseDTO> getAllDocuments();
+
+    /**
+     * Get single document by id
+     */
+    VehicleDocumentDTO getDocumentById(Long id);
+
+    /**
+     * Delete document by id
+     */
+    void deleteDocument(Long id);
 }

@@ -83,10 +83,11 @@ public class BookingResource {
         Booking result = bookingService.save(booking);
         log.info("Booking created successfully with id={}", result.getId());
 
-        return ResponseEntity
-            .created(new URI("/api/bookings/" + result.getId()))
-            .headers(HeaderUtil.createEntityCreationAlert(applicationName, false, ENTITY_NAME, result.getId().toString()))
-            .body(result);
+        Optional<Booking> bookingWithRelations = bookingRepository.findOneWithToOneRelationships(result.getId());
+
+        Booking finalResult = bookingWithRelations.orElse(result);
+
+        return ResponseEntity.created(new URI("/api/bookings/" + finalResult.getId())).body(finalResult);
     }
 
     /**

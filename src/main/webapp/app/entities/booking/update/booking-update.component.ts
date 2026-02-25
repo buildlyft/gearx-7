@@ -25,6 +25,8 @@ import { BookingFormService, BookingFormGroup } from './booking-form.service';
 export class BookingUpdateComponent implements OnInit {
   isSaving = false;
   booking: IBooking | null = null;
+  customerLat?: number;
+  customerLong?: number;
   bookingStatusValues = Object.keys(BookingStatus);
 
   usersSharedCollection: IUser[] = [];
@@ -53,22 +55,54 @@ export class BookingUpdateComponent implements OnInit {
 
       this.loadRelationshipsOptions();
     });
+    this.getCurrentLocation();
   }
 
   previousState(): void {
     window.history.back();
   }
 
+  getCurrentLocation(): void {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        position => {
+          this.customerLat = position.coords.latitude;
+          this.customerLong = position.coords.longitude;
+
+          this.editForm.patchValue({
+            customerLat: this.customerLat,
+            customerLong: this.customerLong,
+          });
+        },
+        error => {
+          console.error('Error getting location:', error);
+        },
+      );
+    } else {
+      console.warn('Geolocation is not supported by this browser.');
+    }
+  }
+
   save(): void {
     this.isSaving = true;
     const booking = this.bookingFormService.getBooking(this.editForm);
+
+    if (!booking.customerLat && this.customerLat) {
+      booking.customerLat = this.customerLat;
+    }
+
+    if (!booking.customerLong && this.customerLong) {
+      booking.customerLong = this.customerLong;
+    }
+
+    console.log('Final Booking Payload:', booking);
+
     if (booking.id !== null) {
       this.subscribeToSaveResponse(this.bookingService.update(booking));
     } else {
       this.subscribeToSaveResponse(this.bookingService.create(booking));
     }
   }
-
   protected subscribeToSaveResponse(result: Observable<HttpResponse<IBooking>>): void {
     result.pipe(finalize(() => this.onSaveFinalize())).subscribe({
       next: () => this.onSaveSuccess(),

@@ -77,18 +77,19 @@ export class SubcategoryUpdateComponent implements OnInit {
     const subcategory = this.subcategoryFormService.getSubcategory(this.editForm);
     const formData = new FormData();
 
-    // JSON part
+    // JSON part (must match @RequestPart("subcategory"))
     formData.append('subcategory', new Blob([JSON.stringify(subcategory)], { type: 'application/json' }));
 
-    // File part
+    // File part (optional for PATCH)
     if (this.selectedFile) {
       formData.append('file', this.selectedFile);
     }
 
     if (subcategory.id !== null) {
-      this.subscribeToSaveResponse(this.subcategoryService.updateMultipart(subcategory.id, formData));
+      // ⭐ NEW DEVELOPMENT: USE PATCH (NOT PUT)
+      this.subscribeToSaveResponse(this.subcategoryService.patchMultipart(subcategory.id, formData));
     } else {
-      // Image required while creating
+      // Create requires image
       if (!this.selectedFile) {
         alert('Image is required while creating Subcategory');
         this.isSaving = false;

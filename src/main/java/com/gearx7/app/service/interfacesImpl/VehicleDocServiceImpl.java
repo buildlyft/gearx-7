@@ -159,6 +159,33 @@ public class VehicleDocServiceImpl implements VehicleDocService {
         return response;
     }
 
+    // ================= GET DOCUMENT BY ID =================
+    @Override
+    @Transactional(readOnly = true)
+    public VehicleDocumentDTO getDocumentById(Long id) {
+        log.info("SERVICE START | Fetch document by id | id={}", id);
+
+        VehicleDocument doc = vehicleDocumentRepository
+            .findById(id)
+            .orElseThrow(() -> new NotFoundAlertException("Document not found with id " + id, "vehicleDocument", "documentNotFound"));
+
+        return toDTO(doc, false);
+    }
+
+    // ================= DELETE DOCUMENT =================
+    @Override
+    public void deleteDocument(Long id) {
+        log.info("SERVICE START | Delete document | id={}", id);
+
+        VehicleDocument doc = vehicleDocumentRepository
+            .findById(id)
+            .orElseThrow(() -> new NotFoundAlertException("Document not found with id " + id, "vehicleDocument", "documentNotFound"));
+
+        vehicleDocumentRepository.delete(doc);
+
+        log.info("SERVICE SUCCESS | Document deleted | id={}", id);
+    }
+
     // ================= HELPERS =================
 
     private void validatePermission(Long machineId) {

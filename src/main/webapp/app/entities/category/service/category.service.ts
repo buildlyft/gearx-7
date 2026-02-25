@@ -29,6 +29,12 @@ export class CategoryService {
     return this.http.put<ICategory>(`${this.resourceUrl}/${id}`, formData, { observe: 'response' });
   }
 
+  patchMultipart(id: number, formData: FormData) {
+    return this.http.patch<ICategory>(`${this.resourceUrl}/${id}`, formData, {
+      observe: 'response',
+    });
+  }
+
   getCategoriesByType(typeId: number): Observable<EntityArrayResponseType> {
     return this.http.get<ICategory[]>(`${this.applicationConfigService.getEndpointFor('api/types')}/${typeId}/categories`, {
       observe: 'response',

@@ -65,4 +65,23 @@ public class VehicleDocumentResource {
         log.info("REST REQUEST | Get all documents");
         return ResponseEntity.ok(vehicleDocService.getAllDocuments());
     }
+
+    // ================= GET SINGLE DOCUMENT =================
+    @GetMapping("/{id}")
+    public ResponseEntity<VehicleDocumentDTO> getDocument(@PathVariable Long id) {
+        log.info("REST REQUEST | Get document by id | id={}", id);
+
+        VehicleDocumentDTO dto = vehicleDocService.getDocumentById(id);
+        return ResponseEntity.ok(dto);
+    }
+
+    // ================= DELETE DOCUMENT =================
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_PARTNER')")
+    public ResponseEntity<Void> deleteDocument(@PathVariable Long id) {
+        log.info("REST REQUEST | Delete document | id={}", id);
+
+        vehicleDocService.deleteDocument(id);
+        return ResponseEntity.noContent().build();
+    }
 }

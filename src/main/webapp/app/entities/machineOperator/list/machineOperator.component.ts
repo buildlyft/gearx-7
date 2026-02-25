@@ -49,28 +49,27 @@ export class MachineOperatorComponent implements OnInit {
   }
 
   loadMachines(): void {
-    this.machineService.queryWithoutOperator().subscribe({
+    this.machineService.query().subscribe({
       next: (res: HttpResponse<IMachine[]>) => {
-        const availableMachines = res.body ?? [];
-        this.noMachinesAvailable = availableMachines.length === 0;
+        this.machines = res.body ?? [];
+        this.noMachinesAvailable = this.machines.length === 0;
       },
     });
   }
 
   getMachineName(machineId?: number | null): string {
-    if (!machineId || this.machines.length === 0) {
-      return '';
+    if (!machineId) {
+      return 'N/A';
     }
 
     const machine = this.machines.find(m => m.id === machineId);
-
-    return machine ? `${machine.brand ?? ''} ${machine.model ?? ''}`.trim() : '';
+    //return machine?.model ?? 'N/A';  // returns model if available, otherwise 'N/A'
+    return machine ? `${machine.brand ?? ''} ${machine.model ?? ''}`.trim() : 'N/A';
   }
 
   delete(operator: IMachineOperator): void {
     const modalRef = this.modalService.open(MachineOperatorDeleteDialogComponent, { size: 'lg', backdrop: 'static' });
 
-    // ✅ PASS FULL OBJECT
     modalRef.componentInstance.machineOperator = operator;
 
     modalRef.closed.subscribe((reason: string) => {

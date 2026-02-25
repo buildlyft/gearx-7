@@ -52,10 +52,11 @@ public class Booking implements Serializable {
     private Instant createdDate;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JsonIgnoreProperties(value = { "*" }, allowSetters = true)
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JsonIgnoreProperties(value = { "user" }, allowSetters = true)
+    @JsonIgnoreProperties(value = { "user", "bookings", "operators", "documents" }, allowSetters = true)
     private Machine machine;
 
     @Column(name = "expected_price")

@@ -125,31 +125,36 @@ public class CategoryResource {
      * {@code PATCH  /categories/:id} : Partial updates given fields of an existing category, field will ignore if it is null
      *
      * @param id the id of the category to save.
-     * @param category the category to update.
+     * @param categoryDTO the category to update.
+     * @param image the image file to update (optional).
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the updated category,
      * or with status {@code 400 (Bad Request)} if the category is not valid,
      * or with status {@code 404 (Not Found)} if the category is not found,
      * or with status {@code 500 (Internal Server Error)} if the category couldn't be updated.
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
-    @PatchMapping(value = "/{id}", consumes = { "application/json", "application/merge-patch+json" })
-    public ResponseEntity<Category> partialUpdateCategory(
+    @PatchMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<CategoryDTO> partialUpdateCategory(
         @PathVariable(value = "id", required = false) final Long id,
-        @NotNull @RequestBody Category category
+        @RequestPart("category") CategoryDTO categoryDTO,
+        @RequestPart(value = "image", required = false) MultipartFile image
     ) throws URISyntaxException {
-        log.debug("REST request to partial update Category partially : {}, {}", id, category);
-        if (category.getId() == null) {
+        log.debug("REST request to partial update Category partially : {}, {}", id, categoryDTO);
+        if (categoryDTO.getId() == null) {
+            log.warn("PATCH failed: Category ID is null");
             throw new BadRequestAlertException("Invalid id", ENTITY_NAME, "idnull");
         }
-        if (!Objects.equals(id, category.getId())) {
-            throw new BadRequestAlertException("Invalid ID", ENTITY_NAME, "idinvalid");
+        if (!Objects.equals(id, categoryDTO.getId())) {
+            log.warn("PATCH failed: Path ID {} does not match DTO ID {}", id, categoryDTO.getId());
+            throw new BadRequestAlertException("Invalid ID", ENTITY_NAME, "IdInvalid");
         }
 
-        Category result = categoryService.partialUpdate(category);
+        CategoryDTO result = categoryService.partialUpdate(categoryDTO, image);
+        log.info("Category partially updated successfully | id={}", result.getId());
 
         return ResponseEntity
             .ok()
-            .headers(HeaderUtil.createEntityUpdateAlert(applicationName, false, ENTITY_NAME, category.getId().toString()))
+            .headers(HeaderUtil.createEntityUpdateAlert(applicationName, false, ENTITY_NAME, categoryDTO.getId().toString()))
             .body(result);
     }
 

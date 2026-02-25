@@ -122,32 +122,36 @@ public class SubcategoryResource {
      * {@code PATCH  /subcategories/:id} : Partial updates given fields of an existing subcategory, field will ignore if it is null
      *
      * @param id the id of the subcategory to save.
-     * @param subcategory the subcategory to update.
+     * @param subCategoryDTO the subcategory to update.
+     * @param image the image file to upload.
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the updated subcategory,
      * or with status {@code 400 (Bad Request)} if the subcategory is not valid,
      * or with status {@code 404 (Not Found)} if the subcategory is not found,
      * or with status {@code 500 (Internal Server Error)} if the subcategory couldn't be updated.
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
-    @PatchMapping(value = "/{id}", consumes = { "application/json", "application/merge-patch+json" })
-    public ResponseEntity<Subcategory> partialUpdateSubcategory(
+    @PatchMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<SubCategoryDTO> partialUpdateSubcategory(
         @PathVariable(value = "id", required = false) final Long id,
-        @NotNull @RequestBody Subcategory subcategory
+        @RequestPart("subcategory") SubCategoryDTO subCategoryDTO,
+        @RequestPart(value = "file", required = false) MultipartFile image
     ) throws URISyntaxException {
-        log.debug("REST request to partial update Subcategory partially : {}, {}", id, subcategory);
-        if (subcategory.getId() == null) {
-            throw new BadRequestAlertException("Invalid id", ENTITY_NAME, "idnull");
+        log.debug("REST request to partial update Subcategory partially : {}, {}", id, subCategoryDTO);
+        if (subCategoryDTO.getId() == null) {
+            log.warn("PATCH failed: Subcategory ID is null");
+            throw new BadRequestAlertException("Invalid id", ENTITY_NAME, "IdNull");
         }
-        if (!Objects.equals(id, subcategory.getId())) {
-            throw new BadRequestAlertException("Invalid ID", ENTITY_NAME, "idinvalid");
+        if (!Objects.equals(id, subCategoryDTO.getId())) {
+            log.warn("PATCH failed: Path ID {} does not match DTO ID {}", id, subCategoryDTO.getId());
+            throw new BadRequestAlertException("Invalid ID", ENTITY_NAME, "IdInvalid");
         }
 
-        Optional<Subcategory> result = subcategoryService.partialUpdate(subcategory);
+        SubCategoryDTO result = subcategoryService.partialUpdate(subCategoryDTO, image);
 
-        return ResponseUtil.wrapOrNotFound(
-            result,
-            HeaderUtil.createEntityUpdateAlert(applicationName, false, ENTITY_NAME, subcategory.getId().toString())
-        );
+        return ResponseEntity
+            .ok()
+            .headers(HeaderUtil.createEntityUpdateAlert(applicationName, false, ENTITY_NAME, result.getId().toString()))
+            .body(result);
     }
 
     /**

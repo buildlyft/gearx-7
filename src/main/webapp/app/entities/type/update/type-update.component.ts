@@ -3,13 +3,13 @@ import { HttpResponse } from '@angular/common/http';
 import { ActivatedRoute } from '@angular/router';
 import { Observable } from 'rxjs';
 import { finalize } from 'rxjs/operators';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 
 import SharedModule from 'app/shared/shared.module';
-import { FormsModule, ReactiveFormsModule, FormGroup } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 import { TypeService } from '../service/type.service';
 import { IType } from '../type.model';
-import { TypeFormService } from './type-form.service';
 
 import { EventManager, EventWithContent } from 'app/core/util/event-manager.service';
 import { AlertError } from 'app/shared/alert/alert-error.model';
@@ -26,20 +26,23 @@ export class TypeUpdateComponent implements OnInit {
   selectedFile?: File;
   previewUrl: string | ArrayBuffer | null = null;
 
-  editForm: FormGroup = this.typeFormService.createTypeFormGroup();
+  editForm: FormGroup = this.fb.group({
+    id: [],
+    typeName: [null, [Validators.required]],
+  });
 
   constructor(
     protected typeService: TypeService,
-    protected typeFormService: TypeFormService,
     protected activatedRoute: ActivatedRoute,
     protected eventManager: EventManager,
+    private fb: FormBuilder,
   ) {}
 
   ngOnInit(): void {
     this.activatedRoute.data.subscribe(({ type }) => {
       this.type = type;
       if (type) {
-        this.typeFormService.resetForm(this.editForm, type);
+        this.editForm.patchValue(type);
       }
     });
   }
@@ -51,20 +54,18 @@ export class TypeUpdateComponent implements OnInit {
       this.selectedFile = file;
 
       const reader = new FileReader();
-
       reader.onload = () => {
         this.previewUrl = reader.result;
       };
-
       reader.readAsDataURL(file);
     }
   }
 
   save(): void {
     this.isSaving = true;
-    const type = this.typeFormService.getType(this.editForm);
+    const type: IType = this.editForm.value;
 
-    if (type.id !== null) {
+    if (type.id !== null && type.id !== undefined) {
       this.subscribeToSaveResponse(this.typeService.update(type, this.selectedFile));
     } else {
       if (!this.selectedFile) {
@@ -72,8 +73,7 @@ export class TypeUpdateComponent implements OnInit {
         this.isSaving = false;
         return;
       }
-
-      this.subscribeToSaveResponse(this.typeService.create(type, this.selectedFile));
+      this.subscribeToSaveResponse(this.typeService.create(type as any, this.selectedFile));
     }
   }
 

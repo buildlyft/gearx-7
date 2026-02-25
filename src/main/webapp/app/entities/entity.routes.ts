@@ -35,6 +35,11 @@ const routes: Routes = [
     path: 'machine-operator',
     loadChildren: () => import('./machineOperator/machineOperator.routes').then(m => m.machineOperatorRoutes),
   },
+  {
+    path: 'vehicle-document',
+    data: { pageTitle: 'Vehicle Documents' },
+    loadChildren: () => import('./vehicleDocument/vehicleDocument.routes'),
+  },
   /* jhipster-needle-add-entity-route - JHipster will add entity modules routes here */
 ];
 

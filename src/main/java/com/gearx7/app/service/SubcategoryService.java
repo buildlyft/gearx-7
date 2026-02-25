@@ -106,35 +106,39 @@ public class SubcategoryService {
     /**
      * Partially update a subcategory.
      *
-     * @param subcategory the entity to update partially.
+     * @param dto the entity to save.
+     * @Param image the image file to upload.
      * @return the persisted entity.
      */
-    public Optional<Subcategory> partialUpdate(Subcategory subcategory) {
-        log.debug("Request to partially update Subcategory : {}", subcategory);
+    public SubCategoryDTO partialUpdate(SubCategoryDTO dto, MultipartFile image) {
+        log.debug("Request to partially update Subcategory : {}", dto);
+        Subcategory existing = getSubcategoryOrThrow(dto.getId());
+        log.debug("Existing subcategory fetched | id={} | currentState={}", existing.getId(), existing);
 
-        return subcategoryRepository
-            .findById(subcategory.getId())
-            .map(existingSubcategory -> {
-                if (subcategory.getName() != null) {
-                    existingSubcategory.setName(subcategory.getName());
-                }
-                if (subcategory.getDescription() != null) {
-                    existingSubcategory.setDescription(subcategory.getDescription());
-                }
-                if (subcategory.getImage() != null) {
-                    existingSubcategory.setImage(subcategory.getImage());
-                }
-                if (subcategory.getImageContentType() != null) {
-                    existingSubcategory.setImageContentType(subcategory.getImageContentType());
-                }
-                if (subcategory.getCategory().getId() != null) {
-                    Category category = getCategoryOrThrow(subcategory.getCategory().getId());
-                    existingSubcategory.setCategory(category);
-                }
+        if (dto.getName() != null) {
+            log.debug("Updating name | old={} | new={}", existing.getName(), dto.getName());
+            existing.setName(dto.getName());
+        }
+        if (dto.getDescription() != null) {
+            log.debug("Updating description");
+            existing.setDescription(dto.getDescription());
+        }
+        if (dto.getCategoryId() != null) {
+            log.debug("Updating category | newCategoryId={}", dto.getCategoryId());
+            Category category = getCategoryOrThrow(dto.getCategoryId());
+            existing.setCategory(category);
+        }
+        if (image != null && !image.isEmpty()) {
+            log.info("Uploading new image for subcategory | id={}", existing.getId());
+            String imageUrl = documentStorageService.uploadSubcategoryImage(image, existing.getId());
+            existing.setImageUrl(imageUrl);
+            log.debug("Image updated | newUrl={}", imageUrl);
+        }
+        Subcategory saved = subcategoryRepository.save(existing);
 
-                return existingSubcategory;
-            })
-            .map(subcategoryRepository::save);
+        log.info("Partial update completed successfully | id={}", saved.getId());
+
+        return subcategoryMapper.toDto(saved);
     }
 
     /**

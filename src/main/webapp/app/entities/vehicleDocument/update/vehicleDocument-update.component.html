@@ -1,0 +1,50 @@
+<div class="row justify-content-center">
+  <div class="col-8">
+    <h2>Upload / Update Vehicle Documents</h2>
+
+    <form>
+      <!-- Machine Select -->
+      <div class="mb-3">
+        <label class="form-label">Machine</label>
+        <select class="form-control" [(ngModel)]="machineId" name="machineId" required>
+          <option [ngValue]="null">Select Machine</option>
+          <option *ngFor="let machine of machines" [ngValue]="machine.id">
+            {{ machine.brand }} {{ machine.model }} ({{ machine.id }})
+          </option>
+        </select>
+      </div>
+
+      <!-- File Upload -->
+      <div class="mb-3">
+        <label class="form-label">Upload Documents</label>
+        <input type="file" multiple class="form-control" (change)="onFileSelect($event)" accept=".pdf,.png,.jpg,.jpeg" />
+      </div>
+
+      <!-- Selected Files -->
+      <div *ngIf="selectedFiles.length > 0" class="mb-3">
+        <h6>Selected Files ({{ selectedFiles.length }})</h6>
+
+        <ul class="list-group">
+          <li *ngFor="let file of selectedFiles; let i = index" class="list-group-item d-flex justify-content-between align-items-center">
+            <div>
+              {{ i + 1 }}. {{ file.name }}
+              <small class="text-muted ms-2"> ({{ file.size }} bytes) </small>
+            </div>
+
+            <button type="button" class="btn btn-sm btn-outline-danger" (click)="removeFile(i)">Remove</button>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Buttons -->
+      <div class="d-flex justify-content-end gap-2">
+        <button type="button" class="btn btn-secondary" (click)="previousState()" [disabled]="isSaving">Back</button>
+
+        <button type="button" class="btn btn-primary" (click)="save()" [disabled]="isSaving || !machineId || selectedFiles.length === 0">
+          <span *ngIf="isSaving">Uploading...</span>
+          <span *ngIf="!isSaving">Upload Documents</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

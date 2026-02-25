@@ -22,12 +22,15 @@ describe('VehicleDocumentUpdateComponent', () => {
           provide: ActivatedRoute,
           useValue: {
             params: of({ machineId: 1 }),
+            queryParams: of({}),
           },
         },
         { provide: VehicleDocumentService, useValue: serviceSpy },
         { provide: Router, useValue: routerSpy },
       ],
-    }).compileComponents();
+    })
+      .overrideTemplate(VehicleDocumentUpdateComponent, '')
+      .compileComponents();
 
     fixture = TestBed.createComponent(VehicleDocumentUpdateComponent);
     comp = fixture.componentInstance;
@@ -49,5 +52,18 @@ describe('VehicleDocumentUpdateComponent', () => {
     comp.save();
 
     expect(service.uploadDocuments).toHaveBeenCalledWith(1, null, comp.selectedFiles);
+  });
+
+  it('should navigate back on successful save', () => {
+    comp.machineId = 1;
+    comp.selectedFiles = [new File(['test'], 'test.pdf')];
+
+    service.uploadDocuments.and.returnValue(of({ machineId: 1, documents: [] }));
+
+    comp.save();
+
+    expect(router.navigate).toHaveBeenCalledWith(['/vehicle-document'], {
+      queryParams: { machineId: 1 },
+    });
   });
 });
