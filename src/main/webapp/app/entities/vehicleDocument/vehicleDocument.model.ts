@@ -1,5 +1,6 @@
 export interface IVehicleDocument {
   id?: number;
+  machineId?: number;
   docType?: string | null;
   fileName?: string | null;
   fileUrl?: string | null;

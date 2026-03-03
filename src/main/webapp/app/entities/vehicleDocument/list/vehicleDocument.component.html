@@ -26,6 +26,7 @@
       <thead>
         <tr>
           <th>ID</th>
+          <th>Machine ID</th>
           <th>Doc Type</th>
           <th>File Name</th>
           <th>Content Type</th>
@@ -39,6 +40,7 @@
       <tbody>
         <tr *ngFor="let doc of documents; trackBy: trackId">
           <td>{{ doc.id }}</td>
+          <td>{{ doc.machineId }}</td>
           <td>{{ doc.docType }}</td>
           <td>{{ doc.fileName }}</td>
           <td>{{ doc.contentType }}</td>

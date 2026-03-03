@@ -43,8 +43,12 @@ export class VehicleDocumentComponent implements OnInit {
 
     this.vehicleDocumentService.getAllDocuments().subscribe({
       next: res => {
-        // Flatten grouped backend response safely
-        this.documents = (res ?? []).flatMap(r => r.documents ?? []);
+        this.documents = (res ?? []).flatMap(r =>
+          (r.documents ?? []).map(doc => ({
+            ...doc,
+            machineId: r.machineId,
+          })),
+        );
         this.isLoading = false;
       },
       error: () => {

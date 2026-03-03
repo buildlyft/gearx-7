@@ -28,7 +28,11 @@ describe('RegisterComponent', () => {
 
   it('should ensure the two passwords entered match', () => {
     comp.registerForm.patchValue({
+      login: 'testuser',
+      firstName: 'Sai',
+      lastName: 'Ganesh',
       phone: '9999999999',
+      email: 'test@test.com',
       password: 'password',
       confirmPassword: 'non-matching',
     });
@@ -42,8 +46,13 @@ describe('RegisterComponent', () => {
     [RegisterService],
     fakeAsync((service: RegisterService) => {
       jest.spyOn(service, 'save').mockReturnValue(of({}));
+
       comp.registerForm.patchValue({
+        login: 'testuser',
+        firstName: 'Sai',
+        lastName: 'Ganesh',
         phone: '9999999999',
+        email: 'test@test.com',
         password: 'password',
         confirmPassword: 'password',
       });
@@ -52,12 +61,15 @@ describe('RegisterComponent', () => {
       tick();
 
       expect(service.save).toHaveBeenCalledWith({
+        login: 'testuser',
+        firstName: 'Sai',
+        lastName: 'Ganesh',
         phone: '9999999999',
-        email: '',
+        email: 'test@test.com',
         password: 'password',
-        login: '',
         langKey: 'en',
       });
+
       expect(comp.success).toBe(true);
       expect(comp.errorUserExists).toBe(false);
       expect(comp.errorEmailExists).toBe(false);
@@ -75,7 +87,11 @@ describe('RegisterComponent', () => {
         }),
       );
       comp.registerForm.patchValue({
+        login: 'testuser',
+        firstName: '',
+        lastName: '',
         phone: '9999999999',
+        email: 'test@test.com',
         password: 'password',
         confirmPassword: 'password',
       });
@@ -99,7 +115,11 @@ describe('RegisterComponent', () => {
         }),
       );
       comp.registerForm.patchValue({
+        login: 'testuser',
+        firstName: '',
+        lastName: '',
         phone: '9999999999',
+        email: 'test@test.com',
         password: 'password',
         confirmPassword: 'password',
       });
@@ -122,7 +142,11 @@ describe('RegisterComponent', () => {
         }),
       );
       comp.registerForm.patchValue({
+        login: 'testuser',
+        firstName: '',
+        lastName: '',
         phone: '9999999999',
+        email: 'test@test.com',
         password: 'password',
         confirmPassword: 'password',
       });
