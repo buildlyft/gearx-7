@@ -92,7 +92,7 @@ public class MachineOperatorResource {
     public ResponseEntity<MachineOperatorDetailsDTO> reassign(
         @PathVariable Long machineId,
         @ModelAttribute MachineOperatorDetailsDTO dto,
-        @RequestPart(value = "files", required = false) MultipartFile file
+        @RequestPart(value = "file", required = false) MultipartFile file
     ) {
         log.info("REST REASSIGN operator | machineId={} filePresent={}", machineId, file != null && !file.isEmpty());
 

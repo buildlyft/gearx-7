@@ -30,6 +30,7 @@
         <th>Address</th>
         <th>Status</th>
         <th>License Issue Date</th>
+        <th>Doc URL</th>
         <th></th>
       </tr>
     </thead>
@@ -55,6 +56,11 @@
           </span>
         </td>
         <td>{{ operator.licenseIssueDate | date: 'dd-MM-yyyy' }}</td>
+        <td>
+          <a [href]="operator.docUrl" target="_blank">
+            {{ operator.docUrl }}
+          </a>
+        </td>
 
         <td class="text-end">
           <a [routerLink]="['/machine-operator', operator.machineId, 'view']" class="btn btn-info btn-sm me-1">

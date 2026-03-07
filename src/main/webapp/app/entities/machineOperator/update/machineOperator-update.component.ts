@@ -25,6 +25,7 @@ export class MachineOperatorUpdateComponent implements OnInit {
   isSaving = false;
   machineOperator: IMachineOperator | null = null;
   selectedFile?: File;
+  previewUrl: string | ArrayBuffer | null = null;
 
   machines: IMachine[] = [];
 
@@ -63,6 +64,14 @@ export class MachineOperatorUpdateComponent implements OnInit {
   onFileChange(event: any): void {
     if (event.target.files?.length) {
       this.selectedFile = event.target.files[0];
+
+      const reader = new FileReader();
+
+      reader.onload = () => {
+        this.previewUrl = reader.result;
+      };
+
+      reader.readAsDataURL(this.selectedFile as Blob);
     }
   }
 

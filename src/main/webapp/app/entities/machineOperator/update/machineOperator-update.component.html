@@ -56,7 +56,12 @@
         <!-- File Upload -->
         <div class="mb-3">
           <label class="form-label">Upload License Document</label>
-          <input type="file" class="form-control" (change)="onFileChange($event)" />
+          <input type="file" class="form-control" accept="image/*" (change)="onFileChange($event)" />
+        </div>
+        <div *ngIf="previewUrl" class="mt-3">
+          <label class="form-label">License Preview</label>
+          <br />
+          <img [src]="previewUrl" alt="License Preview" width="200" style="border: 1px solid #ccc; border-radius: 6px" />
         </div>
       </div>
 

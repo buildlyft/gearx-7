@@ -17,23 +17,41 @@
       <!-- File Upload -->
       <div class="mb-3">
         <label class="form-label">Upload Documents</label>
-        <input type="file" multiple class="form-control" (change)="onFileSelect($event)" accept=".pdf,.png,.jpg,.jpeg" />
+        <input type="file" multiple class="form-control" (change)="onFileSelect($event)" accept=".jpg,.jpeg,.png,.pdf,.docx" />
       </div>
 
       <!-- Selected Files -->
-      <div *ngIf="selectedFiles.length > 0" class="mb-3">
-        <h6>Selected Files ({{ selectedFiles.length }})</h6>
+      <div *ngIf="filePreviews.length > 0" class="mb-3">
+        <h6>Selected Files ({{ filePreviews.length }})</h6>
 
-        <ul class="list-group">
-          <li *ngFor="let file of selectedFiles; let i = index" class="list-group-item d-flex justify-content-between align-items-center">
-            <div>
-              {{ i + 1 }}. {{ file.name }}
-              <small class="text-muted ms-2"> ({{ file.size }} bytes) </small>
+        <div class="row">
+          <div *ngFor="let file of filePreviews; let i = index" class="col-md-4 mb-3">
+            <div class="card p-2 text-center">
+              <!-- Image Preview -->
+              <img
+                *ngIf="file.url && file.type.startsWith('image/')"
+                [src]="file.url"
+                style="height: 120px; object-fit: cover; border-radius: 6px"
+              />
+
+              <!-- PDF Preview -->
+              <div *ngIf="file.type === 'application/pdf'">
+                <fa-icon icon="file-pdf" size="3x"></fa-icon>
+                <p>PDF Document</p>
+              </div>
+
+              <!-- DOCX Preview -->
+              <div *ngIf="file.type.includes('word')">
+                <fa-icon icon="file-word" size="3x"></fa-icon>
+                <p>Word Document</p>
+              </div>
+
+              <small class="mt-2">{{ file.name }}</small>
+
+              <button type="button" class="btn btn-sm btn-outline-danger mt-2" (click)="removeFile(i)">Remove</button>
             </div>
-
-            <button type="button" class="btn btn-sm btn-outline-danger" (click)="removeFile(i)">Remove</button>
-          </li>
-        </ul>
+          </div>
+        </div>
       </div>
 
       <!-- Buttons -->

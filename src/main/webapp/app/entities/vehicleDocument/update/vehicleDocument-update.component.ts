@@ -17,6 +17,7 @@ export class VehicleDocumentUpdateComponent implements OnInit {
   machineId: number | null = null;
   machines: IMachine[] = [];
   selectedFiles: File[] = [];
+  filePreviews: { name: string; type: string; url?: string }[] = [];
   isSaving = false;
 
   constructor(
@@ -52,22 +53,37 @@ export class VehicleDocumentUpdateComponent implements OnInit {
 
     for (let i = 0; i < input.files.length; i++) {
       const file = input.files.item(i);
-      if (file) {
-        // Prevent duplicates
-        const alreadyExists = this.selectedFiles.some(f => f.name === file.name && f.size === file.size);
 
-        if (!alreadyExists) {
-          this.selectedFiles.push(file);
-        }
+      if (!file) continue;
+
+      const alreadyExists = this.selectedFiles.some(f => f.name === file.name && f.size === file.size);
+      if (alreadyExists) continue;
+
+      this.selectedFiles.push(file);
+
+      const preview: any = {
+        name: file.name,
+        type: file.type,
+      };
+
+      // Image preview
+      if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = () => {
+          preview.url = reader.result as string;
+        };
+        reader.readAsDataURL(file);
       }
+
+      this.filePreviews.push(preview);
     }
 
-    // Reset input so same file can be selected again
     input.value = '';
   }
 
   removeFile(index: number): void {
     this.selectedFiles.splice(index, 1);
+    this.filePreviews.splice(index, 1);
   }
 
   save(): void {
