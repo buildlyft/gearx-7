@@ -96,8 +96,6 @@ public class BookingService {
         }
 */
         booking.setMachine(machine);
-        User user = findByUserId(booking.getUser().getId());
-        booking.setUser(user);
 
         // Don't allow save if status is BOOKED or ACCEPTED for overlapping booking
         if (booking.getMachine() != null && booking.getStartDateTime() != null && booking.getEndDateTime() != null) {
@@ -114,7 +112,7 @@ public class BookingService {
         Booking savedBooking = bookingRepository.save(booking);
         log.info("Booking saved successfully | bookingId={}", savedBooking.getId());
 
-        // 5️⃣ SEND SMS ONLY AFTER TRANSACTION COMMIT
+        // SEND SMS ONLY AFTER TRANSACTION COMMIT
         TransactionSynchronizationManager.registerSynchronization(
             new TransactionSynchronization() {
                 @Override

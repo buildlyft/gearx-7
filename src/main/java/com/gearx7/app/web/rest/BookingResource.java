@@ -22,6 +22,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import tech.jhipster.web.util.HeaderUtil;
@@ -63,7 +65,11 @@ public class BookingResource {
      */
     @PostMapping("")
     public ResponseEntity<Booking> createBooking(@Valid @RequestBody Booking booking) throws URISyntaxException {
-        log.info("REST request to save Booking : {}", booking);
+        log.info(
+            "REST REQUEST for Creating booking | machineId={}, userId={}",
+            booking.getMachine() != null ? booking.getMachine().getId() : null,
+            booking.getUser() != null ? booking.getUser().getId() : null
+        );
 
         if (booking.getId() != null) {
             log.warn("Attempt to create Booking with existing ID: {}", booking.getId());
@@ -71,11 +77,29 @@ public class BookingResource {
         }
 
         if (!SecurityUtils.hasCurrentUserThisAuthority(AuthoritiesConstants.ADMIN)) {
-            log.info("No user passed in, using current user: {}", SecurityUtils.getCurrentUserLogin().orElseThrow());
-            String username = SecurityUtils.getCurrentUserLogin().orElseThrow();
-            booking.setUser(userRepository.findOneByLogin(username).orElseThrow());
+            // log.info("No user passed in, using current user: {}", SecurityUtils.getCurrentUserLogin().orElseThrow());
+            String username = SecurityUtils.getCurrentUserLogin().orElseThrow(() -> new AccessDeniedException("User not authenticated"));
+            log.info("Creating booking | login={}", username);
+            booking.setUser(
+                userRepository
+                    .findOneByLogin(username)
+                    .orElseThrow(() ->
+                        new BadRequestAlertException("User not found with login : " + username, ENTITY_NAME, "User Not Found")
+                    )
+            );
         } else {
-            log.info("Admin user creating booking for userId={}", booking.getUser().getId());
+            if (booking.getUser() == null || booking.getUser().getId() == null) {
+                throw new BadRequestAlertException("User must be provided for admin booking", ENTITY_NAME, "UserMissing");
+            }
+
+            Long userId = booking.getUser().getId();
+
+            booking.setUser(
+                userRepository
+                    .findById(userId)
+                    .orElseThrow(() -> new BadRequestAlertException("User not found with id " + userId, ENTITY_NAME, "UserNotFound"))
+            );
+            log.info("Admin user creating booking for userId={}", userId);
         }
 
         FailedValidator.validateInputParameters(booking);

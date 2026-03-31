@@ -100,7 +100,7 @@
             </th>
             <th scope="col" jhiSortBy="user.login">
               <div class="d-flex">
-                <span>User</span>
+                <span>UserID</span>
                 <fa-icon class="p-1" icon="sort"></fa-icon>
               </div>
             </th>
@@ -128,7 +128,7 @@
               <td>{{ booking.customerLong }}</td>
               <td>{{ booking.createdDate | formatMediumDatetime }}</td>
               <td>
-                {{ booking.user?.login }}
+                {{ booking.user?.id }}
               </td>
               <td>
                 @if (booking.machine) {
