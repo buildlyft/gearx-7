@@ -251,7 +251,7 @@ public class BookingResource {
     public ResponseEntity<List<Booking>> getBookingsByOwner(@PathVariable String ownerLogin, Pageable pageable) {
         log.debug("REST request to get bookings for machine owner : {}", ownerLogin);
 
-        Page<Booking> page = bookingRepository.findByMachineUserLogin(ownerLogin, pageable);
+        Page<Booking> page = bookingRepository.findByMachineOwnerLogin(ownerLogin, pageable);
 
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
 

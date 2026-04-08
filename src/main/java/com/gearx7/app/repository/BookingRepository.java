@@ -45,10 +45,22 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     @Query("select booking from Booking booking " + "left join fetch booking.machine")
     List<Booking> findAllWithToOneRelationships();
 
-    @Query("select booking from Booking booking " + "left join fetch booking.machine " + "where booking.id = :id")
+    @Query(
+        "select booking from Booking booking " +
+        "left join fetch booking.machine " +
+        "left join fetch booking.user " +
+        "where booking.id = :id"
+    )
     Optional<Booking> findOneWithToOneRelationships(@Param("id") Long id);
 
-    Page<Booking> findByMachineUserLogin(String ownerLogin, Pageable pageable);
+    @Query(
+        value = "select distinct b from Booking b " +
+        "left join fetch b.machine m " +
+        "left join fetch b.user u " +
+        "where m.user.login = :ownerLogin",
+        countQuery = "select count(b) from Booking b where b.machine.user.login = :ownerLogin"
+    )
+    Page<Booking> findByMachineOwnerLogin(@Param("ownerLogin") String ownerLogin, Pageable pageable);
 
     @Query(
         "SELECT CASE WHEN COUNT(b) > 0 THEN true ELSE false END FROM Booking b " +
