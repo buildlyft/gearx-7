@@ -46,6 +46,18 @@ public class MachineOperator implements Serializable {
     @Size(min = 5, max = 1000)
     private String docUrl;
 
+    @Column(name = "image_url")
+    @Size(min = 5, max = 1000)
+    private String imageUrl;
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
+
     public String getDocUrl() {
         return docUrl;
     }

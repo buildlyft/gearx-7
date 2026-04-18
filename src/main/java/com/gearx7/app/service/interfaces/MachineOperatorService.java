@@ -5,13 +5,15 @@ import java.util.List;
 import org.springframework.web.multipart.MultipartFile;
 
 public interface MachineOperatorService {
-    MachineOperatorDetailsDTO create(MachineOperatorDetailsDTO dto, MultipartFile file);
+    MachineOperatorDetailsDTO create(MachineOperatorDetailsDTO dto, MultipartFile operatorImage, MultipartFile license);
 
-    MachineOperatorDetailsDTO reassign(Long machineId, MachineOperatorDetailsDTO dto, MultipartFile file);
+    MachineOperatorDetailsDTO reassign(Long machineId, MachineOperatorDetailsDTO dto, MultipartFile operatorImage, MultipartFile license);
+
+    MachineOperatorDetailsDTO partialUpdate(Long operatorId, MachineOperatorDetailsDTO dto, MultipartFile photo, MultipartFile license);
 
     MachineOperatorDetailsDTO getByMachineId(Long machineId);
 
     List<MachineOperatorDetailsDTO> getAllActiveOperators();
 
-    void delete(Long machineId);
+    void delete(Long operatorId);
 }

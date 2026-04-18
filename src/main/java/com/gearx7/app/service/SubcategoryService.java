@@ -174,7 +174,18 @@ public class SubcategoryService {
     public void delete(Long id) {
         log.debug("Request to delete Subcategory : {}", id);
         Subcategory subcategory = getSubcategoryOrThrow(id);
+        /* =========================================
+       Delete Cloudinary Image
+       ========================================= */
+
+        try {
+            documentStorageService.deleteByUrl(subcategory.getImageUrl());
+            log.info("DELETE_SUBCATEGORY_IMAGE SUCCESS | subcategoryId={}", id);
+        } catch (Exception ex) {
+            log.warn("DELETE_SUBCATEGORY_IMAGE FAILED | subcategoryId={} | reason={}", id, ex.getMessage());
+        }
         subcategoryRepository.deleteById(subcategory.getId());
+        log.info("DELETE_SUBCATEGORY SUCCESS | subcategoryId={}", id);
     }
 
     private Subcategory getSubcategoryOrThrow(Long id) {

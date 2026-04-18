@@ -138,8 +138,21 @@ public class TypeServiceImpl implements TypeService {
         Type existing = getTypeById(id);
 
         if (!existing.getCategories().isEmpty()) {
+            log.warn("DELETE_TYPE BLOCKED | typeId={} | reason=categories_exist", id);
             throw new BadRequestAlertException("Cannot delete type with existing categories", "type", "hascategories");
         }
+
+        /* ===============================
+       Delete Cloudinary Image
+       =============================== */
+
+        try {
+            documentStorageService.deleteByUrl(existing.getImageUrl());
+            log.info("DELETE_TYPE_IMAGE SUCCESS | typeId={}", id);
+        } catch (Exception ex) {
+            log.warn("DELETE_TYPE_IMAGE FAILED | typeId={} | reason={}", id, ex.getMessage());
+        }
+
         typeRepository.delete(existing);
         log.info("Type with id {} deleted successfully", id);
     }

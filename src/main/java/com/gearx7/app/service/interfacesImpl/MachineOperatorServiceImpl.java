@@ -42,8 +42,10 @@ public class MachineOperatorServiceImpl implements MachineOperatorService {
        ============================================================ */
 
     @Override
-    public MachineOperatorDetailsDTO create(MachineOperatorDetailsDTO dto, MultipartFile file) {
+    public MachineOperatorDetailsDTO create(MachineOperatorDetailsDTO dto, MultipartFile operatorImage, MultipartFile license) {
         log.info("Request to create operator | machineId={}", dto.getMachineId());
+
+        validateCreateRequest(operatorImage, license);
 
         Machine machine = getMachineOrThrow(dto.getMachineId());
 
@@ -51,15 +53,49 @@ public class MachineOperatorServiceImpl implements MachineOperatorService {
 
         MachineOperator operator = buildOperator(machine, dto);
 
-        operator = operatorRepo.save(operator);
+        operator = operatorRepo.saveAndFlush(operator);
 
-        log.debug("Operator saved | operatorId={}", operator.getId());
+        log.debug("Temporary operator row created | operatorId={} | machineId={}", operator.getId(), machine.getId());
 
-        attachDocumentIfPresent(operator, file);
+        String photoUrl = null;
+        String licenseUrl = null;
 
-        log.info("Operator successfully created | operatorId={} machineId={}", operator.getId(), machine.getId());
+        try {
+            // Upload photo
+            photoUrl = storageService.uploadOperatorPhoto(operatorImage, operator.getId());
 
-        return mapToDTO(operator);
+            log.info("Operator photo uploaded | operatorId={} | url={}", operator.getId(), photoUrl);
+            operator.setImageUrl(photoUrl);
+
+            // Upload license
+            licenseUrl = storageService.uploadOperatorLicense(license, operator.getId());
+
+            log.info("Operator license uploaded | operatorId={} | url={}", operator.getId(), licenseUrl);
+
+            operator.setDocUrl(licenseUrl);
+            operator.setActive(true);
+
+            operator = operatorRepo.saveAndFlush(operator);
+
+            log.info("Create Operator SUCCESS | operatorId={} | machineId={}", operator.getId(), machine.getId());
+
+            return mapToDTO(operator);
+        } catch (Exception ex) {
+            log.error("Create Operator FAILED | operatorId={} | reason={}", operator.getId(), ex.getMessage(), ex);
+
+            //========  CLEANUP CLOUDINARY FILES =========
+
+            safeDeleteCloudinary(photoUrl, "photo", operator.getId());
+            safeDeleteCloudinary(licenseUrl, "license", operator.getId());
+
+            try {
+                storageService.deleteOperatorFolder(operator.getId());
+            } catch (Exception e) {
+                log.warn("Folder cleanup failed | operatorId={}", operator.getId());
+            }
+
+            throw new BadRequestAlertException("Operator creation failed", "MachineOperator", "CreateFailed");
+        }
     }
 
     /* ============================================================
@@ -67,7 +103,12 @@ public class MachineOperatorServiceImpl implements MachineOperatorService {
        ============================================================ */
 
     @Override
-    public MachineOperatorDetailsDTO reassign(Long machineId, MachineOperatorDetailsDTO dto, MultipartFile file) {
+    public MachineOperatorDetailsDTO reassign(
+        Long machineId,
+        MachineOperatorDetailsDTO dto,
+        MultipartFile operatorImage,
+        MultipartFile license
+    ) {
         log.info("Request to reassign operator | machineId={}", machineId);
 
         Machine machine = getMachineOrThrow(machineId);
@@ -78,11 +119,33 @@ public class MachineOperatorServiceImpl implements MachineOperatorService {
 
         operator = operatorRepo.save(operator);
 
-        log.debug("New operator assigned | operatorId={}", operator.getId());
+        String photoUrl = null;
+        String licenseUrl = null;
 
-        attachDocumentIfPresent(operator, file);
+        try {
+            if (operatorImage != null && !operatorImage.isEmpty()) {
+                photoUrl = storageService.uploadOperatorPhoto(operatorImage, operator.getId());
+                operator.setImageUrl(photoUrl);
+            }
 
-        return mapToDTO(operator);
+            if (license != null && !license.isEmpty()) {
+                licenseUrl = storageService.uploadOperatorLicense(license, operator.getId());
+                operator.setDocUrl(licenseUrl);
+            }
+            operator = operatorRepo.saveAndFlush(operator);
+
+            log.info("Reassign SUCCESS | operatorId={} | machineId={}", operator.getId(), machineId);
+
+            return mapToDTO(operator);
+        } catch (Exception ex) {
+            log.error("Reassign FAILED | operatorId={}", operator.getId(), ex);
+
+            safeDeleteCloudinary(photoUrl, "photo", operator.getId());
+            safeDeleteCloudinary(licenseUrl, "license", operator.getId());
+            storageService.deleteOperatorFolder(operator.getId());
+
+            throw new BadRequestAlertException("Reassign Operator creation failed", "MachineOperator", "CreateFailed");
+        }
     }
 
     /* ============================================================
@@ -113,6 +176,86 @@ public class MachineOperatorServiceImpl implements MachineOperatorService {
         log.debug("Active operators found | count={}", operators.size());
 
         return operators.stream().map(this::mapToDTO).toList();
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public MachineOperatorDetailsDTO partialUpdate(
+        Long operatorId,
+        MachineOperatorDetailsDTO dto,
+        MultipartFile photo,
+        MultipartFile license
+    ) {
+        log.info("PATCH Operator request START | operatorId={}", operatorId);
+
+        MachineOperator operator = operatorRepo
+            .findById(operatorId)
+            .orElseThrow(() -> {
+                log.error("Operator not found | operatorId={}", operatorId);
+                return new NotFoundAlertException("Operator not found", "MachineOperator", "OperatorNotFound");
+            });
+
+        String oldPhotoUrl = operator.getImageUrl();
+        String oldLicenseUrl = operator.getDocUrl();
+
+        String newPhotoUrl = null;
+        String newLicenseUrl = null;
+
+        try {
+            if (dto.getDriverName() != null) {
+                operator.setDriverName(dto.getDriverName());
+            }
+
+            if (dto.getOperatorContact() != null) {
+                operator.setOperatorContact(dto.getOperatorContact());
+            }
+
+            if (dto.getAddress() != null) {
+                operator.setAddress(dto.getAddress());
+            }
+
+            if (dto.getLicenseIssueDate() != null) {
+                operator.setLicenseIssueDate(dto.getLicenseIssueDate());
+            }
+
+            if (photo != null && !photo.isEmpty()) {
+                newPhotoUrl = storageService.uploadOperatorPhoto(photo, operator.getId());
+                operator.setImageUrl(newPhotoUrl);
+                log.info("Operator photo updated | operatorId={}", operatorId);
+            }
+
+            if (license != null && !license.isEmpty()) {
+                newLicenseUrl = storageService.uploadOperatorLicense(license, operator.getId());
+                operator.setDocUrl(newLicenseUrl);
+                log.info("Operator license updated | operatorId={}", operatorId);
+            }
+            operator = operatorRepo.saveAndFlush(operator);
+
+            /* ==============================================
+           DELETE OLD FILES AFTER SUCCESS
+           ============================================== */
+
+            if (newPhotoUrl != null && oldPhotoUrl != null) {
+                safeDeleteCloudinary(oldPhotoUrl, "old-photo", operatorId);
+            }
+
+            if (newLicenseUrl != null && oldLicenseUrl != null) {
+                safeDeleteCloudinary(oldLicenseUrl, "old-license", operatorId);
+            }
+
+            log.info("PATCH Operator SUCCESS | operatorId={}", operatorId);
+
+            return mapToDTO(operator);
+        } catch (Exception ex) {
+            log.error("PATCH Operator FAILED | operatorId={} | reason={}", operatorId, ex.getMessage(), ex);
+
+            /* cleanup newly uploaded files */
+            safeDeleteCloudinary(newPhotoUrl, "new-photo", operatorId);
+
+            safeDeleteCloudinary(newLicenseUrl, "new-license", operatorId);
+
+            throw new BadRequestAlertException("Operator patch update failed", "MachineOperator", "PatchFailed");
+        }
     }
 
     /* ============================================================
@@ -152,21 +295,6 @@ public class MachineOperatorServiceImpl implements MachineOperatorService {
         return operator;
     }
 
-    private void attachDocumentIfPresent(MachineOperator operator, MultipartFile file) {
-        if (file == null || file.isEmpty()) {
-            log.debug("No document provided for operatorId={}", operator.getId());
-            return;
-        }
-        log.debug("Uploading document for operatorId={}", operator.getId());
-
-        String url = storageService.uploadOperatorDocument(file, operator.getId());
-
-        operator.setDocUrl(url);
-        operatorRepo.save(operator);
-
-        log.info("Document uploaded | operatorId={} docUrl={}", operator.getId(), url);
-    }
-
     private MachineOperatorDetailsDTO mapToDTO(MachineOperator operator) {
         MachineOperatorDetailsDTO dto = new MachineOperatorDetailsDTO();
 
@@ -179,13 +307,59 @@ public class MachineOperatorServiceImpl implements MachineOperatorService {
         dto.setLicenseIssueDate(operator.getLicenseIssueDate());
         dto.setCreatedAt(operator.getCreatedAt());
         dto.setDocUrl(operator.getDocUrl());
+        dto.setImageUrl(operator.getImageUrl());
 
         return dto;
     }
 
     @Override
-    public void delete(Long machineId) {
-        log.debug("Request to delete MachineOperator : {}", machineId);
-        operatorRepo.deleteById(machineId);
+    public void delete(Long operatorId) {
+        MachineOperator operator = operatorRepo
+            .findById(operatorId)
+            .orElseThrow(() -> new NotFoundAlertException("Operator not found", "MachineOperator", "OperatorNotFound"));
+
+        safeDeleteCloudinary(operator.getImageUrl(), "photo", operatorId);
+
+        safeDeleteCloudinary(operator.getDocUrl(), "license", operatorId);
+
+        storageService.deleteOperatorFolder(operatorId);
+
+        operatorRepo.delete(operator);
+
+        log.info("DELETE Operator SUCCESS | operatorId={}", operatorId);
+    }
+
+    /* ==========================================================
+                       REQUEST VALIDATION
+   ========================================================== */
+
+    private void validateCreateRequest(MultipartFile operatorImage, MultipartFile license) {
+        if (operatorImage == null || operatorImage.isEmpty()) {
+            log.error("Validation failed | Operator image missing");
+
+            throw new BadRequestAlertException("Operator image is required", "MachineOperator", "OperatorImageMissing");
+        }
+
+        if (license == null || license.isEmpty()) {
+            log.error("Validation failed | Operator license missing");
+            throw new BadRequestAlertException("Operator license is required", "MachineOperator", "OperatorLicenseMissing");
+        }
+    }
+
+    /* ==========================================================
+                  SAFE DELETE CLOUDINARY FILE
+
+   ========================================================== */
+
+    private void safeDeleteCloudinary(String url, String fileType, Long operatorId) {
+        if (url == null || url.isBlank()) {
+            return;
+        }
+        try {
+            storageService.deleteByUrl(url);
+            log.info("Cleanup success | operatorId={} | type={} | url={}", operatorId, fileType, url);
+        } catch (Exception ex) {
+            log.error("Cleanup failed | operatorId={} | type={} | url={}", operatorId, fileType, url, ex);
+        }
     }
 }

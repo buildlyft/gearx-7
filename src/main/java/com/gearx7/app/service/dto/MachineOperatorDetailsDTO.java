@@ -25,11 +25,21 @@ public class MachineOperatorDetailsDTO implements Serializable {
 
     private String docUrl;
 
+    private String imageUrl;
+
     /* ===== Metadata ===== */
 
     private Instant createdAt;
 
     // getters & setters
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
 
     public Boolean getActive() {
         return active;
@@ -126,6 +136,9 @@ public class MachineOperatorDetailsDTO implements Serializable {
             licenseIssueDate +
             ", docUrl='" +
             docUrl +
+            '\'' +
+            ", imageUrl='" +
+            imageUrl +
             '\'' +
             ", createdAt=" +
             createdAt +

@@ -183,5 +183,12 @@
 
     </changeSet>
 
+    <changeSet id="202604171152" author="Ganesh">
+        <addColumn tableName="machine_operator">
+            <column name="image_url" type="varchar(1000)"/>
+        </addColumn>
+
+    </changeSet>
+
 
 </databaseChangeLog>

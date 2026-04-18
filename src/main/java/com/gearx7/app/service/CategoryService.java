@@ -174,7 +174,25 @@ public class CategoryService {
     public void delete(Long id) {
         log.debug("Request to delete Category : {}", id);
         Category existing = getCategoryOrThrow(id);
+
+        if (!existing.getSubcategories().isEmpty()) {
+            throw new BadRequestAlertException("Cannot delete category with existing subcategories", "category", "hassubcategories");
+        }
+
+        /* =========================================
+       Delete Cloudinary Image
+       ========================================= */
+
+        try {
+            documentStorageService.deleteByUrl(existing.getImageUrl());
+
+            log.info("DELETE_CATEGORY_IMAGE SUCCESS | categoryId={}", id);
+        } catch (Exception ex) {
+            log.warn("DELETE_CATEGORY_IMAGE FAILED | categoryId={} | reason={}", id, ex.getMessage());
+        }
+
         categoryRepository.delete(existing);
+        log.info("DELETE_CATEGORY SUCCESS | categoryId={}", id);
     }
 
     //=============Helper methods================

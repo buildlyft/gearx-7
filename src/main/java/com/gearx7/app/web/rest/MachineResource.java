@@ -202,7 +202,8 @@ public class MachineResource {
      * {@code DELETE  /machines/:id} : delete the "id" machine.
      *
      * @param id the id of the machineDTO to delete.
-     * @return the {@link ResponseEntity} with status {@code 204 (NO_CONTENT)}.
+     * @return the {@li\
+     * nk ResponseEntity} with status {@code 204 (NO_CONTENT)}.
      */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteMachine(@PathVariable("id") Long id) {

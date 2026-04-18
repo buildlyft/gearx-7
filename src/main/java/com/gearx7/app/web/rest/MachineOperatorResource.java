@@ -5,10 +5,10 @@ import com.gearx7.app.service.dto.MachineOperatorDetailsDTO;
 import com.gearx7.app.service.interfaces.MachineOperatorService;
 import com.gearx7.app.web.rest.errors.BadRequestAlertException;
 import java.util.List;
-import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,23 +21,25 @@ public class MachineOperatorResource {
 
     private static final Logger log = LoggerFactory.getLogger(MachineOperatorResource.class);
 
-    private final MachineOperatorService service;
+    private final MachineOperatorService machineOperatorService;
 
-    private MachineOperatorRepository machineOperatorRepository;
+    private final MachineOperatorRepository machineOperatorRepository;
 
     private static final String ENTITY_NAME = "machineOperator";
 
     @Value("${jhipster.clientApp.name}")
     private String applicationName;
 
-    public MachineOperatorResource(MachineOperatorService service, MachineOperatorRepository machineOperatorRepository) {
-        this.service = service;
+    public MachineOperatorResource(MachineOperatorService machineOperatorService, MachineOperatorRepository machineOperatorRepository) {
+        this.machineOperatorService = machineOperatorService;
         this.machineOperatorRepository = machineOperatorRepository;
     }
 
     /**
      *
      * @param dto MachineOperatorDetailsDTO
+     * @param photo operator's photo (required)
+     * @param license operator's license (required)
      *
      * consumes = request Content-Type
      * This API only accepts requests whose Content-Type is multipart/form-data
@@ -47,15 +49,21 @@ public class MachineOperatorResource {
     @PostMapping(value = "/create_and_assign", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<MachineOperatorDetailsDTO> createOperatorAndAssignToMachine(
         @ModelAttribute MachineOperatorDetailsDTO dto,
-        @RequestParam(value = "file", required = false) MultipartFile file
+        @RequestPart(value = "photo", required = true) MultipartFile photo,
+        @RequestPart(value = "license", required = true) MultipartFile license
     ) {
-        log.info("REST CREATE operator | machineId={} filePresent={}", dto.getMachineId(), file != null && !file.isEmpty());
+        log.info(
+            "REST CREATE Operator | machineId={} | photoPresent={} | licensePresent={}",
+            dto.getMachineId(),
+            photo != null && !photo.isEmpty(),
+            license != null && !license.isEmpty()
+        );
 
-        MachineOperatorDetailsDTO result = service.create(dto, file);
+        MachineOperatorDetailsDTO result = machineOperatorService.create(dto, photo, license);
 
         log.info("REST Operator created successfully | operatorId={} machineId={}", result.getOperatorId(), result.getMachineId());
 
-        return ResponseEntity.ok(result);
+        return ResponseEntity.status(HttpStatus.CREATED).body(result);
     }
 
     /**
@@ -67,15 +75,20 @@ public class MachineOperatorResource {
     public ResponseEntity<MachineOperatorDetailsDTO> getMachineOperatorDetails(@PathVariable Long machineId) {
         log.debug("REST request to GET active operator for machineId={}", machineId);
 
-        return ResponseEntity.ok(service.getByMachineId(machineId));
+        return ResponseEntity.ok(machineOperatorService.getByMachineId(machineId));
     }
+
+    /**
+     *
+     * @return list of all active machine operators
+     */
 
     @GetMapping("/active")
     public ResponseEntity<List<MachineOperatorDetailsDTO>> getAllActiveMachineOperators() {
         log.debug("REST request to GET all active machine operators");
 
         // Assuming the service has a method to get all active machine operators
-        List<MachineOperatorDetailsDTO> activeOperators = service.getAllActiveOperators();
+        List<MachineOperatorDetailsDTO> activeOperators = machineOperatorService.getAllActiveOperators();
 
         log.debug("REST response | activeOperatorsCount={}", activeOperators.size());
 
@@ -92,39 +105,60 @@ public class MachineOperatorResource {
     public ResponseEntity<MachineOperatorDetailsDTO> reassign(
         @PathVariable Long machineId,
         @ModelAttribute MachineOperatorDetailsDTO dto,
-        @RequestPart(value = "file", required = false) MultipartFile file
+        @RequestPart(value = "photo", required = false) MultipartFile photo,
+        @RequestPart(value = "license", required = false) MultipartFile license
     ) {
-        log.info("REST REASSIGN operator | machineId={} filePresent={}", machineId, file != null && !file.isEmpty());
+        log.info(
+            "REST REASSIGN Operator | machineId={} | photoUpdate={} | licenseUpdate={}",
+            machineId,
+            photo != null && !photo.isEmpty(),
+            license != null && !license.isEmpty()
+        );
+        return ResponseEntity.ok(machineOperatorService.reassign(machineId, dto, photo, license));
+    }
 
-        return ResponseEntity.ok(service.reassign(machineId, dto, file));
+    @PatchMapping(value = "/{operatorId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<MachineOperatorDetailsDTO> partialUpdateOperator(
+        @PathVariable Long operatorId,
+        @ModelAttribute MachineOperatorDetailsDTO dto,
+        @RequestPart(value = "photo", required = false) MultipartFile photo,
+        @RequestPart(value = "license", required = false) MultipartFile license
+    ) {
+        log.info(
+            "REST PATCH MachineOperator START | operatorId={} | photoUpdate={} | licenseUpdate={}",
+            operatorId,
+            photo != null && !photo.isEmpty(),
+            license != null && !license.isEmpty()
+        );
+
+        MachineOperatorDetailsDTO result = machineOperatorService.partialUpdate(operatorId, dto, photo, license);
+
+        log.info("REST PATCH MachineOperator SUCCESS | operatorId={}", operatorId);
+
+        return ResponseEntity.ok(result);
     }
 
     /**
      *
-     * @param id operatorId
+     * @param  operatorId
      * @return 204 No Content if deleted successfully
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteMachineOperator(@PathVariable("id") Long id) {
-        log.info("REST request to delete MachineOperator : {}", id);
+    public ResponseEntity<Void> deleteMachineOperator(@PathVariable("id") Long operatorId) {
+        log.info("REST request to delete MachineOperator : {}", operatorId);
 
-        if (id == null) {
+        if (operatorId == null) {
             log.error("Delete failed. Operator ID is null");
             throw new BadRequestAlertException("Invalid operatorId", ENTITY_NAME, "idnull");
         }
 
-        if (!machineOperatorRepository.existsById(id)) {
-            log.warn("MachineOperator not found with ID : {}", id);
-            throw new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound");
-        }
+        machineOperatorService.delete(operatorId);
 
-        service.delete(id);
-
-        log.info("MachineOperator deleted successfully with ID : {}", id);
+        log.info("MachineOperator deleted successfully with ID : {}", operatorId);
 
         return ResponseEntity
             .noContent()
-            .headers(HeaderUtil.createEntityDeletionAlert(applicationName, false, ENTITY_NAME, id.toString()))
+            .headers(HeaderUtil.createEntityDeletionAlert(applicationName, false, ENTITY_NAME, operatorId.toString()))
             .build();
     }
 }
