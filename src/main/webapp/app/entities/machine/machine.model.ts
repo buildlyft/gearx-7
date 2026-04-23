@@ -4,8 +4,8 @@ import { MachineStatus } from 'app/entities/enumerations/machine-status.model';
 
 export interface IMachine {
   id: number;
+  name?: string | null;
   brand?: string | null;
-  type?: string | null;
   tag?: string | null;
   model?: string | null;
   vinNumber?: string | null;

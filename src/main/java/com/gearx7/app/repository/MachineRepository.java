@@ -104,4 +104,16 @@ public interface MachineRepository extends JpaRepository<Machine, Long> {
         """
     )
     List<Machine> findMachinesWithoutOperator();
+
+    @Query(
+        """
+        select m
+        from Machine m
+        left join fetch m.user
+        where m.user.login = :login
+        """
+    )
+    List<Machine> findByOwnerLogin(@Param("login") String login);
+
+    List<Machine> findByUserId(Long userId);
 }

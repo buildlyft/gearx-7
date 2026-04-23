@@ -22,8 +22,8 @@ public class MachineOperator implements Serializable {
     @Column(name = "driver_name")
     private String driverName;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "machine_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = true)
+    @JoinColumn(name = "machine_id", nullable = true)
     @JsonIgnoreProperties(value = { "document", "operator", "subcategory", "category", "user" }, allowSetters = true)
     private Machine machine;
 
@@ -37,7 +37,7 @@ public class MachineOperator implements Serializable {
     private String address;
 
     @Column(name = "active")
-    private Boolean active = true;
+    private Boolean active = false;
 
     @Column(name = "created_at")
     private Instant createdAt;

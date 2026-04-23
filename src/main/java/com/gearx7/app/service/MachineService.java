@@ -8,6 +8,7 @@ import com.gearx7.app.security.SecurityUtils;
 import com.gearx7.app.service.dto.MachineDTO;
 import com.gearx7.app.service.mapper.MachineMapper;
 import com.gearx7.app.web.rest.errors.BadRequestAlertException;
+import com.gearx7.app.web.rest.errors.NotFoundAlertException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Duration;
@@ -71,12 +72,25 @@ public class MachineService {
      */
     @Transactional
     public MachineDTO save(MachineDTO machineDTO) {
-        log.debug("Request to save Machine : {}", machineDTO);
+        log.info(
+            "Start: Saving Machine. typeId={}, categoryId={}, subcategoryId={}",
+            machineDTO.getTypeId(),
+            machineDTO.getCategoryId(),
+            machineDTO.getSubcategoryId()
+        );
 
         //  FINAL SECURITY GATE
         if (!SecurityUtils.hasCurrentUserAnyOfAuthorities(AuthoritiesConstants.ADMIN, AuthoritiesConstants.PARTNER)) {
+            log.warn("Unauthorized attempt to create machine");
             throw new AccessDeniedException("You are not allowed to create a machine");
         }
+
+        log.debug(
+            "Validating hierarchy for typeId={}, categoryId={}, subcategoryId={}",
+            machineDTO.getTypeId(),
+            machineDTO.getCategoryId(),
+            machineDTO.getSubcategoryId()
+        );
 
         validateHierarchy(machineDTO.getTypeId(), machineDTO.getCategoryId(), machineDTO.getSubcategoryId());
 
@@ -84,15 +98,18 @@ public class MachineService {
 
         // ADMIN Flow: specify partner user
         if (SecurityUtils.hasCurrentUserThisAuthority(AuthoritiesConstants.ADMIN)) {
+            log.debug("ADMIN flow: assigning partner user");
             User partner = validateAndLoadPartner(machineDTO);
             machine.setUser(partner);
             // PARTNER Flow: assign current logged-in user
         } else if (SecurityUtils.hasCurrentUserThisAuthority(AuthoritiesConstants.PARTNER)) {
+            log.debug("PARTNER flow: assigning current logged-in user");
             User currentUser = getCurrentLoggedInUser();
             machine.setUser(currentUser);
         }
 
         machine = machineRepository.save(machine);
+        log.info("Machine saved successfully. ID={}", machine.getId());
         return machineMapper.toDto(machine);
     }
 
@@ -246,6 +263,53 @@ public class MachineService {
         return machineMapper.toDto(machines);
     }
 
+    @Transactional(readOnly = true)
+    public List<MachineDTO> getMachinesByOwner(Long ownerId) {
+        log.debug("SERVICE | Get machines | requestOwnerId={}", ownerId);
+
+        boolean isAdmin = SecurityUtils.hasCurrentUserThisAuthority("ROLE_ADMIN");
+
+        List<Machine> machines;
+
+        if (isAdmin) {
+            //  ADMIN FLOW
+            if (ownerId == null) {
+                log.warn("ADMIN FLOW | ownerId missing");
+                throw new BadRequestAlertException("PartnerId (ownerId) is required for admin", "machine", "ownerIdMissing");
+            }
+
+            if (!userRepository.existsById(ownerId)) {
+                log.warn("ADMIN FLOW | User not found | ownerId={}", ownerId);
+                throw new NotFoundAlertException("User not found with id " + ownerId, "User", "UserNotFound");
+            }
+
+            log.info("ADMIN FLOW | Fetch machines for ownerId={}", ownerId);
+
+            machines = machineRepository.findByUserId(ownerId);
+        } else {
+            //  PARTNER FLOW
+            String login = SecurityUtils
+                .getCurrentUserLogin()
+                .orElseThrow(() -> {
+                    log.error("JWT missing login");
+                    return new NotFoundAlertException("User not found", "User", "UserNotFound");
+                });
+
+            log.info("PARTNER FLOW | login={}", login);
+
+            machines = machineRepository.findByOwnerLogin(login);
+        }
+
+        if (machines.isEmpty()) {
+            log.warn("No machines found");
+            return List.of();
+        }
+
+        log.info("Machines fetched | count={}", machines.size());
+
+        return machineMapper.toDto(machines);
+    }
+
     private User getCurrentLoggedInUser() {
         String login = SecurityUtils.getCurrentUserLogin().orElseThrow(() -> new IllegalStateException("No logged-in user"));
 
@@ -253,39 +317,53 @@ public class MachineService {
     }
 
     private User validateAndLoadPartner(MachineDTO machineDTO) {
+        log.debug("Validating partner user from DTO");
         if (machineDTO.getUser() == null || machineDTO.getUser().getId() == null) {
+            log.error("Partner user is missing in request");
             throw new BadRequestAlertException("Admin must specify partner user", "machine", "userrequired");
         }
 
         Long partnerId = machineDTO.getUser().getId();
+        log.debug("Fetching partner user with ID: {}", partnerId);
 
         User partner = userRepository
             .findById(partnerId)
-            .orElseThrow(() -> new BadRequestAlertException("Partner user does not exist", "machine", "usernotfound"));
+            .orElseThrow(() -> {
+                log.error("Partner user not found with ID: {}", partnerId);
+                return new BadRequestAlertException("Partner user does not exist", "machine", "usernotfound");
+            });
 
         boolean isPartner = partner.getAuthorities().stream().anyMatch(a -> AuthoritiesConstants.PARTNER.equals(a.getName()));
 
         if (!isPartner) {
+            log.error("User {} is not a PARTNER", partnerId);
             throw new BadRequestAlertException("Machine can be created only for PARTNER users", "machine", "invalidpartner");
         }
+        log.debug("Partner validation successful for user ID: {}", partnerId);
 
         return partner;
     }
 
     private void validateHierarchy(Long typeId, Long categoryId, Long subcategoryId) {
-        if (!typeRepository.existsById(typeId)) throw new BadRequestAlertException("Type not found", "type", "typeNotFound");
+        log.debug("Validating Type existence: {}", typeId);
 
-        if (!categoryRepository.existsByIdAndTypeId(categoryId, typeId)) throw new BadRequestAlertException(
-            "Invalid Category for Type",
-            "category",
-            "invalidTypeCategory"
-        );
+        if (!typeRepository.existsById(typeId)) {
+            log.error("Type not found: {}", typeId);
+            throw new BadRequestAlertException("Type not found", "type", "typeNotFound");
+        }
+        log.debug("Validating Category {} belongs to Type {}", categoryId, typeId);
+        if (!categoryRepository.existsByIdAndTypeId(categoryId, typeId)) {
+            log.error("Invalid Category {} for Type {}", categoryId, typeId);
+            throw new BadRequestAlertException("Invalid Category for Type", "category", "invalidTypeCategory");
+        }
 
-        if (!subCategoryRepository.existsByIdAndCategoryId(subcategoryId, categoryId)) throw new BadRequestAlertException(
-            "Invalid Subcategory for Category",
-            "subcategory",
-            "invalidCategorySubcategory"
-        );
+        log.debug("Validating Subcategory {} belongs to Category {}", subcategoryId, categoryId);
+        if (!subCategoryRepository.existsByIdAndCategoryId(subcategoryId, categoryId)) {
+            log.error("Invalid Subcategory {} for Category {}", subcategoryId, categoryId);
+            throw new BadRequestAlertException("Invalid Subcategory for Category", "subcategory", "invalidCategorySubcategory");
+        }
+
+        log.debug("Hierarchy validation passed");
     }
 
     private void validateLocation(Double lat, Double lon) {
@@ -306,32 +384,93 @@ public class MachineService {
     private record BoundingBox(double minLat, double maxLat, double minLon, double maxLon) {}
 
     private MachineDTO calculatePricing(Machine machine, Instant start, Instant end) {
+        log.info("PRICING START | machineId={} | start={} | end={}", machine.getId(), start, end);
+
         MachineDTO dto = machineMapper.toDto(machine);
+
+        if (start == null || end == null || end.isBefore(start)) {
+            log.error("Invalid booking time | start={} | end={}", start, end);
+            throw new IllegalArgumentException("Invalid booking time");
+        }
 
         LocalDate startDate = start.atZone(ZoneOffset.UTC).toLocalDate();
         LocalDate endDate = end.atZone(ZoneOffset.UTC).toLocalDate();
 
-        boolean isSameDay = startDate.equals(endDate);
+        long totalSeconds = Duration.between(start, end).getSeconds();
+        long totalHours = (long) Math.ceil(totalSeconds / 3600.0);
 
-        if (isSameDay) {
-            long totalSeconds = Duration.between(start, end).getSeconds();
-            long hours = (long) Math.ceil(totalSeconds / 3600.0);
-            hours = Math.max(1, hours);
+        log.debug("Duration calculated | seconds={} | hours(beforeMin)={}", totalSeconds, totalHours);
 
-            if (machine.getMinimumUsageHours() != null) {
-                hours = Math.max(hours, machine.getMinimumUsageHours());
-            }
+        totalHours = Math.max(1, totalHours);
 
-            BigDecimal hourlyTotal = machine.getRatePerHour().multiply(BigDecimal.valueOf(hours));
+        if (machine.getMinimumUsageHours() != null) {
+            long beforeMin = totalHours;
+            totalHours = Math.max(totalHours, machine.getMinimumUsageHours());
+
+            log.debug("Minimum usage applied | before={} | min={} | after={}", beforeMin, machine.getMinimumUsageHours(), totalHours);
+        }
+
+        // ==============================
+        // SAME DAY
+        // ==============================
+        if (startDate.equals(endDate)) {
+            BigDecimal hourlyTotal = machine.getRatePerHour().multiply(BigDecimal.valueOf(totalHours));
+
+            log.debug("Same day booking | hours={} | hourlyTotal={}", totalHours, hourlyTotal);
 
             if (machine.getRatePerDay() != null && hourlyTotal.compareTo(machine.getRatePerDay()) > 0) {
+                log.info("Pricing decision: DAILY | dailyRate={} cheaper than hourly={}", machine.getRatePerDay(), hourlyTotal);
+
                 dto.setTotalDailyRate(machine.getRatePerDay().setScale(2, RoundingMode.HALF_UP));
                 dto.setTotalHourlyRate(null);
             } else {
+                log.info("Pricing decision: HOURLY | hours={} | total={}", totalHours, hourlyTotal);
+
                 dto.setTotalHourlyRate(hourlyTotal.setScale(2, RoundingMode.HALF_UP));
                 dto.setTotalDailyRate(null);
             }
+
+            log.info(
+                "PRICING END | machineId={} | hourly={} | daily={}",
+                machine.getId(),
+                dto.getTotalHourlyRate(),
+                dto.getTotalDailyRate()
+            );
+
+            return dto;
         }
+
+        // ==============================
+        // MULTI-DAY
+        // ==============================
+
+        long totalDays = Duration.between(startDate.atStartOfDay(), endDate.atStartOfDay()).toDays();
+
+        long remainingHours = totalHours - (totalDays * 24);
+
+        log.debug("Multi-day booking | days={} | remainingHours={}", totalDays, remainingHours);
+
+        BigDecimal dailyCost = BigDecimal.ZERO;
+        BigDecimal hourlyCost = BigDecimal.ZERO;
+
+        if (machine.getRatePerDay() != null) {
+            dailyCost = machine.getRatePerDay().multiply(BigDecimal.valueOf(totalDays));
+        }
+
+        if (remainingHours > 0) {
+            if (machine.getMinimumUsageHours() != null) {
+                remainingHours = Math.max(remainingHours, machine.getMinimumUsageHours());
+            }
+
+            hourlyCost = machine.getRatePerHour().multiply(BigDecimal.valueOf(remainingHours));
+        }
+
+        log.info("Pricing decision: MIXED | daysCost={} | hoursCost={}", dailyCost, hourlyCost);
+
+        dto.setTotalDailyRate(dailyCost.setScale(2, RoundingMode.HALF_UP));
+        dto.setTotalHourlyRate(hourlyCost.setScale(2, RoundingMode.HALF_UP));
+
+        log.info("PRICING END | machineId={} | hourly={} | daily={}", machine.getId(), dto.getTotalHourlyRate(), dto.getTotalDailyRate());
 
         return dto;
     }

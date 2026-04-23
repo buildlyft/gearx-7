@@ -28,7 +28,7 @@ describe('Booking Management Component', () => {
           provide: ActivatedRoute,
           useValue: {
             data: of({
-              defaultSort: 'id,asc',
+              defaultSort: 'id,desc',
             }),
             queryParamMap: of(
               jest.requireActual('@angular/router').convertToParamMap({

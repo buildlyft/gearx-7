@@ -15,7 +15,11 @@ public interface MachineMapper extends EntityMapper<MachineDTO, Machine> {
     @Mapping(target = "typeId", source = "typeEntity.id")
     @Mapping(target = "categoryId", source = "category.id")
     @Mapping(target = "subcategoryId", source = "subcategory.id")
-    MachineDTO toDto(Machine s);
+    @Mapping(
+        target = "partnerName",
+        expression = "java(machine.getUser() != null ? machine.getUser().getFirstName() + \" \" + machine.getUser().getLastName() : null)"
+    )
+    MachineDTO toDto(Machine machine);
 
     // DTO → ENTITY
     @Mapping(target = "typeEntity", source = "typeId", qualifiedByName = "typeFromId")

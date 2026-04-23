@@ -20,10 +20,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import tech.jhipster.web.util.HeaderUtil;
@@ -66,9 +68,11 @@ public class BookingResource {
     @PostMapping("")
     public ResponseEntity<Booking> createBooking(@Valid @RequestBody Booking booking) throws URISyntaxException {
         log.info(
-            "REST REQUEST for Creating booking | machineId={}, userId={}",
+            "REST REQUEST for Creating booking | machineId={}, userId={}, startDateTime={}, endDateTime={}",
             booking.getMachine() != null ? booking.getMachine().getId() : null,
-            booking.getUser() != null ? booking.getUser().getId() : null
+            booking.getUser() != null ? booking.getUser().getId() : null,
+            booking.getStartDateTime(),
+            booking.getEndDateTime()
         );
 
         if (booking.getId() != null) {
@@ -148,6 +152,30 @@ public class BookingResource {
             .body(result);
     }
 
+    @PutMapping("/{id}/cancel")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_PARTNER')") // Only admin and partner can cancel bookings
+    public ResponseEntity<Booking> cancelBooking(@PathVariable Long id) {
+        log.info("REST request to cancel booking | bookingId={}", id);
+
+        Booking booking = bookingService
+            .findOne(id)
+            .orElseThrow(() -> new BadRequestAlertException("Booking not found", ENTITY_NAME, "notFound"));
+
+        String currentUser = SecurityUtils.getCurrentUserLogin().orElseThrow(() -> new AccessDeniedException("User not authenticated"));
+
+        boolean isAdmin = SecurityUtils.hasCurrentUserThisAuthority(AuthoritiesConstants.ADMIN);
+
+        //  Ownership validation
+        if (!isAdmin && !booking.getUser().getLogin().equals(currentUser)) {
+            log.error("Unauthorized cancel attempt | bookingId={} | user={}", id, currentUser);
+            throw new AccessDeniedException("You are not allowed to cancel this booking");
+        }
+
+        Booking result = bookingService.cancelBooking(id);
+
+        return ResponseEntity.ok(result);
+    }
+
     /**
      * {@code PATCH  /bookings/:id} : Partial updates given fields of an existing booking, field will ignore if it is null
      *
@@ -193,7 +221,7 @@ public class BookingResource {
      */
     @GetMapping("")
     public ResponseEntity<List<Booking>> getAllBookings(
-        @org.springdoc.core.annotations.ParameterObject Pageable pageable,
+        @PageableDefault(sort = "id", direction = Sort.Direction.DESC) Pageable pageable,
         @RequestParam(name = "eagerload", required = false, defaultValue = "true") boolean eagerload
     ) {
         log.debug("REST request to get a page of Bookings");
@@ -241,19 +269,31 @@ public class BookingResource {
     }
 
     /**
-     * GET  /bookings/by-owner/{ownerLogin} : get all bookings for machines owned by given owner.
+     *If login as a admin can get all bookings or filter by ownerId,
+     * if login as a partner can only get own bookings
      *
-     * @param ownerLogin the login of the machine owner (partner)
+     * @param ownerId    the id of the machine owner to filter bookings (optional, only for admin)
      * @param pageable   the pagination information
      * @return the ResponseEntity with status 200 (OK) and with body the list of bookings
      */
-    @GetMapping("/by-owner/{ownerLogin}")
-    public ResponseEntity<List<Booking>> getBookingsByOwner(@PathVariable String ownerLogin, Pageable pageable) {
-        log.debug("REST request to get bookings for machine owner : {}", ownerLogin);
+    @GetMapping("/by-owner")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_PARTNER')")
+    public ResponseEntity<List<Booking>> getBookingsByOwner(
+        @RequestParam(required = false) Long ownerId,
+        @PageableDefault(sort = "id", direction = Sort.Direction.DESC) Pageable pageable
+    ) {
+        log.info(
+            "REST GET Bookings START | requestOwnerId={} | page={} | size={}",
+            ownerId,
+            pageable.getPageNumber(),
+            pageable.getPageSize()
+        );
 
-        Page<Booking> page = bookingRepository.findByMachineOwnerLogin(ownerLogin, pageable);
+        Page<Booking> page = bookingService.getBookingsByOwner(ownerId, pageable);
 
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
+
+        log.info("REST GET Bookings SUCCESS | totalElements={} | totalPages={}", page.getTotalElements(), page.getTotalPages());
 
         return ResponseEntity.ok().headers(headers).body(page.getContent());
     }

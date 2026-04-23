@@ -103,5 +103,11 @@
             columnDataType="bigint"/>
     </changeSet>
 
+    <changeSet id="202604201104" author="Ganesh">
+        <addColumn tableName="booking">
+            <column name="cancelled_date" type="${datetimeType}"/>
+        </addColumn>
+    </changeSet>
+
 
 </databaseChangeLog>

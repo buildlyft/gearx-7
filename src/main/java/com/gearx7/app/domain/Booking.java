@@ -65,6 +65,17 @@ public class Booking implements Serializable {
     @Column(name = "notes")
     private String notes;
 
+    @Column(name = "cancelled_date")
+    private Instant cancelledDate;
+
+    public Instant getCancelledDate() {
+        return cancelledDate;
+    }
+
+    public void setCancelledDate(Instant cancelledDate) {
+        this.cancelledDate = cancelledDate;
+    }
+
     public Double getExpectedPrice() {
         return expectedPrice;
     }

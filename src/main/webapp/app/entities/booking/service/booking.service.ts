@@ -106,8 +106,9 @@ export class BookingService {
   protected convertDateFromClient<T extends IBooking | NewBooking | PartialUpdateBooking>(booking: T): RestOf<T> {
     return {
       ...booking,
-      startDateTime: booking.startDateTime?.toJSON() ?? null,
-      endDateTime: booking.endDateTime?.toJSON() ?? null,
+      startDateTime: booking.startDateTime ? booking.startDateTime.toISOString() : null,
+
+      endDateTime: booking.endDateTime ? booking.endDateTime.toISOString() : null,
       createdDate: booking.createdDate?.toJSON() ?? null,
     };
   }

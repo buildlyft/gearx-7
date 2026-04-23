@@ -12,7 +12,7 @@ const bookingRoute: Routes = [
     path: '',
     component: BookingComponent,
     data: {
-      defaultSort: 'id,' + ASC,
+      defaultSort: 'id,desc',
     },
     canActivate: [UserRouteAccessService],
   },

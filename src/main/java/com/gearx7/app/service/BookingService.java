@@ -4,9 +4,13 @@ import com.gearx7.app.domain.Booking;
 import com.gearx7.app.domain.Machine;
 import com.gearx7.app.domain.User;
 import com.gearx7.app.domain.enumeration.BookingStatus;
-import com.gearx7.app.repository.*;
+import com.gearx7.app.repository.BookingRepository;
+import com.gearx7.app.repository.MachineRepository;
+import com.gearx7.app.repository.UserRepository;
+import com.gearx7.app.security.SecurityUtils;
 import com.gearx7.app.service.interfaces.SmsService;
 import com.gearx7.app.web.rest.errors.BadRequestAlertException;
+import com.gearx7.app.web.rest.errors.NotFoundAlertException;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Optional;
@@ -224,6 +228,75 @@ public class BookingService {
     public void delete(Long id) {
         log.debug("Request to delete Booking : {}", id);
         bookingRepository.deleteById(id);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<Booking> getBookingsByOwner(Long ownerId, Pageable pageable) {
+        log.debug("SERVICE GET Bookings START | requestOwnerId={}", ownerId);
+
+        boolean isAdmin = SecurityUtils.hasCurrentUserThisAuthority("ROLE_ADMIN");
+
+        try {
+            if (isAdmin) {
+                //  ADMIN FLOW
+                if (ownerId == null) {
+                    log.warn("ADMIN FLOW | Missing ownerId");
+                    throw new BadRequestAlertException("Owner ID must be provided for admin", "Booking", "ownerIdMissing");
+                }
+
+                if (!userRepository.existsById(ownerId)) {
+                    log.warn("ADMIN FLOW | User not found | ownerId={}", ownerId);
+                    throw new NotFoundAlertException("User not found with id " + ownerId, "User", "UserNotFound");
+                }
+
+                log.debug("ADMIN FLOW | Fetch bookings by ownerId={}", ownerId);
+
+                return bookingRepository.findByMachineOwnerId(ownerId, pageable);
+            } else {
+                //  PARTNER FLOW
+                String login = SecurityUtils
+                    .getCurrentUserLogin()
+                    .orElseThrow(() -> {
+                        return new NotFoundAlertException("User not found", "User", "UserNotFound");
+                    });
+
+                log.debug("PARTNER FLOW | login={}", login);
+
+                return bookingRepository.findByMachineOwnerLogin(login, pageable);
+            }
+        } catch (Exception ex) {
+            log.error("SERVICE GET Bookings FAILED | requestOwnerId={} | reason={}", ownerId, ex.getMessage(), ex);
+            throw ex;
+        }
+    }
+
+    @Transactional
+    public Booking cancelBooking(Long id) {
+        log.info("Cancel booking request received | bookingId={}", id);
+
+        Booking booking = bookingRepository
+            .findById(id)
+            .orElseThrow(() -> {
+                log.error("Booking not found | bookingId={}", id);
+                return new BadRequestAlertException("Booking not found", "booking", "notFound");
+            });
+        if (booking.getStatus() == BookingStatus.CANCELLED) {
+            log.warn("Booking already cancelled | bookingId={}", id);
+            return booking;
+        }
+        if (booking.getStatus() != BookingStatus.PENDING) {
+            log.error("Invalid cancel attempt | bookingId={} | status={}", id, booking.getStatus());
+            throw new BadRequestAlertException("Only pending bookings can be cancelled", "booking", "invalidState");
+        }
+
+        booking.setStatus(BookingStatus.CANCELLED);
+        booking.setCancelledDate(Instant.now());
+
+        Booking saved = bookingRepository.save(booking);
+
+        log.info("Booking cancelled successfully | bookingId={}", id);
+
+        return saved;
     }
 
     public boolean isOverlappingBookingExists(Long machineId, Instant start, Instant end) {

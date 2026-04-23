@@ -20,8 +20,8 @@ describe('Machine Form Service', () => {
         expect(formGroup.controls).toEqual(
           expect.objectContaining({
             id: expect.any(Object),
+            name: expect.any(Object),
             brand: expect.any(Object),
-            type: expect.any(Object),
             tag: expect.any(Object),
             model: expect.any(Object),
             vinNumber: expect.any(Object),
@@ -54,7 +54,6 @@ describe('Machine Form Service', () => {
           expect.objectContaining({
             id: expect.any(Object),
             brand: expect.any(Object),
-            type: expect.any(Object),
             tag: expect.any(Object),
             model: expect.any(Object),
             vinNumber: expect.any(Object),

@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import tech.jhipster.web.util.HeaderUtil;
@@ -47,6 +48,7 @@ public class MachineOperatorResource {
      * @return MachineOperatorDetailsDTO
      */
     @PostMapping(value = "/create_and_assign", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_PARTNER')") // Only admin and partner can create and assign operators
     public ResponseEntity<MachineOperatorDetailsDTO> createOperatorAndAssignToMachine(
         @ModelAttribute MachineOperatorDetailsDTO dto,
         @RequestPart(value = "photo", required = true) MultipartFile photo,
@@ -101,23 +103,31 @@ public class MachineOperatorResource {
      * @param dto MachineOperatorDetailsDTO
      * @return new updated MachineOperatorDetailsDTO
      */
-    @PutMapping(value = "/machine/{machineId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<MachineOperatorDetailsDTO> reassign(
-        @PathVariable Long machineId,
+    @PutMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_PARTNER')") // Only admin and partner can reassign operators
+    public ResponseEntity<MachineOperatorDetailsDTO> upsertOperator(
+        @RequestPart(value = "machineId", required = false) Long machineId,
         @ModelAttribute MachineOperatorDetailsDTO dto,
         @RequestPart(value = "photo", required = false) MultipartFile photo,
         @RequestPart(value = "license", required = false) MultipartFile license
     ) {
         log.info(
-            "REST REASSIGN Operator | machineId={} | photoUpdate={} | licenseUpdate={}",
+            "REST UPSERT Operator START | operatorId={} | machineId={} | photoUpdate={} | licenseUpdate={}",
+            dto.getOperatorId(),
             machineId,
             photo != null && !photo.isEmpty(),
             license != null && !license.isEmpty()
         );
-        return ResponseEntity.ok(machineOperatorService.reassign(machineId, dto, photo, license));
+
+        MachineOperatorDetailsDTO result = machineOperatorService.reassign(machineId, dto, photo, license);
+
+        log.info("REST UPSERT Operator SUCCESS | operatorId={} | machineId={}", result.getOperatorId(), result.getMachineId());
+
+        return ResponseEntity.ok(result);
     }
 
     @PatchMapping(value = "/{operatorId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_PARTNER')") // Only admin and partner can update operators
     public ResponseEntity<MachineOperatorDetailsDTO> partialUpdateOperator(
         @PathVariable Long operatorId,
         @ModelAttribute MachineOperatorDetailsDTO dto,
@@ -144,6 +154,7 @@ public class MachineOperatorResource {
      * @return 204 No Content if deleted successfully
      */
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_PARTNER')") // Only admin and partner can delete operators
     public ResponseEntity<Void> deleteMachineOperator(@PathVariable("id") Long operatorId) {
         log.info("REST request to delete MachineOperator : {}", operatorId);
 
@@ -160,5 +171,22 @@ public class MachineOperatorResource {
             .noContent()
             .headers(HeaderUtil.createEntityDeletionAlert(applicationName, false, ENTITY_NAME, operatorId.toString()))
             .build();
+    }
+
+    /**
+     *
+     * @return list of all machine operators (active and inactive)
+     */
+
+    @GetMapping("/all")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_PARTNER')")
+    public ResponseEntity<List<MachineOperatorDetailsDTO>> getAllOperators() {
+        log.info("REST Request to get all machine operators");
+
+        List<MachineOperatorDetailsDTO> operators = machineOperatorService.getAllOperators();
+
+        log.info("REST GET ALL Operators SUCCESS | count={}", operators.size());
+
+        return ResponseEntity.ok(operators);
     }
 }

@@ -4,8 +4,8 @@ import { IMachine, NewMachine } from './machine.model';
 
 export const sampleWithRequiredData: IMachine = {
   id: 7267,
+  name: 'Excavator 320D',
   brand: 'harmonise freeload sports',
-  type: 'itchy abandon piglet',
   ratePerHour: 5186.38,
   latitude: 8368.4,
   longitude: 23118.09,
@@ -19,8 +19,8 @@ export const sampleWithRequiredData: IMachine = {
 
 export const sampleWithPartialData: IMachine = {
   id: 25145,
+  name: 'JCB Loader',
   brand: 'needily likewise swan',
-  type: 'quaintly off',
   vinNumber: 'consequently zowie to',
   chassisNumber: 'unblock scow meanwhile',
   description: 'yuck',
@@ -42,8 +42,8 @@ export const sampleWithPartialData: IMachine = {
 
 export const sampleWithFullData: IMachine = {
   id: 31319,
+  name: 'sophisticated',
   brand: 'lovely',
-  type: 'elegant',
   tag: 'where pish',
   model: 'counterpart vacation knotty',
   vinNumber: 'raid justly',
@@ -66,8 +66,8 @@ export const sampleWithFullData: IMachine = {
 };
 
 export const sampleWithNewData: NewMachine = {
+  name: 'JCB Loader',
   brand: 'um ragged',
-  type: 'doc',
   ratePerHour: 19066.5,
   latitude: 788.82,
   longitude: 26098.39,

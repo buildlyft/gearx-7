@@ -1,5 +1,6 @@
 package com.gearx7.app.service.dto;
 
+import com.gearx7.app.domain.MachineOperator;
 import com.gearx7.app.domain.enumeration.MachineStatus;
 import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
@@ -16,10 +17,10 @@ public class MachineDTO implements Serializable {
     private Long id;
 
     @NotNull
-    private String brand;
+    private String name;
 
     @NotNull
-    private String type;
+    private String brand;
 
     private String tag;
 
@@ -91,6 +92,14 @@ public class MachineDTO implements Serializable {
     private String insuranceNo;
 
     private Long mfgDate;
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
 
     public Long getMfgDate() {
         return mfgDate;
@@ -186,14 +195,6 @@ public class MachineDTO implements Serializable {
 
     public void setBrand(String brand) {
         this.brand = brand;
-    }
-
-    public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
     }
 
     public String getTag() {
@@ -391,11 +392,10 @@ public class MachineDTO implements Serializable {
             "MachineDTO{" +
             "id=" +
             id +
+            ", name='" +
+            name +
             ", brand='" +
             brand +
-            '\'' +
-            ", type='" +
-            type +
             '\'' +
             ", tag='" +
             tag +

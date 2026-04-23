@@ -48,9 +48,6 @@ class MachineResourceIT {
     private static final String DEFAULT_BRAND = "AAAAAAAAAA";
     private static final String UPDATED_BRAND = "BBBBBBBBBB";
 
-    private static final String DEFAULT_TYPE = "AAAAAAAAAA";
-    private static final String UPDATED_TYPE = "BBBBBBBBBB";
-
     private static final String DEFAULT_TAG = "AAAAAAAAAA";
     private static final String UPDATED_TAG = "BBBBBBBBBB";
 
@@ -131,7 +128,6 @@ class MachineResourceIT {
     public static Machine createEntity(EntityManager em) {
         Machine machine = new Machine()
             .brand(DEFAULT_BRAND)
-            .type(DEFAULT_TYPE)
             .tag(DEFAULT_TAG)
             .model(DEFAULT_MODEL)
             .vinNumber(DEFAULT_VIN_NUMBER)
@@ -159,7 +155,6 @@ class MachineResourceIT {
     public static Machine createUpdatedEntity(EntityManager em) {
         Machine machine = new Machine()
             .brand(UPDATED_BRAND)
-            .type(UPDATED_TYPE)
             .tag(UPDATED_TAG)
             .model(UPDATED_MODEL)
             .vinNumber(UPDATED_VIN_NUMBER)
@@ -198,7 +193,6 @@ class MachineResourceIT {
         assertThat(machineList).hasSize(databaseSizeBeforeCreate + 1);
         Machine testMachine = machineList.get(machineList.size() - 1);
         assertThat(testMachine.getBrand()).isEqualTo(DEFAULT_BRAND);
-        assertThat(testMachine.getType()).isEqualTo(DEFAULT_TYPE);
         assertThat(testMachine.getTag()).isEqualTo(DEFAULT_TAG);
         assertThat(testMachine.getModel()).isEqualTo(DEFAULT_MODEL);
         assertThat(testMachine.getVinNumber()).isEqualTo(DEFAULT_VIN_NUMBER);
@@ -258,7 +252,6 @@ class MachineResourceIT {
     void checkTypeIsRequired() throws Exception {
         int databaseSizeBeforeTest = machineRepository.findAll().size();
         // set the field null
-        machine.setType(null);
 
         // Create the Machine, which fails.
         MachineDTO machineDTO = machineMapper.toDto(machine);
@@ -374,7 +367,6 @@ class MachineResourceIT {
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
             .andExpect(jsonPath("$.[*].id").value(hasItem(machine.getId().intValue())))
             .andExpect(jsonPath("$.[*].brand").value(hasItem(DEFAULT_BRAND)))
-            .andExpect(jsonPath("$.[*].type").value(hasItem(DEFAULT_TYPE)))
             .andExpect(jsonPath("$.[*].tag").value(hasItem(DEFAULT_TAG)))
             .andExpect(jsonPath("$.[*].model").value(hasItem(DEFAULT_MODEL)))
             .andExpect(jsonPath("$.[*].vinNumber").value(hasItem(DEFAULT_VIN_NUMBER)))
@@ -422,7 +414,6 @@ class MachineResourceIT {
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
             .andExpect(jsonPath("$.id").value(machine.getId().intValue()))
             .andExpect(jsonPath("$.brand").value(DEFAULT_BRAND))
-            .andExpect(jsonPath("$.type").value(DEFAULT_TYPE))
             .andExpect(jsonPath("$.tag").value(DEFAULT_TAG))
             .andExpect(jsonPath("$.model").value(DEFAULT_MODEL))
             .andExpect(jsonPath("$.vinNumber").value(DEFAULT_VIN_NUMBER))
@@ -461,7 +452,6 @@ class MachineResourceIT {
         em.detach(updatedMachine);
         updatedMachine
             .brand(UPDATED_BRAND)
-            .type(UPDATED_TYPE)
             .tag(UPDATED_TAG)
             .model(UPDATED_MODEL)
             .vinNumber(UPDATED_VIN_NUMBER)
@@ -492,7 +482,6 @@ class MachineResourceIT {
         assertThat(machineList).hasSize(databaseSizeBeforeUpdate);
         Machine testMachine = machineList.get(machineList.size() - 1);
         assertThat(testMachine.getBrand()).isEqualTo(UPDATED_BRAND);
-        assertThat(testMachine.getType()).isEqualTo(UPDATED_TYPE);
         assertThat(testMachine.getTag()).isEqualTo(UPDATED_TAG);
         assertThat(testMachine.getModel()).isEqualTo(UPDATED_MODEL);
         assertThat(testMachine.getVinNumber()).isEqualTo(UPDATED_VIN_NUMBER);
@@ -615,7 +604,6 @@ class MachineResourceIT {
         assertThat(machineList).hasSize(databaseSizeBeforeUpdate);
         Machine testMachine = machineList.get(machineList.size() - 1);
         assertThat(testMachine.getBrand()).isEqualTo(UPDATED_BRAND);
-        assertThat(testMachine.getType()).isEqualTo(DEFAULT_TYPE);
         assertThat(testMachine.getTag()).isEqualTo(UPDATED_TAG);
         assertThat(testMachine.getModel()).isEqualTo(UPDATED_MODEL);
         assertThat(testMachine.getVinNumber()).isEqualTo(UPDATED_VIN_NUMBER);
@@ -647,7 +635,6 @@ class MachineResourceIT {
 
         partialUpdatedMachine
             .brand(UPDATED_BRAND)
-            .type(UPDATED_TYPE)
             .tag(UPDATED_TAG)
             .model(UPDATED_MODEL)
             .vinNumber(UPDATED_VIN_NUMBER)
@@ -677,7 +664,6 @@ class MachineResourceIT {
         assertThat(machineList).hasSize(databaseSizeBeforeUpdate);
         Machine testMachine = machineList.get(machineList.size() - 1);
         assertThat(testMachine.getBrand()).isEqualTo(UPDATED_BRAND);
-        assertThat(testMachine.getType()).isEqualTo(UPDATED_TYPE);
         assertThat(testMachine.getTag()).isEqualTo(UPDATED_TAG);
         assertThat(testMachine.getModel()).isEqualTo(UPDATED_MODEL);
         assertThat(testMachine.getVinNumber()).isEqualTo(UPDATED_VIN_NUMBER);

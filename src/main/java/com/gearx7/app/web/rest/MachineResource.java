@@ -12,6 +12,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -72,8 +73,10 @@ public class MachineResource {
     @PostMapping("")
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_PARTNER')")
     public ResponseEntity<MachineDTO> createMachine(@Valid @RequestBody MachineDTO machineDTO) throws URISyntaxException {
-        log.debug("REST request to save Machine : {}", machineDTO);
+        log.info("REST request to create Machine. Payload: {}", machineDTO);
+
         if (machineDTO.getId() != null) {
+            log.error("Attempt to create Machine with existing ID: {}", machineDTO.getId());
             throw new BadRequestAlertException("A new machine cannot already have an ID", ENTITY_NAME, "idexists");
         }
 
@@ -87,6 +90,8 @@ public class MachineResource {
         //        }
 
         MachineDTO result = machineService.save(machineDTO);
+        log.info("Machine created successfully with ID: {}", result.getId());
+
         return ResponseEntity
             .created(new URI("/api/machines/" + result.getId()))
             .headers(HeaderUtil.createEntityCreationAlert(applicationName, false, ENTITY_NAME, result.getId().toString()))
@@ -276,7 +281,29 @@ public class MachineResource {
             log.info("Search completed. No machines found.");
             return ResponseEntity.noContent().build();
         }
+        log.info("StartingDate : {} , EndingDate : {} ", startDateTime, endDateTime);
         log.info("Search completed. {} machines found.", machines.size());
+        return ResponseEntity.ok(machines);
+    }
+
+    /**if login as a admin , then admin must be provided with ownerId to get machines of that owner.
+     * if login as a partner, then partner automatically gets all machines
+     * */
+
+    @GetMapping("/by-owner")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_PARTNER')")
+    public ResponseEntity<List<MachineDTO>> getMachinesByOwner(@RequestParam(required = false) Long ownerId) {
+        log.info("REST request | Get machines | ownerId={}", ownerId);
+
+        List<MachineDTO> machines = machineService.getMachinesByOwner(ownerId);
+
+        if (machines.isEmpty()) {
+            log.info("Response: No machines found");
+            return ResponseEntity.noContent().build();
+        }
+
+        log.info("REST GET Machines SUCCESS | count={}", machines.size());
+
         return ResponseEntity.ok(machines);
     }
 

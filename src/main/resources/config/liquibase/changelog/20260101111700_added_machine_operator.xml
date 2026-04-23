@@ -190,5 +190,18 @@
 
     </changeSet>
 
+    <changeSet id="202604209040" author="Ganesh">
+
+        <preConditions onFail="MARK_RAN">
+            <columnExists tableName="machine_operator" columnName="machine_id"/>
+        </preConditions>
+
+        <dropNotNullConstraint
+            tableName="machine_operator"
+            columnName="machine_id"
+            columnDataType="bigint"/>
+
+    </changeSet>
+
 
 </databaseChangeLog>

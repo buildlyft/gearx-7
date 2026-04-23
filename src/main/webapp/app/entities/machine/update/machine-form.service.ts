@@ -31,8 +31,8 @@ type MachineFormDefaults = Pick<NewMachine, 'id' | 'createdDate' | 'typeId' | 'c
 
 type MachineFormGroupContent = {
   id: FormControl<MachineFormRawValue['id'] | NewMachine['id']>;
+  name: FormControl<MachineFormRawValue['name']>;
   brand: FormControl<MachineFormRawValue['brand']>;
-  type: FormControl<MachineFormRawValue['type']>;
   tag: FormControl<MachineFormRawValue['tag']>;
   model: FormControl<MachineFormRawValue['model']>;
   vinNumber: FormControl<MachineFormRawValue['vinNumber']>;
@@ -73,10 +73,10 @@ export class MachineFormService {
           validators: [Validators.required],
         },
       ),
-      brand: new FormControl(machineRawValue.brand, {
+      name: new FormControl(machineRawValue.name, {
         validators: [Validators.required],
       }),
-      type: new FormControl(machineRawValue.type, {
+      brand: new FormControl(machineRawValue.brand, {
         validators: [Validators.required],
       }),
       tag: new FormControl(machineRawValue.tag),

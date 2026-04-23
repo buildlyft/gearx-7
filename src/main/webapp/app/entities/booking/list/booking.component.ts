@@ -37,7 +37,7 @@ export class BookingComponent implements OnInit {
   isLoading = false;
 
   predicate = 'id';
-  ascending = true;
+  ascending = false;
 
   itemsPerPage = ITEMS_PER_PAGE;
   totalItems = 0;

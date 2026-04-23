@@ -12,13 +12,12 @@
             <input type="number" class="form-control" name="id" id="field_id" data-cy="id" formControlName="id" [readonly]="true" />
           </div>
         }
-
         <div class="mb-3">
-          <label class="form-label" for="field_brand">Brand</label>
-          <input type="text" class="form-control" name="brand" id="field_brand" data-cy="brand" formControlName="brand" />
-          @if (editForm.get('brand')!.invalid && (editForm.get('brand')!.dirty || editForm.get('brand')!.touched)) {
+          <label class="form-label" for="field_name">Name</label>
+          <input type="text" class="form-control" name="name" id="field_name" data-cy="name" formControlName="name" />
+          @if (editForm.get('name')!.invalid && (editForm.get('name')!.dirty || editForm.get('name')!.touched)) {
             <div>
-              @if (editForm.get('brand')?.errors?.required) {
+              @if (editForm.get('name')?.errors?.required) {
                 <small class="form-text text-danger">This field is required.</small>
               }
             </div>
@@ -26,11 +25,11 @@
         </div>
 
         <div class="mb-3">
-          <label class="form-label" for="field_type">Type</label>
-          <input type="text" class="form-control" name="type" id="field_type" data-cy="type" formControlName="type" />
-          @if (editForm.get('type')!.invalid && (editForm.get('type')!.dirty || editForm.get('type')!.touched)) {
+          <label class="form-label" for="field_brand">Brand</label>
+          <input type="text" class="form-control" name="brand" id="field_brand" data-cy="brand" formControlName="brand" />
+          @if (editForm.get('brand')!.invalid && (editForm.get('brand')!.dirty || editForm.get('brand')!.touched)) {
             <div>
-              @if (editForm.get('type')?.errors?.required) {
+              @if (editForm.get('brand')?.errors?.required) {
                 <small class="form-text text-danger">This field is required.</small>
               }
             </div>

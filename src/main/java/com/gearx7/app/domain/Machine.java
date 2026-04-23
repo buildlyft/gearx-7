@@ -26,13 +26,12 @@ public class Machine implements Serializable {
     @Column(name = "id")
     private Long id;
 
+    @Column(name = "name")
+    private String name;
+
     @NotNull
     @Column(name = "brand", nullable = false)
     private String brand;
-
-    @NotNull
-    @Column(name = "type", nullable = false)
-    private String type;
 
     @Column(name = "tag")
     private String tag;
@@ -134,6 +133,14 @@ public class Machine implements Serializable {
 
     @Column(name = "mfg_date")
     private Long mfgDate;
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
 
     public Long getMfgDate() {
         return mfgDate;
@@ -257,19 +264,6 @@ public class Machine implements Serializable {
 
     public void setBrand(String brand) {
         this.brand = brand;
-    }
-
-    public String getType() {
-        return this.type;
-    }
-
-    public Machine type(String type) {
-        this.setType(type);
-        return this;
-    }
-
-    public void setType(String type) {
-        this.type = type;
     }
 
     public String getTag() {
@@ -518,11 +512,11 @@ public class Machine implements Serializable {
             "Machine{" +
             "id=" +
             id +
+            ",  name='" +
+            name +
             ", brand='" +
             brand +
             '\'' +
-            ", type='" +
-            type +
             '\'' +
             ", tag='" +
             tag +
