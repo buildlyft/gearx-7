@@ -79,6 +79,8 @@ public class MachineDTO implements Serializable {
     @NotNull(message = "Subcategory is required")
     private Long subcategoryId;
 
+    private Long operatorId;
+
     private String warranty;
 
     private String driverName;
@@ -92,6 +94,14 @@ public class MachineDTO implements Serializable {
     private String insuranceNo;
 
     private Long mfgDate;
+
+    public Long getOperatorId() {
+        return operatorId;
+    }
+
+    public void setOperatorId(Long operatorId) {
+        this.operatorId = operatorId;
+    }
 
     public String getName() {
         return name;
@@ -394,6 +404,7 @@ public class MachineDTO implements Serializable {
             id +
             ", name='" +
             name +
+            '\'' +
             ", brand='" +
             brand +
             '\'' +
@@ -452,6 +463,8 @@ public class MachineDTO implements Serializable {
             categoryId +
             ", subcategoryId=" +
             subcategoryId +
+            ", operatorId=" +
+            operatorId +
             ", warranty='" +
             warranty +
             '\'' +

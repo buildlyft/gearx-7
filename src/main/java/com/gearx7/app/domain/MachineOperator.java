@@ -22,9 +22,8 @@ public class MachineOperator implements Serializable {
     @Column(name = "driver_name")
     private String driverName;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = true)
-    @JoinColumn(name = "machine_id", nullable = true)
-    @JsonIgnoreProperties(value = { "document", "operator", "subcategory", "category", "user" }, allowSetters = true)
+    @OneToOne(mappedBy = "operator")
+    @JsonIgnoreProperties(value = { "operator" }, allowSetters = true)
     private Machine machine;
 
     @Column(name = "operator_contact")
@@ -36,9 +35,6 @@ public class MachineOperator implements Serializable {
     @Column(name = "address", length = 1000)
     private String address;
 
-    @Column(name = "active")
-    private Boolean active = false;
-
     @Column(name = "created_at")
     private Instant createdAt;
 
@@ -49,6 +45,19 @@ public class MachineOperator implements Serializable {
     @Column(name = "image_url")
     @Size(min = 5, max = 1000)
     private String imageUrl;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "partner_id")
+    @JsonIgnoreProperties(value = { "password", "authorities" }, allowSetters = true)
+    private User partner;
+
+    public User getPartner() {
+        return partner;
+    }
+
+    public void setPartner(User partner) {
+        this.partner = partner;
+    }
 
     public String getImageUrl() {
         return imageUrl;
@@ -72,14 +81,6 @@ public class MachineOperator implements Serializable {
 
     public void setCreatedAt(Instant createdAt) {
         this.createdAt = createdAt;
-    }
-
-    public Boolean getActive() {
-        return active;
-    }
-
-    public void setActive(Boolean active) {
-        this.active = active;
     }
 
     public Long getId() {
@@ -158,6 +159,14 @@ public class MachineOperator implements Serializable {
             licenseIssueDate +
             ", address='" +
             address +
+            '\'' +
+            ", createdAt=" +
+            createdAt +
+            ", docUrl='" +
+            docUrl +
+            '\'' +
+            ", imageUrl='" +
+            imageUrl +
             '\'' +
             '}'
         );

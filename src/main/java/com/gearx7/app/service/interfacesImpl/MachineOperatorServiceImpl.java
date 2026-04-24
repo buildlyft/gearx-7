@@ -1,9 +1,10 @@
 package com.gearx7.app.service.interfacesImpl;
 
-import com.gearx7.app.domain.Machine;
 import com.gearx7.app.domain.MachineOperator;
+import com.gearx7.app.domain.User;
 import com.gearx7.app.repository.MachineOperatorRepository;
-import com.gearx7.app.repository.MachineRepository;
+import com.gearx7.app.repository.UserRepository;
+import com.gearx7.app.security.SecurityUtils;
 import com.gearx7.app.service.dto.MachineOperatorDetailsDTO;
 import com.gearx7.app.service.interfaces.DocumentStorageService;
 import com.gearx7.app.service.interfaces.MachineOperatorService;
@@ -24,17 +25,17 @@ public class MachineOperatorServiceImpl implements MachineOperatorService {
     private static final Logger log = LoggerFactory.getLogger(MachineOperatorServiceImpl.class);
 
     private final MachineOperatorRepository operatorRepo;
-    private final MachineRepository machineRepo;
     private final DocumentStorageService storageService;
+    private final UserRepository userRepository;
 
     public MachineOperatorServiceImpl(
         MachineOperatorRepository operatorRepo,
-        MachineRepository machineRepo,
-        DocumentStorageService storageService
+        DocumentStorageService storageService,
+        UserRepository userRepository
     ) {
         this.operatorRepo = operatorRepo;
-        this.machineRepo = machineRepo;
         this.storageService = storageService;
+        this.userRepository = userRepository;
     }
 
     /* ============================================================
@@ -44,26 +45,30 @@ public class MachineOperatorServiceImpl implements MachineOperatorService {
     @Override
     public MachineOperatorDetailsDTO create(MachineOperatorDetailsDTO dto, MultipartFile operatorImage, MultipartFile license) {
         log.info(
-            "CREATE Operator START | machineId={} | photo={} | license={}",
-            dto.getMachineId(),
+            "CREATE Operator START | photo={} | license={}",
             operatorImage != null && !operatorImage.isEmpty(),
             license != null && !license.isEmpty()
         );
 
+        User partner = getCurrentPartner();
+
         validateCreateRequest(operatorImage, license);
 
-        Machine machine = null;
+        // ==============================
+        //      CREATE OPERATOR
+        // ==============================
+        MachineOperator operator = new MachineOperator();
 
-        if (dto.getMachineId() != null) {
-            machine = getMachineOrThrow(dto.getMachineId());
-            validateNewAssignment(dto.getMachineId());
-        }
-
-        MachineOperator operator = buildOperator(machine, dto);
+        operator.setDriverName(dto.getDriverName());
+        operator.setOperatorContact(dto.getOperatorContact());
+        operator.setAddress(dto.getAddress());
+        operator.setLicenseIssueDate(dto.getLicenseIssueDate());
+        operator.setCreatedAt(Instant.now());
+        operator.setPartner(partner);
 
         operator = operatorRepo.saveAndFlush(operator);
 
-        log.debug("Operator temp saved | operatorId={} | machineId={}", operator.getId(), machine != null ? machine.getId() : null);
+        log.info("Operator temp saved | operatorId={}", operator.getId());
 
         String photoUrl = null;
         String licenseUrl = null;
@@ -71,27 +76,21 @@ public class MachineOperatorServiceImpl implements MachineOperatorService {
         try {
             // Upload photo
             photoUrl = storageService.uploadOperatorPhoto(operatorImage, operator.getId());
-
-            log.info("Operator photo uploaded | operatorId={} | url={}", operator.getId(), photoUrl);
             operator.setImageUrl(photoUrl);
 
             // Upload license
             licenseUrl = storageService.uploadOperatorLicense(license, operator.getId());
-
-            log.info("Operator license uploaded | operatorId={} | url={}", operator.getId(), licenseUrl);
             operator.setDocUrl(licenseUrl);
-            operator.setActive(machine != null);
 
             operator = operatorRepo.saveAndFlush(operator);
 
-            log.info("Create Operator SUCCESS | operatorId={} | machineId={}", operator.getId(), machine != null ? machine.getId() : null);
+            log.info("Create Operator SUCCESS | operatorId={}", operator.getId());
 
             return mapToDTO(operator);
         } catch (Exception ex) {
             log.error("Create Operator FAILED | operatorId={} | reason={}", operator.getId(), ex.getMessage(), ex);
 
-            //========  CLEANUP CLOUDINARY FILES =========
-
+            // cleanup
             safeDeleteCloudinary(photoUrl, "photo", operator.getId());
             safeDeleteCloudinary(licenseUrl, "license", operator.getId());
 
@@ -105,134 +104,16 @@ public class MachineOperatorServiceImpl implements MachineOperatorService {
         }
     }
 
-    /* ============================================================
-                            REASSIGN
-       ============================================================ */
-
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public MachineOperatorDetailsDTO reassign(Long machineId, MachineOperatorDetailsDTO dto, MultipartFile photo, MultipartFile license) {
-        log.info("reassign start | operatorId={} | machineId={}", dto.getOperatorId(), machineId);
-
-        // Find existing or create new
-        MachineOperator operator;
-        boolean isUpdate = dto.getOperatorId() != null;
-
-        if (isUpdate) {
-            operator =
-                operatorRepo
-                    .findById(dto.getOperatorId())
-                    .orElseThrow(() -> {
-                        log.error("Operator not found | operatorId={}", dto.getOperatorId());
-                        return new NotFoundAlertException("Operator not found", "MachineOperator", "OperatorNotFound");
-                    });
-        } else {
-            operator = new MachineOperator();
-            operator.setCreatedAt(Instant.now());
-        }
-
-        //  Basic fields
-        if (dto.getDriverName() != null) operator.setDriverName(dto.getDriverName());
-        if (dto.getOperatorContact() != null) operator.setOperatorContact(dto.getOperatorContact());
-        if (dto.getAddress() != null) operator.setAddress(dto.getAddress());
-        if (dto.getLicenseIssueDate() != null) operator.setLicenseIssueDate(dto.getLicenseIssueDate());
-
-        String oldPhoto = operator.getImageUrl();
-        String oldLicense = operator.getDocUrl();
-
-        String newPhoto = null;
-        String newLicense = null;
-
-        try {
-            //  CASE 1: machineId present → assign
-            if (machineId != null) {
-                Machine machine = getMachineOrThrow(machineId);
-
-                // only deactivate if another active operator exists
-                if (operatorRepo.existsByMachineIdAndActiveTrue(machineId)) {
-                    deactivateExistingAssignments(machineId);
-                }
-
-                operator.setMachine(machine);
-                operator.setActive(true);
-
-                log.debug(
-                    "Operator assigned | operatorId={} | machineId={}",
-                    operator.getId() != null ? operator.getId() : "NEW",
-                    machineId
-                );
-            }
-            //  CASE 2: machineId NOT present → unassign / standalone
-            else {
-                operator.setMachine(null);
-                operator.setActive(false);
-
-                log.debug("Operator set as standalone | operatorId={}", operator.getId());
-            }
-
-            operator = operatorRepo.saveAndFlush(operator);
-
-            //  File uploads
-            if (photo != null && !photo.isEmpty()) {
-                newPhoto = storageService.uploadOperatorPhoto(photo, operator.getId());
-                operator.setImageUrl(newPhoto);
-            }
-
-            if (license != null && !license.isEmpty()) {
-                newLicense = storageService.uploadOperatorLicense(license, operator.getId());
-                operator.setDocUrl(newLicense);
-            }
-
-            operator = operatorRepo.saveAndFlush(operator);
-
-            //  Cleanup old files after success
-            if (newPhoto != null && oldPhoto != null) {
-                safeDeleteCloudinary(oldPhoto, "old-photo", operator.getId());
-            }
-            if (newLicense != null && oldLicense != null) {
-                safeDeleteCloudinary(oldLicense, "old-license", operator.getId());
-            }
-
-            log.info("REASSIGN  SUCCESS | operatorId={} | machineId={}", operator.getId(), machineId);
-
-            return mapToDTO(operator);
-        } catch (Exception ex) {
-            log.error("Reassign FAILED | operatorId={} | machineId={} | reason={}", operator.getId(), machineId, ex.getMessage(), ex);
-
-            // cleanup new uploads
-            safeDeleteCloudinary(newPhoto, "new-photo", operator.getId());
-            safeDeleteCloudinary(newLicense, "new-license", operator.getId());
-
-            throw new BadRequestAlertException("Operator upsert failed", "MachineOperator", "UpsertFailed");
-        }
-    }
-
-    /* ============================================================
-                                GET
-       ============================================================ */
-
     @Override
     @Transactional(readOnly = true)
-    public MachineOperatorDetailsDTO getByMachineId(Long machineId) {
-        log.debug("Fetching active operator | machineId={}", machineId);
+    public List<MachineOperatorDetailsDTO> getAllOperatorsByPartner() {
+        User partner = getCurrentPartner();
 
-        MachineOperator operator = operatorRepo
-            .findByMachineIdAndActiveTrue(machineId)
-            .orElseThrow(() ->
-                new NotFoundAlertException("No active operator for machine id : " + machineId, "MachineOperator", "OperatorNotFound")
-            );
+        log.info("GET Operators By Partner START | partnerId={} | login={}", partner.getId(), partner.getLogin());
 
-        return mapToDTO(operator);
-    }
+        List<MachineOperator> operators = operatorRepo.findByPartnerId(partner.getId());
 
-    @Override
-    @Transactional(readOnly = true)
-    public List<MachineOperatorDetailsDTO> getAllActiveOperators() {
-        log.debug("Fetching all active operators");
-
-        List<MachineOperator> operators = operatorRepo.findAllByActiveTrue();
-
-        log.debug("Active operators found | count={}", operators.size());
+        log.info("GET Operators By Partner SUCCESS | partnerId={} | count={}", partner.getId(), operators.size());
 
         return operators.stream().map(this::mapToDTO).toList();
     }
@@ -245,112 +126,64 @@ public class MachineOperatorServiceImpl implements MachineOperatorService {
         MultipartFile photo,
         MultipartFile license
     ) {
-        log.info("PATCH START | operatorId={} | machineId={}", operatorId, dto.getMachineId());
+        log.info("PATCH Operator START | operatorId={}", operatorId);
 
         MachineOperator operator = operatorRepo
             .findById(operatorId)
             .orElseThrow(() -> {
-                log.error("Operator not found | operatorId={}", operatorId);
+                log.error("Operator NOT FOUND | operatorId={}", operatorId);
                 return new NotFoundAlertException("Operator not found", "MachineOperator", "OperatorNotFound");
             });
 
-        String oldPhotoUrl = operator.getImageUrl();
-        String oldLicenseUrl = operator.getDocUrl();
+        String oldPhoto = operator.getImageUrl();
+        String oldLicense = operator.getDocUrl();
 
-        String newPhotoUrl = null;
-        String newLicenseUrl = null;
+        String newPhoto = null;
+        String newLicense = null;
 
         try {
-            /* =========================
-           BASIC FIELD UPDATES
-        ========================= */
+            // =========================
+            // BASIC FIELD UPDATES
+            // =========================
+            if (dto.getDriverName() != null) operator.setDriverName(dto.getDriverName());
+            if (dto.getOperatorContact() != null) operator.setOperatorContact(dto.getOperatorContact());
+            if (dto.getAddress() != null) operator.setAddress(dto.getAddress());
+            if (dto.getLicenseIssueDate() != null) operator.setLicenseIssueDate(dto.getLicenseIssueDate());
 
-            if (dto.getDriverName() != null) {
-                operator.setDriverName(dto.getDriverName());
-            }
-
-            if (dto.getOperatorContact() != null) {
-                operator.setOperatorContact(dto.getOperatorContact());
-            }
-
-            if (dto.getAddress() != null) {
-                operator.setAddress(dto.getAddress());
-            }
-
-            if (dto.getLicenseIssueDate() != null) {
-                operator.setLicenseIssueDate(dto.getLicenseIssueDate());
-            }
-
-            /* =========================
-           MACHINE HANDLING
-        ========================= */
-
-            // CASE 1: Assign / Reassign
-            if (dto.getMachineId() != null) {
-                Machine machine = getMachineOrThrow(dto.getMachineId());
-
-                if (!machine.getId().equals(operator.getMachine() != null ? operator.getMachine().getId() : null)) {
-                    deactivateExistingAssignments(machine.getId());
-                }
-                operator.setMachine(machine);
-                operator.setActive(true);
-
-                log.info("Operator assigned | operatorId={} | machineId={}", operatorId, dto.getMachineId());
-            }
-
-            //  CASE 2: Unassign (explicit flag recommended)
-            // Example: dto.setActive(false) or add dto.isUnassign()
-            if (dto.getMachineId() == null && Boolean.FALSE.equals(dto.getActive())) {
-                operator.setMachine(null);
-                operator.setActive(false);
-
-                log.info("Operator unassigned | operatorId={}", operatorId);
-            }
-
-            /* =========================
-           FILE UPLOADS
-        ========================= */
-
+            // =========================
+            // FILE UPDATES
+            // =========================
             if (photo != null && !photo.isEmpty()) {
-                newPhotoUrl = storageService.uploadOperatorPhoto(photo, operator.getId());
-                operator.setImageUrl(newPhotoUrl);
-
-                log.debug("Photo updated | operatorId={}", operatorId);
+                newPhoto = storageService.uploadOperatorPhoto(photo, operator.getId());
+                operator.setImageUrl(newPhoto);
             }
 
             if (license != null && !license.isEmpty()) {
-                newLicenseUrl = storageService.uploadOperatorLicense(license, operator.getId());
-                operator.setDocUrl(newLicenseUrl);
-
-                log.debug("License updated | operatorId={}", operatorId);
+                newLicense = storageService.uploadOperatorLicense(license, operator.getId());
+                operator.setDocUrl(newLicense);
             }
 
             operator = operatorRepo.saveAndFlush(operator);
 
-            /* =========================
-           CLEANUP OLD FILES
-        ========================= */
-
-            if (newPhotoUrl != null && oldPhotoUrl != null) {
-                safeDeleteCloudinary(oldPhotoUrl, "old-photo", operatorId);
+            // =========================
+            // CLEANUP OLD FILES
+            // =========================
+            if (newPhoto != null && oldPhoto != null) {
+                safeDeleteCloudinary(oldPhoto, "old-photo", operatorId);
             }
 
-            if (newLicenseUrl != null && oldLicenseUrl != null) {
-                safeDeleteCloudinary(oldLicenseUrl, "old-license", operatorId);
+            if (newLicense != null && oldLicense != null) {
+                safeDeleteCloudinary(oldLicense, "old-license", operatorId);
             }
 
-            log.info(
-                "PATCH SUCCESS | operatorId={} | machineId={}",
-                operatorId,
-                operator.getMachine() != null ? operator.getMachine().getId() : null
-            );
+            log.info("PATCH Operator SUCCESS | operatorId={}", operatorId);
 
             return mapToDTO(operator);
         } catch (Exception ex) {
-            log.error("PATCH FAILED | operatorId={} | reason={}", operatorId, ex.getMessage(), ex);
+            log.error("PATCH Operator FAILED | operatorId={} | reason={}", operatorId, ex.getMessage(), ex);
 
-            safeDeleteCloudinary(newPhotoUrl, "new-photo", operatorId);
-            safeDeleteCloudinary(newLicenseUrl, "new-license", operatorId);
+            safeDeleteCloudinary(newPhoto, "new-photo", operatorId);
+            safeDeleteCloudinary(newLicense, "new-license", operatorId);
 
             throw new BadRequestAlertException("Operator patch update failed", "MachineOperator", "PatchFailed");
         }
@@ -362,86 +195,126 @@ public class MachineOperatorServiceImpl implements MachineOperatorService {
     @Override
     @Transactional(readOnly = true)
     public List<MachineOperatorDetailsDTO> getAllOperators() {
-        log.info("Fetching ALL operators from DB");
+        log.info("GET ALL Operators START");
 
         List<MachineOperator> operators = operatorRepo.findAll();
 
-        log.info("Operators fetched | count={}", operators.size());
+        log.info("GET ALL Operators SUCCESS | count={}", operators.size());
 
         return operators.stream().map(this::mapToDTO).toList();
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public MachineOperatorDetailsDTO update(Long operatorId, MachineOperatorDetailsDTO dto, MultipartFile photo, MultipartFile license) {
+        log.info("PUT Operator START | operatorId={}", operatorId);
+
+        MachineOperator operator = operatorRepo
+            .findById(operatorId)
+            .orElseThrow(() -> {
+                log.error("Operator NOT FOUND | operatorId={}", operatorId);
+                return new NotFoundAlertException("Operator not found", "MachineOperator", "OperatorNotFound");
+            });
+
+        String oldPhoto = operator.getImageUrl();
+        String oldLicense = operator.getDocUrl();
+
+        String newPhoto = null;
+        String newLicense = null;
+
+        try {
+            // =========================
+            // FULL REPLACEMENT (PUT)
+            // =========================
+            operator.setDriverName(dto.getDriverName());
+            operator.setOperatorContact(dto.getOperatorContact());
+            operator.setAddress(dto.getAddress());
+            operator.setLicenseIssueDate(dto.getLicenseIssueDate());
+
+            // =========================
+            // FILE UPDATES
+            // =========================
+            if (photo != null && !photo.isEmpty()) {
+                newPhoto = storageService.uploadOperatorPhoto(photo, operator.getId());
+                operator.setImageUrl(newPhoto);
+            }
+
+            if (license != null && !license.isEmpty()) {
+                newLicense = storageService.uploadOperatorLicense(license, operator.getId());
+                operator.setDocUrl(newLicense);
+            }
+
+            operator = operatorRepo.saveAndFlush(operator);
+
+            // cleanup old files
+            if (newPhoto != null && oldPhoto != null) {
+                safeDeleteCloudinary(oldPhoto, "old-photo", operatorId);
+            }
+
+            if (newLicense != null && oldLicense != null) {
+                safeDeleteCloudinary(oldLicense, "old-license", operatorId);
+            }
+
+            log.info("PUT Operator SUCCESS | operatorId={}", operatorId);
+
+            return mapToDTO(operator);
+        } catch (Exception ex) {
+            log.error("PUT Operator FAILED | operatorId={} | reason={}", operatorId, ex.getMessage(), ex);
+
+            safeDeleteCloudinary(newPhoto, "new-photo", operatorId);
+            safeDeleteCloudinary(newLicense, "new-license", operatorId);
+
+            throw new BadRequestAlertException("Operator update failed", "MachineOperator", "UpdateFailed");
+        }
     }
 
     /* ============================================================
                           INTERNAL HELPERS
        ============================================================ */
 
-    private Machine getMachineOrThrow(Long machineId) {
-        return machineRepo
-            .findById(machineId)
-            .orElseThrow(() -> {
-                log.error("Machine not found | machineId={}", machineId);
-                return new NotFoundAlertException("Machine not found", "Machine", "MachineNotFound");
-            });
-    }
-
-    private void validateNewAssignment(Long machineId) {
-        if (operatorRepo.existsByMachineIdAndActiveTrue(machineId)) {
-            log.warn("Machine already has active operator | machineId={}", machineId);
-            throw new BadRequestAlertException("Machine already has operator", "MachineOperator", "MachineAlreadyHasOperator");
-        }
-    }
-
-    private void deactivateExistingAssignments(Long machineId) {
-        operatorRepo.deactivateAllActiveByMachineId(machineId);
-    }
-
-    private MachineOperator buildOperator(Machine machine, MachineOperatorDetailsDTO dto) {
-        MachineOperator operator = new MachineOperator();
-        operator.setMachine(machine);
-        operator.setDriverName(dto.getDriverName());
-        operator.setOperatorContact(dto.getOperatorContact());
-        operator.setAddress(dto.getAddress());
-        operator.setLicenseIssueDate(dto.getLicenseIssueDate());
-        operator.setActive(false);
-        operator.setCreatedAt(Instant.now());
-
-        return operator;
-    }
-
     private MachineOperatorDetailsDTO mapToDTO(MachineOperator operator) {
         MachineOperatorDetailsDTO dto = new MachineOperatorDetailsDTO();
 
         dto.setOperatorId(operator.getId());
-        if (operator.getMachine() != null) {
-            dto.setMachineId(operator.getMachine().getId());
-        }
         dto.setDriverName(operator.getDriverName());
         dto.setOperatorContact(operator.getOperatorContact());
         dto.setAddress(operator.getAddress());
-        dto.setActive(operator.getActive());
         dto.setLicenseIssueDate(operator.getLicenseIssueDate());
         dto.setCreatedAt(operator.getCreatedAt());
         dto.setDocUrl(operator.getDocUrl());
         dto.setImageUrl(operator.getImageUrl());
+
+        if (operator.getPartner() != null) {
+            dto.setPartnerId(operator.getPartner().getId());
+        }
 
         return dto;
     }
 
     @Override
     public void delete(Long operatorId) {
+        log.info("DELETE Operator START | operatorId={}", operatorId);
+
         MachineOperator operator = operatorRepo
             .findById(operatorId)
-            .orElseThrow(() -> new NotFoundAlertException("Operator not found", "MachineOperator", "OperatorNotFound"));
+            .orElseThrow(() -> {
+                log.error("DELETE FAILED | Operator NOT FOUND | operatorId={}", operatorId);
+                return new NotFoundAlertException("Operator not found", "MachineOperator", "OperatorNotFound");
+            });
 
-        safeDeleteCloudinary(operator.getImageUrl(), "photo", operatorId);
+        try {
+            safeDeleteCloudinary(operator.getImageUrl(), "photo", operatorId);
+            safeDeleteCloudinary(operator.getDocUrl(), "license", operatorId);
 
-        safeDeleteCloudinary(operator.getDocUrl(), "license", operatorId);
+            storageService.deleteOperatorFolder(operatorId);
 
-        storageService.deleteOperatorFolder(operatorId);
+            operatorRepo.delete(operator);
 
-        operatorRepo.delete(operator);
-
-        log.info("DELETE Operator SUCCESS | operatorId={}", operatorId);
+            log.info("DELETE Operator SUCCESS | operatorId={}", operatorId);
+        } catch (Exception ex) {
+            log.error("DELETE Operator FAILED | operatorId={} | reason={}", operatorId, ex.getMessage(), ex);
+            throw new BadRequestAlertException("Operator delete failed", "MachineOperator", "DeleteFailed");
+        }
     }
 
     /* ==========================================================
@@ -476,5 +349,15 @@ public class MachineOperatorServiceImpl implements MachineOperatorService {
         } catch (Exception ex) {
             log.error("Cleanup failed | operatorId={} | type={} | url={}", operatorId, fileType, url, ex);
         }
+    }
+
+    private User getCurrentPartner() {
+        String login = SecurityUtils
+            .getCurrentUserLogin()
+            .orElseThrow(() -> new BadRequestAlertException("User not logged in", "User", "NotAuthenticated"));
+
+        return userRepository
+            .findOneByLogin(login)
+            .orElseThrow(() -> new BadRequestAlertException("User not found", "User", "UserNotFound"));
     }
 }

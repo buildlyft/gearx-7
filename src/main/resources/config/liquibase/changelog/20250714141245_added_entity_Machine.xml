@@ -249,5 +249,28 @@
         </addColumn>
     </changeSet>
 
+    <changeSet id="20260424" author="Ganesh">
+
+        <!-- Add operator_id column -->
+        <addColumn tableName="machine">
+            <column name="operator_id" type="bigint"/>
+        </addColumn>
+
+        <!-- Add foreign key -->
+        <addForeignKeyConstraint
+            baseTableName="machine"
+            baseColumnNames="operator_id"
+            constraintName="fk_machine_operator"
+            referencedTableName="machine_operator"
+            referencedColumnNames="id"/>
+
+        <!-- Add UNIQUE constraint (VERY IMPORTANT) -->
+        <addUniqueConstraint
+            tableName="machine"
+            columnNames="operator_id"
+            constraintName="uk_machine_operator"/>
+
+    </changeSet>
+
 
 </databaseChangeLog>

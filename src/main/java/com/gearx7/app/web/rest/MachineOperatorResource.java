@@ -24,16 +24,13 @@ public class MachineOperatorResource {
 
     private final MachineOperatorService machineOperatorService;
 
-    private final MachineOperatorRepository machineOperatorRepository;
-
     private static final String ENTITY_NAME = "machineOperator";
 
     @Value("${jhipster.clientApp.name}")
     private String applicationName;
 
-    public MachineOperatorResource(MachineOperatorService machineOperatorService, MachineOperatorRepository machineOperatorRepository) {
+    public MachineOperatorResource(MachineOperatorService machineOperatorService) {
         this.machineOperatorService = machineOperatorService;
-        this.machineOperatorRepository = machineOperatorRepository;
     }
 
     /**
@@ -49,101 +46,37 @@ public class MachineOperatorResource {
      */
     @PostMapping(value = "/create_and_assign", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_PARTNER')") // Only admin and partner can create and assign operators
-    public ResponseEntity<MachineOperatorDetailsDTO> createOperatorAndAssignToMachine(
+    public ResponseEntity<MachineOperatorDetailsDTO> createOperator(
         @ModelAttribute MachineOperatorDetailsDTO dto,
         @RequestPart(value = "photo", required = true) MultipartFile photo,
         @RequestPart(value = "license", required = true) MultipartFile license
     ) {
         log.info(
-            "REST CREATE Operator | machineId={} | photoPresent={} | licensePresent={}",
-            dto.getMachineId(),
+            "REST CREATE Operator | photoPresent={} | licensePresent={}",
             photo != null && !photo.isEmpty(),
             license != null && !license.isEmpty()
         );
 
         MachineOperatorDetailsDTO result = machineOperatorService.create(dto, photo, license);
 
-        log.info("REST Operator created successfully | operatorId={} machineId={}", result.getOperatorId(), result.getMachineId());
+        log.info("REST Operator created successfully | operatorId={}", result.getOperatorId());
 
         return ResponseEntity.status(HttpStatus.CREATED).body(result);
     }
 
-    /**
-     *
-     * @param machineId
-     * @return returns only the active operator for a machine otherwise you will get exception
-     */
-    @GetMapping("/machine/{machineId}")
-    public ResponseEntity<MachineOperatorDetailsDTO> getMachineOperatorDetails(@PathVariable Long machineId) {
-        log.debug("REST request to GET active operator for machineId={}", machineId);
-
-        return ResponseEntity.ok(machineOperatorService.getByMachineId(machineId));
-    }
-
-    /**
-     *
-     * @return list of all active machine operators
-     */
-
-    @GetMapping("/active")
-    public ResponseEntity<List<MachineOperatorDetailsDTO>> getAllActiveMachineOperators() {
-        log.debug("REST request to GET all active machine operators");
-
-        // Assuming the service has a method to get all active machine operators
-        List<MachineOperatorDetailsDTO> activeOperators = machineOperatorService.getAllActiveOperators();
-
-        log.debug("REST response | activeOperatorsCount={}", activeOperators.size());
-
-        return ResponseEntity.ok(activeOperators);
-    }
-
-    /**
-     *
-     * @param machineId
-     * @param dto MachineOperatorDetailsDTO
-     * @return new updated MachineOperatorDetailsDTO
-     */
-    @PutMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_PARTNER')") // Only admin and partner can reassign operators
-    public ResponseEntity<MachineOperatorDetailsDTO> upsertOperator(
-        @RequestPart(value = "machineId", required = false) Long machineId,
-        @ModelAttribute MachineOperatorDetailsDTO dto,
-        @RequestPart(value = "photo", required = false) MultipartFile photo,
-        @RequestPart(value = "license", required = false) MultipartFile license
-    ) {
-        log.info(
-            "REST UPSERT Operator START | operatorId={} | machineId={} | photoUpdate={} | licenseUpdate={}",
-            dto.getOperatorId(),
-            machineId,
-            photo != null && !photo.isEmpty(),
-            license != null && !license.isEmpty()
-        );
-
-        MachineOperatorDetailsDTO result = machineOperatorService.reassign(machineId, dto, photo, license);
-
-        log.info("REST UPSERT Operator SUCCESS | operatorId={} | machineId={}", result.getOperatorId(), result.getMachineId());
-
-        return ResponseEntity.ok(result);
-    }
-
     @PatchMapping(value = "/{operatorId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_PARTNER')") // Only admin and partner can update operators
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_PARTNER')")
     public ResponseEntity<MachineOperatorDetailsDTO> partialUpdateOperator(
         @PathVariable Long operatorId,
         @ModelAttribute MachineOperatorDetailsDTO dto,
         @RequestPart(value = "photo", required = false) MultipartFile photo,
         @RequestPart(value = "license", required = false) MultipartFile license
     ) {
-        log.info(
-            "REST PATCH MachineOperator START | operatorId={} | photoUpdate={} | licenseUpdate={}",
-            operatorId,
-            photo != null && !photo.isEmpty(),
-            license != null && !license.isEmpty()
-        );
+        log.info("REST PATCH Operator START | operatorId={}", operatorId);
 
         MachineOperatorDetailsDTO result = machineOperatorService.partialUpdate(operatorId, dto, photo, license);
 
-        log.info("REST PATCH MachineOperator SUCCESS | operatorId={}", operatorId);
+        log.info("REST PATCH Operator SUCCESS | operatorId={}", operatorId);
 
         return ResponseEntity.ok(result);
     }
@@ -156,8 +89,7 @@ public class MachineOperatorResource {
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_PARTNER')") // Only admin and partner can delete operators
     public ResponseEntity<Void> deleteMachineOperator(@PathVariable("id") Long operatorId) {
-        log.info("REST request to delete MachineOperator : {}", operatorId);
-
+        log.info("REST DELETE Operator START | operatorId={}", operatorId);
         if (operatorId == null) {
             log.error("Delete failed. Operator ID is null");
             throw new BadRequestAlertException("Invalid operatorId", ENTITY_NAME, "idnull");
@@ -188,5 +120,38 @@ public class MachineOperatorResource {
         log.info("REST GET ALL Operators SUCCESS | count={}", operators.size());
 
         return ResponseEntity.ok(operators);
+    }
+
+    /**
+     *
+     * @return list of machine operators associated with the current partner
+     */
+    @GetMapping("/partner")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_PARTNER')")
+    public ResponseEntity<List<MachineOperatorDetailsDTO>> getOperatorsByPartner() {
+        log.info("REST GET Operators by Partner START");
+
+        List<MachineOperatorDetailsDTO> result = machineOperatorService.getAllOperatorsByPartner();
+
+        log.info("REST GET Operators by Partner SUCCESS | count={}", result.size());
+
+        return ResponseEntity.ok(result);
+    }
+
+    @PutMapping(value = "/{operatorId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_PARTNER')")
+    public ResponseEntity<MachineOperatorDetailsDTO> updateOperator(
+        @PathVariable Long operatorId,
+        @ModelAttribute MachineOperatorDetailsDTO dto,
+        @RequestPart(value = "photo", required = false) MultipartFile photo,
+        @RequestPart(value = "license", required = false) MultipartFile license
+    ) {
+        log.info("REST PUT Operator START | operatorId={}", operatorId);
+
+        MachineOperatorDetailsDTO result = machineOperatorService.update(operatorId, dto, photo, license);
+
+        log.info("REST PUT Operator SUCCESS | operatorId={}", operatorId);
+
+        return ResponseEntity.ok(result);
     }
 }

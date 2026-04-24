@@ -152,30 +152,6 @@ public class BookingResource {
             .body(result);
     }
 
-    @PutMapping("/{id}/cancel")
-    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_PARTNER')") // Only admin and partner can cancel bookings
-    public ResponseEntity<Booking> cancelBooking(@PathVariable Long id) {
-        log.info("REST request to cancel booking | bookingId={}", id);
-
-        Booking booking = bookingService
-            .findOne(id)
-            .orElseThrow(() -> new BadRequestAlertException("Booking not found", ENTITY_NAME, "notFound"));
-
-        String currentUser = SecurityUtils.getCurrentUserLogin().orElseThrow(() -> new AccessDeniedException("User not authenticated"));
-
-        boolean isAdmin = SecurityUtils.hasCurrentUserThisAuthority(AuthoritiesConstants.ADMIN);
-
-        //  Ownership validation
-        if (!isAdmin && !booking.getUser().getLogin().equals(currentUser)) {
-            log.error("Unauthorized cancel attempt | bookingId={} | user={}", id, currentUser);
-            throw new AccessDeniedException("You are not allowed to cancel this booking");
-        }
-
-        Booking result = bookingService.cancelBooking(id);
-
-        return ResponseEntity.ok(result);
-    }
-
     /**
      * {@code PATCH  /bookings/:id} : Partial updates given fields of an existing booking, field will ignore if it is null
      *

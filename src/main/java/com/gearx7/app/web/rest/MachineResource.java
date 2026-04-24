@@ -109,6 +109,7 @@ public class MachineResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_PARTNER')")
     public ResponseEntity<MachineDTO> updateMachine(
         @PathVariable(value = "id", required = false) final Long id,
         @Valid @RequestBody MachineDTO machineDTO
@@ -144,6 +145,7 @@ public class MachineResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PatchMapping(value = "/{id}", consumes = { "application/json", "application/merge-patch+json" })
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_PARTNER')")
     public ResponseEntity<MachineDTO> partialUpdateMachine(
         @PathVariable(value = "id", required = false) final Long id,
         @NotNull @RequestBody MachineDTO machineDTO
@@ -329,7 +331,7 @@ public class MachineResource {
                 DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
                 LocalDateTime localDateTime = LocalDateTime.parse(dateString, formatter);
                 // Convert to Instant assuming UTC timezone
-                return localDateTime.toInstant(ZoneOffset.UTC);
+                return localDateTime.atZone(ZoneId.of("Asia/Kolkata")).toInstant();
             } catch (DateTimeParseException e2) {
                 log.error("Invalid date format: {}", dateString);
                 // If all parsing fails, throw a more descriptive error

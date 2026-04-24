@@ -13,14 +13,13 @@ public class MachineOperatorDetailsDTO implements Serializable {
     /* ===== IDs ===== */
 
     private Long operatorId; // response
-    private Long machineId; // request + response
+    private Long partnerId; // request
 
     /* ===== Operator Info ===== */
 
     private String driverName;
     private String operatorContact;
     private String address;
-    private Boolean active;
     private LocalDate licenseIssueDate;
 
     private String docUrl;
@@ -32,6 +31,13 @@ public class MachineOperatorDetailsDTO implements Serializable {
     private Instant createdAt;
 
     // getters & setters
+    public Long getPartnerId() {
+        return partnerId;
+    }
+
+    public void setPartnerId(Long partnerId) {
+        this.partnerId = partnerId;
+    }
 
     public String getImageUrl() {
         return imageUrl;
@@ -39,14 +45,6 @@ public class MachineOperatorDetailsDTO implements Serializable {
 
     public void setImageUrl(String imageUrl) {
         this.imageUrl = imageUrl;
-    }
-
-    public Boolean getActive() {
-        return active;
-    }
-
-    public void setActive(Boolean active) {
-        this.active = active;
     }
 
     public String getDocUrl() {
@@ -63,14 +61,6 @@ public class MachineOperatorDetailsDTO implements Serializable {
 
     public void setOperatorId(Long operatorId) {
         this.operatorId = operatorId;
-    }
-
-    public Long getMachineId() {
-        return machineId;
-    }
-
-    public void setMachineId(Long machineId) {
-        this.machineId = machineId;
     }
 
     public String getDriverName() {
@@ -119,8 +109,8 @@ public class MachineOperatorDetailsDTO implements Serializable {
             "MachineOperatorDetailsDTO{" +
             "operatorId=" +
             operatorId +
-            ", machineId=" +
-            machineId +
+            ", partnerId=" +
+            partnerId +
             ", driverName='" +
             driverName +
             '\'' +
@@ -130,8 +120,6 @@ public class MachineOperatorDetailsDTO implements Serializable {
             ", address='" +
             address +
             '\'' +
-            ", active=" +
-            active +
             ", licenseIssueDate=" +
             licenseIssueDate +
             ", docUrl='" +

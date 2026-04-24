@@ -270,35 +270,6 @@ public class BookingService {
         }
     }
 
-    @Transactional
-    public Booking cancelBooking(Long id) {
-        log.info("Cancel booking request received | bookingId={}", id);
-
-        Booking booking = bookingRepository
-            .findById(id)
-            .orElseThrow(() -> {
-                log.error("Booking not found | bookingId={}", id);
-                return new BadRequestAlertException("Booking not found", "booking", "notFound");
-            });
-        if (booking.getStatus() == BookingStatus.CANCELLED) {
-            log.warn("Booking already cancelled | bookingId={}", id);
-            return booking;
-        }
-        if (booking.getStatus() != BookingStatus.PENDING) {
-            log.error("Invalid cancel attempt | bookingId={} | status={}", id, booking.getStatus());
-            throw new BadRequestAlertException("Only pending bookings can be cancelled", "booking", "invalidState");
-        }
-
-        booking.setStatus(BookingStatus.CANCELLED);
-        booking.setCancelledDate(Instant.now());
-
-        Booking saved = bookingRepository.save(booking);
-
-        log.info("Booking cancelled successfully | bookingId={}", id);
-
-        return saved;
-    }
-
     public boolean isOverlappingBookingExists(Long machineId, Instant start, Instant end) {
         return bookingRepository.existsByMachineIdAndStatusInAndDateRangeOverlap(
             machineId,

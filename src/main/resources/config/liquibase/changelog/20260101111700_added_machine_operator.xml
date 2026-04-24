@@ -203,5 +203,56 @@
 
     </changeSet>
 
+    <changeSet id="202604231604" author="Ganesh">
+
+        <!-- 1. Add column -->
+        <addColumn tableName="machine_operator">
+            <column name="partner_id" type="bigint"/>
+        </addColumn>
+
+        <!-- 2. Add foreign key -->
+        <addForeignKeyConstraint
+            baseTableName="machine_operator"
+            baseColumnNames="partner_id"
+            constraintName="fk_machine_operator_partner"
+            referencedTableName="jhi_user"
+            referencedColumnNames="id"
+            onDelete="SET NULL"/>
+
+    </changeSet>
+
+    <!-- Drop FK -->
+    <changeSet id="drop-fk-machine-operator" author="Ganesh">
+        <preConditions onFail="MARK_RAN">
+            <foreignKeyConstraintExists foreignKeyName="fk_machine_operator_machine"/>
+        </preConditions>
+
+        <dropForeignKeyConstraint
+            baseTableName="machine_operator"
+            constraintName="fk_machine_operator_machine"/>
+    </changeSet>
+
+    <!-- Drop machine_id -->
+    <changeSet id="drop-machine-id" author="Ganesh">
+        <preConditions onFail="MARK_RAN">
+            <columnExists tableName="machine_operator" columnName="machine_id"/>
+        </preConditions>
+
+        <dropColumn
+            tableName="machine_operator"
+            columnName="machine_id"/>
+    </changeSet>
+
+    <!-- Drop active -->
+    <changeSet id="drop-active" author="Ganesh">
+        <preConditions onFail="MARK_RAN">
+            <columnExists tableName="machine_operator" columnName="active"/>
+        </preConditions>
+
+        <dropColumn
+            tableName="machine_operator"
+            columnName="active"/>
+    </changeSet>
+
 
 </databaseChangeLog>

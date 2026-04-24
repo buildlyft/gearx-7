@@ -1,6 +1,7 @@
 package com.gearx7.app.service;
 
 import com.gearx7.app.domain.Machine;
+import com.gearx7.app.domain.MachineOperator;
 import com.gearx7.app.domain.User;
 import com.gearx7.app.repository.*;
 import com.gearx7.app.security.AuthoritiesConstants;
@@ -11,10 +12,7 @@ import com.gearx7.app.web.rest.errors.BadRequestAlertException;
 import com.gearx7.app.web.rest.errors.NotFoundAlertException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.Duration;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.ZoneOffset;
+import java.time.*;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
@@ -48,13 +46,16 @@ public class MachineService {
 
     private final TypeRepository typeRepository;
 
+    private final MachineOperatorRepository machineOperatorRepository;
+
     public MachineService(
         MachineRepository machineRepository,
         MachineMapper machineMapper,
         CategoryRepository categoryRepository,
         SubcategoryRepository subCategoryRepository,
         UserRepository userRepository,
-        TypeRepository typeRepository
+        TypeRepository typeRepository,
+        MachineOperatorRepository machineOperatorRepository
     ) {
         this.machineRepository = machineRepository;
         this.machineMapper = machineMapper;
@@ -62,6 +63,7 @@ public class MachineService {
         this.subCategoryRepository = subCategoryRepository;
         this.userRepository = userRepository;
         this.typeRepository = typeRepository;
+        this.machineOperatorRepository = machineOperatorRepository;
     }
 
     /**
@@ -119,13 +121,36 @@ public class MachineService {
      * @param machineDTO the entity to update partially.
      * @return the persisted entity.
      */
+    @Transactional
     public Optional<MachineDTO> partialUpdate(MachineDTO machineDTO) {
         log.debug("Request to partially update Machine : {}", machineDTO);
 
         return machineRepository
             .findById(machineDTO.getId())
             .map(existingMachine -> {
+                // update normal fields
                 machineMapper.partialUpdate(existingMachine, machineDTO);
+
+                // ==============================
+                // OPERATOR ASSIGNMENT
+                // ==============================
+                if (machineDTO.getOperatorId() != null) {
+                    MachineOperator operator = machineOperatorRepository
+                        .findById(machineDTO.getOperatorId())
+                        .orElseThrow(() -> new BadRequestAlertException("Operator not found", "MachineOperator", "OperatorNotFound"));
+
+                    if (operator.getMachine() != null && !operator.getMachine().getId().equals(existingMachine.getId())) {
+                        throw new BadRequestAlertException(
+                            "Operator already assigned to another machine",
+                            "Machine",
+                            "OperatorAlreadyAssigned"
+                        );
+                    }
+                    // replace operator directly
+                    existingMachine.setOperator(operator);
+
+                    log.info("Operator assigned/replaced | machineId={} | operatorId={}", existingMachine.getId(), operator.getId());
+                }
 
                 return existingMachine;
             })
@@ -139,11 +164,53 @@ public class MachineService {
      * @param machineDTO the entity to save.
      * @return the persisted entity.
      */
+    @Transactional
     public MachineDTO update(MachineDTO machineDTO) {
-        log.debug("Request to update Machine : {}", machineDTO);
-        Machine machine = machineMapper.toEntity(machineDTO);
-        machine = machineRepository.save(machine);
-        return machineMapper.toDto(machine);
+        log.info("PUT | Updating Machine | id={}", machineDTO.getId());
+
+        Machine existingMachine = machineRepository
+            .findById(machineDTO.getId())
+            .orElseThrow(() -> new BadRequestAlertException("Machine not found", "Machine", "notfound"));
+
+        // ==============================
+        // UPDATE NORMAL FIELDS
+        // ==============================
+        machineMapper.partialUpdate(existingMachine, machineDTO);
+
+        // ==============================
+        // OPERATOR ASSIGNMENT
+        // ==============================
+        if (machineDTO.getOperatorId() != null) {
+            MachineOperator operator = machineOperatorRepository
+                .findById(machineDTO.getOperatorId())
+                .orElseThrow(() -> new BadRequestAlertException("Operator not found", "MachineOperator", "OperatorNotFound"));
+
+            // validation
+            if (operator.getMachine() != null && !operator.getMachine().getId().equals(existingMachine.getId())) {
+                throw new BadRequestAlertException("Operator already assigned to another machine", "Machine", "OperatorAlreadyAssigned");
+            }
+
+            // clear old operator (optional but clean)
+            MachineOperator oldOperator = existingMachine.getOperator();
+            if (oldOperator != null) {
+                oldOperator.setMachine(null);
+            }
+
+            // set new operator
+            existingMachine.setOperator(operator);
+            operator.setMachine(existingMachine);
+
+            log.info("PUT | Operator assigned/replaced | machineId={} | operatorId={}", existingMachine.getId(), operator.getId());
+        }
+
+        // ==============================
+        // SAVE
+        // ==============================
+        Machine saved = machineRepository.save(existingMachine);
+
+        log.info("PUT | Machine updated successfully | id={}", saved.getId());
+
+        return machineMapper.toDto(saved);
     }
 
     /**
@@ -393,9 +460,10 @@ public class MachineService {
             throw new IllegalArgumentException("Invalid booking time");
         }
 
-        LocalDate startDate = start.atZone(ZoneOffset.UTC).toLocalDate();
-        LocalDate endDate = end.atZone(ZoneOffset.UTC).toLocalDate();
+        ZoneId IST = ZoneId.of("Asia/Kolkata");
 
+        LocalDate startDate = start.atZone(IST).toLocalDate();
+        LocalDate endDate = end.atZone(IST).toLocalDate();
         long totalSeconds = Duration.between(start, end).getSeconds();
         long totalHours = (long) Math.ceil(totalSeconds / 3600.0);
 

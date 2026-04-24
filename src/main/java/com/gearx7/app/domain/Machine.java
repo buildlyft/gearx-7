@@ -123,9 +123,10 @@ public class Machine implements Serializable {
     @Column(name = "insurance_no")
     private String insuranceNo;
 
-    @OneToMany(mappedBy = "machine", fetch = FetchType.LAZY)
-    @JsonIgnoreProperties(value = { "machine", "user", "vehicleDocument" }, allowSetters = true)
-    private List<MachineOperator> operators;
+    @OneToOne
+    @JoinColumn(name = "operator_id", unique = true)
+    @JsonIgnoreProperties(value = { "machine" }, allowSetters = true)
+    private MachineOperator operator;
 
     @OneToMany(mappedBy = "machine", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JsonIgnoreProperties(value = { "machine", "uploadedBy", "operator" }, allowSetters = true)
@@ -133,6 +134,14 @@ public class Machine implements Serializable {
 
     @Column(name = "mfg_date")
     private Long mfgDate;
+
+    public MachineOperator getOperator() {
+        return operator;
+    }
+
+    public void setOperator(MachineOperator operator) {
+        this.operator = operator;
+    }
 
     public String getName() {
         return name;
@@ -156,14 +165,6 @@ public class Machine implements Serializable {
 
     public void setTypeEntity(Type typeEntity) {
         this.typeEntity = typeEntity;
-    }
-
-    public List<MachineOperator> getOperators() {
-        return operators;
-    }
-
-    public void setOperators(List<MachineOperator> operators) {
-        this.operators = operators;
     }
 
     public List<VehicleDocument> getDocuments() {
@@ -512,11 +513,11 @@ public class Machine implements Serializable {
             "Machine{" +
             "id=" +
             id +
-            ",  name='" +
+            ", name='" +
             name +
+            '\'' +
             ", brand='" +
             brand +
-            '\'' +
             '\'' +
             ", tag='" +
             tag +
@@ -555,14 +556,6 @@ public class Machine implements Serializable {
             status +
             ", createdDate=" +
             createdDate +
-            ", user=" +
-            user +
-            ", typeEntity=" +
-            typeEntity +
-            ", category=" +
-            category +
-            ", subcategory=" +
-            subcategory +
             ", warranty='" +
             warranty +
             '\'' +
@@ -580,10 +573,6 @@ public class Machine implements Serializable {
             ", insuranceNo='" +
             insuranceNo +
             '\'' +
-            ", operators=" +
-            operators +
-            ", documents=" +
-            documents +
             ", mfgDate=" +
             mfgDate +
             '}'

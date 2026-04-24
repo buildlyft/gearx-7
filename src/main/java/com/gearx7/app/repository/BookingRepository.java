@@ -54,14 +54,23 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     Optional<Booking> findOneWithToOneRelationships(@Param("id") Long id);
 
     @Query(
-        value = "select b from Booking b " + "join b.machine m " + "join m.user u " + "where u.id = :ownerId",
-        countQuery = "select count(b) from Booking b where b.machine.user.id = :ownerId"
+        """
+        select b
+        from Booking b
+        join fetch b.machine m
+        join m.user u
+        where u.id = :ownerId
+        """
     )
     Page<Booking> findByMachineOwnerId(@Param("ownerId") Long ownerId, Pageable pageable);
 
     @Query(
-        value = "select b from Booking b join b.machine m where m.user.login = :login",
-        countQuery = "select count(b) from Booking b where b.machine.user.login = :login"
+        """
+        select b
+        from Booking b
+        join fetch b.machine m
+        where m.user.login = :login
+        """
     )
     Page<Booking> findByMachineOwnerLogin(@Param("login") String login, Pageable pageable);
 

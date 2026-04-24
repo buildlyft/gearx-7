@@ -87,7 +87,7 @@ public interface MachineRepository extends JpaRepository<Machine, Long> {
             left join fetch m.user
             left join fetch m.category
             left join fetch m.subcategory
-            left join fetch m.operators o
+            left join fetch m.operator o
             where m.id = :id
         """
     )
@@ -95,12 +95,8 @@ public interface MachineRepository extends JpaRepository<Machine, Long> {
 
     @Query(
         """
-        select m from Machine m
-        where not exists (
-            select mo.id from MachineOperator mo
-            where mo.machine = m
-            and mo.active = true
-        )
+          select m from Machine m
+          where m.operator is null
         """
     )
     List<Machine> findMachinesWithoutOperator();
