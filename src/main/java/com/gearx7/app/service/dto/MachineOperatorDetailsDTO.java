@@ -14,6 +14,8 @@ public class MachineOperatorDetailsDTO implements Serializable {
 
     private Long operatorId; // response
     private Long partnerId; // request
+    private Long machineId; // response
+    private boolean active; // response
 
     /* ===== Operator Info ===== */
 
@@ -31,6 +33,23 @@ public class MachineOperatorDetailsDTO implements Serializable {
     private Instant createdAt;
 
     // getters & setters
+
+    public Long getMachineId() {
+        return machineId;
+    }
+
+    public void setMachineId(Long machineId) {
+        this.machineId = machineId;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
+    }
+
     public Long getPartnerId() {
         return partnerId;
     }
@@ -111,6 +130,10 @@ public class MachineOperatorDetailsDTO implements Serializable {
             operatorId +
             ", partnerId=" +
             partnerId +
+            ", machineId=" +
+            machineId +
+            ", active=" +
+            active +
             ", driverName='" +
             driverName +
             '\'' +

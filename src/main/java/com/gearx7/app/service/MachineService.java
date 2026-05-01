@@ -128,6 +128,14 @@ public class MachineService {
         return machineRepository
             .findById(machineDTO.getId())
             .map(existingMachine -> {
+                String login = SecurityUtils
+                    .getCurrentUserLogin()
+                    .orElseThrow(() -> new BadRequestAlertException("User not found", "User", "UserNotFound"));
+
+                // Machine ownership check
+                if (!existingMachine.getUser().getLogin().equals(login)) {
+                    throw new BadRequestAlertException("You are not allowed to modify this machine", "Machine", "forbidden");
+                }
                 // update normal fields
                 machineMapper.partialUpdate(existingMachine, machineDTO);
 
@@ -139,15 +147,28 @@ public class MachineService {
                         .findById(machineDTO.getOperatorId())
                         .orElseThrow(() -> new BadRequestAlertException("Operator not found", "MachineOperator", "OperatorNotFound"));
 
-                    if (operator.getMachine() != null && !operator.getMachine().getId().equals(existingMachine.getId())) {
-                        throw new BadRequestAlertException(
-                            "Operator already assigned to another machine",
-                            "Machine",
-                            "OperatorAlreadyAssigned"
-                        );
+                    // OPERATOR OWNERSHIP CHECK
+                    if (!operator.getPartner().getLogin().equals(login)) {
+                        throw new BadRequestAlertException("You are not allowed to use this operator", "MachineOperator", "forbidden");
                     }
-                    // replace operator directly
+                    // Step 1: remove old operator from machine
+                    MachineOperator oldOperator = existingMachine.getOperator();
+
+                    if (oldOperator != null && !oldOperator.getId().equals(operator.getId())) {
+                        oldOperator.setMachine(null);
+                    }
+
+                    // Step 2: remove operator from previous machine (if exists)
+                    Machine oldMachine = operator.getMachine();
+
+                    if (oldMachine != null && !oldMachine.getId().equals(existingMachine.getId())) {
+                        oldMachine.setOperator(null);
+                        machineRepository.saveAndFlush(oldMachine);
+                    }
+
+                    // Step 3: assign new operator
                     existingMachine.setOperator(operator);
+                    operator.setMachine(existingMachine);
 
                     log.info("Operator assigned/replaced | machineId={} | operatorId={}", existingMachine.getId(), operator.getId());
                 }
@@ -172,6 +193,15 @@ public class MachineService {
             .findById(machineDTO.getId())
             .orElseThrow(() -> new BadRequestAlertException("Machine not found", "Machine", "notfound"));
 
+        String login = SecurityUtils
+            .getCurrentUserLogin()
+            .orElseThrow(() -> new BadRequestAlertException("User not found", "User", "notfound"));
+
+        // Machine ownership check
+        if (!existingMachine.getUser().getLogin().equals(login)) {
+            throw new BadRequestAlertException("You are not allowed to modify this machine", "Machine", "forbidden");
+        }
+
         // ==============================
         // UPDATE NORMAL FIELDS
         // ==============================
@@ -183,26 +213,34 @@ public class MachineService {
         if (machineDTO.getOperatorId() != null) {
             MachineOperator operator = machineOperatorRepository
                 .findById(machineDTO.getOperatorId())
-                .orElseThrow(() -> new BadRequestAlertException("Operator not found", "MachineOperator", "OperatorNotFound"));
+                .orElseThrow(() -> new RuntimeException("Operator not found"));
 
-            // validation
-            if (operator.getMachine() != null && !operator.getMachine().getId().equals(existingMachine.getId())) {
-                throw new BadRequestAlertException("Operator already assigned to another machine", "Machine", "OperatorAlreadyAssigned");
+            // ==============================
+            // 1. REMOVE OPERATOR FROM OLD MACHINE (CRITICAL)
+            // ==============================
+            Machine previousMachine = operator.getMachine();
+
+            if (previousMachine != null && !previousMachine.getId().equals(existingMachine.getId())) {
+                previousMachine.setOperator(null);
+
+                machineRepository.saveAndFlush(previousMachine);
             }
 
-            // clear old operator (optional but clean)
+            // ==============================
+            // 2. REMOVE OLD OPERATOR FROM CURRENT MACHINE
+            // ==============================
             MachineOperator oldOperator = existingMachine.getOperator();
-            if (oldOperator != null) {
+
+            if (oldOperator != null && !oldOperator.getId().equals(operator.getId())) {
                 oldOperator.setMachine(null);
             }
 
-            // set new operator
+            // ==============================
+            // 3. ASSIGN NEW OPERATOR
+            // ==============================
             existingMachine.setOperator(operator);
             operator.setMachine(existingMachine);
-
-            log.info("PUT | Operator assigned/replaced | machineId={} | operatorId={}", existingMachine.getId(), operator.getId());
         }
-
         // ==============================
         // SAVE
         // ==============================

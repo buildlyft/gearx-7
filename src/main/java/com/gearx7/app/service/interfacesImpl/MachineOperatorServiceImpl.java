@@ -111,7 +111,7 @@ public class MachineOperatorServiceImpl implements MachineOperatorService {
 
         log.info("GET Operators By Partner START | partnerId={} | login={}", partner.getId(), partner.getLogin());
 
-        List<MachineOperator> operators = operatorRepo.findByPartnerId(partner.getId());
+        List<MachineOperator> operators = operatorRepo.findByPartnerIdWithRelations(partner.getId());
 
         log.info("GET Operators By Partner SUCCESS | partnerId={} | count={}", partner.getId(), operators.size());
 
@@ -197,7 +197,7 @@ public class MachineOperatorServiceImpl implements MachineOperatorService {
     public List<MachineOperatorDetailsDTO> getAllOperators() {
         log.info("GET ALL Operators START");
 
-        List<MachineOperator> operators = operatorRepo.findAll();
+        List<MachineOperator> operators = operatorRepo.findAllWithRelations();
 
         log.info("GET ALL Operators SUCCESS | count={}", operators.size());
 
@@ -268,6 +268,23 @@ public class MachineOperatorServiceImpl implements MachineOperatorService {
         }
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public MachineOperatorDetailsDTO getById(Long operatorId) {
+        log.info("GET Operator BY ID START | operatorId={}", operatorId);
+
+        MachineOperator operator = operatorRepo
+            .findOneWithRelations(operatorId)
+            .orElseThrow(() -> {
+                log.error("Operator NOT FOUND | operatorId={}", operatorId);
+                return new NotFoundAlertException("Operator not found", "MachineOperator", "OperatorNotFound");
+            });
+
+        log.info("GET Operator BY ID SUCCESS | operatorId={}", operatorId);
+
+        return mapToDTO(operator);
+    }
+
     /* ============================================================
                           INTERNAL HELPERS
        ============================================================ */
@@ -286,6 +303,14 @@ public class MachineOperatorServiceImpl implements MachineOperatorService {
 
         if (operator.getPartner() != null) {
             dto.setPartnerId(operator.getPartner().getId());
+        }
+
+        if (operator.getMachine() != null) {
+            dto.setMachineId(operator.getMachine().getId());
+            dto.setActive(true);
+        } else {
+            dto.setMachineId(null);
+            dto.setActive(false);
         }
 
         return dto;

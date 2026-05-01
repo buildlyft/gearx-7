@@ -154,4 +154,13 @@ public class MachineOperatorResource {
 
         return ResponseEntity.ok(result);
     }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<MachineOperatorDetailsDTO> getOperatorById(@PathVariable Long id) {
+        log.info("REST GET Operator BY ID | operatorId={}", id);
+
+        MachineOperatorDetailsDTO dto = machineOperatorService.getById(id);
+
+        return ResponseEntity.ok(dto);
+    }
 }

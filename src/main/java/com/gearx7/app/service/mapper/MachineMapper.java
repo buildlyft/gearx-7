@@ -20,6 +20,7 @@ public interface MachineMapper extends EntityMapper<MachineDTO, Machine> {
         target = "partnerName",
         expression = "java(machine.getUser() != null ? machine.getUser().getFirstName() + \" \" + machine.getUser().getLastName() : null)"
     )
+    @Mapping(target = "driverName", expression = "java(machine.getOperator() != null ? machine.getOperator().getDriverName() : null)")
     MachineDTO toDto(Machine machine);
 
     // DTO → ENTITY
