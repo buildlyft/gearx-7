@@ -92,12 +92,14 @@ public class AccountResource {
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<AuthenticateController.JWTToken> registerAccount(@Valid @RequestBody ManagedUserVM managedUserVM) {
-        log.debug("REST request to save User : {}", managedUserVM);
+        log.info("REGISTER START | login={} | phone={}", managedUserVM.getLogin(), managedUserVM.getPhone());
 
         if (isPasswordLengthInvalid(managedUserVM.getPassword())) {
+            log.warn("REGISTER FAILED | login={} | reason=Invalid password length", managedUserVM.getLogin());
             throw new InvalidPasswordException();
         }
         userService.registerUser(managedUserVM, managedUserVM.getPassword());
+        log.info("USER REGISTERED SUCCESSFULLY | login={}", managedUserVM.getLogin());
         //        mailService.sendActivationEmail(user);
         // Direct login after registration
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
@@ -106,13 +108,18 @@ public class AccountResource {
         );
         Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
         SecurityContextHolder.getContext().setAuthentication(authentication);
+        log.debug("AUTHENTICATION SUCCESS | login={}", managedUserVM.getLogin());
         String jwt = this.createToken(authentication, false);
+        log.info("JWT GENERATED | login={}", managedUserVM.getLogin());
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.setBearerAuth(jwt);
+        log.info("REGISTER END | login={}", managedUserVM.getLogin());
         return new ResponseEntity<>(new AuthenticateController.JWTToken(jwt), httpHeaders, HttpStatus.OK);
     }
 
     public String createToken(Authentication authentication, boolean rememberMe) {
+        String username = authentication.getName();
+        log.debug("JWT CREATION START | login={} | rememberMe={}", username, rememberMe);
         String authorities = authentication.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.joining(" "));
 
         Instant now = Instant.now();
@@ -132,7 +139,11 @@ public class AccountResource {
             .build();
 
         JwsHeader jwsHeader = JwsHeader.with(JWT_ALGORITHM).build();
-        return this.jwtEncoder.encode(JwtEncoderParameters.from(jwsHeader, claims)).getTokenValue();
+        String token = this.jwtEncoder.encode(JwtEncoderParameters.from(jwsHeader, claims)).getTokenValue();
+
+        log.debug("JWT CREATED SUCCESSFULLY | login={} | expiresAt={}", username, validity);
+
+        return token;
     }
 
     /**

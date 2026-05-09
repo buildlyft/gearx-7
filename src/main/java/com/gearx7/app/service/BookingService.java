@@ -123,6 +123,7 @@ public class BookingService {
                 public void afterCommit() {
                     try {
                         smsService.sendBookingCreatedSmsToUser(savedBooking);
+                        smsService.sendBookingCreatedSmsToPartner(savedBooking);
                         log.info("Booking-created SMS sent AFTER COMMIT | bookingId={}", savedBooking.getId());
                     } catch (Exception ex) {
                         log.error("SMS failed AFTER COMMIT (ignored) | bookingId={}", savedBooking.getId(), ex);
@@ -151,40 +152,121 @@ public class BookingService {
      * @param booking the entity to update partially.
      * @return the persisted entity.
      */
+    @Transactional
     public Optional<Booking> partialUpdate(Booking booking) {
-        log.debug("Request to partially update Booking : {}", booking);
+        log.info("Request to partially update Booking | bookingId={}", booking.getId());
 
         return bookingRepository
             .findById(booking.getId())
             .map(existingBooking -> {
+                BookingStatus oldStatus = existingBooking.getStatus();
+
+                log.info("Existing booking found | bookingId={} | oldStatus={}", existingBooking.getId(), oldStatus);
+
                 if (booking.getStartDateTime() != null) {
+                    log.info("Updating startDateTime | bookingId={} | value={}", existingBooking.getId(), booking.getStartDateTime());
+
                     existingBooking.setStartDateTime(booking.getStartDateTime());
                 }
+
                 if (booking.getEndDateTime() != null) {
+                    log.info("Updating endDateTime | bookingId={} | value={}", existingBooking.getId(), booking.getEndDateTime());
+
                     existingBooking.setEndDateTime(booking.getEndDateTime());
                 }
+
                 if (booking.getStatus() != null) {
+                    log.info(
+                        "Updating booking status | bookingId={} | oldStatus={} | newStatus={}",
+                        existingBooking.getId(),
+                        oldStatus,
+                        booking.getStatus()
+                    );
+
                     existingBooking.setStatus(booking.getStatus());
                 }
+
                 if (booking.getAdditionalDetails() != null) {
+                    log.info("Updating additionalDetails | bookingId={}", existingBooking.getId());
+
                     existingBooking.setAdditionalDetails(booking.getAdditionalDetails());
                 }
+
                 if (booking.getWorksiteImageUrl() != null) {
+                    log.info("Updating worksiteImageUrl | bookingId={}", existingBooking.getId());
+
                     existingBooking.setWorksiteImageUrl(booking.getWorksiteImageUrl());
                 }
+
                 if (booking.getCustomerLat() != null) {
+                    log.info("Updating customerLat | bookingId={} | value={}", existingBooking.getId(), booking.getCustomerLat());
+
                     existingBooking.setCustomerLat(booking.getCustomerLat());
                 }
+
                 if (booking.getCustomerLong() != null) {
+                    log.info("Updating customerLong | bookingId={} | value={}", existingBooking.getId(), booking.getCustomerLong());
+
                     existingBooking.setCustomerLong(booking.getCustomerLong());
                 }
+
                 if (booking.getCreatedDate() != null) {
+                    log.info("Updating createdDate | bookingId={} | value={}", existingBooking.getId(), booking.getCreatedDate());
+
                     existingBooking.setCreatedDate(booking.getCreatedDate());
                 }
 
-                return existingBooking;
-            })
-            .map(bookingRepository::save);
+                Booking savedBooking = bookingRepository.save(existingBooking);
+
+                log.info("Booking updated successfully | bookingId={} | currentStatus={}", savedBooking.getId(), savedBooking.getStatus());
+
+                // SEND SMS ONLY WHEN STATUS CHANGED
+                if (booking.getStatus() != null && oldStatus != booking.getStatus()) {
+                    log.info(
+                        "Booking status changed | bookingId={} | oldStatus={} | newStatus={}",
+                        savedBooking.getId(),
+                        oldStatus,
+                        savedBooking.getStatus()
+                    );
+
+                    TransactionSynchronizationManager.registerSynchronization(
+                        new TransactionSynchronization() {
+                            @Override
+                            public void afterCommit() {
+                                try {
+                                    if (savedBooking.getStatus() == BookingStatus.ACCEPTED) {
+                                        log.info("Sending ACCEPTED SMS to customer | bookingId={}", savedBooking.getId());
+
+                                        smsService.sendBookingAcceptedSmsToUser(savedBooking);
+                                    }
+
+                                    if (savedBooking.getStatus() == BookingStatus.REJECTED) {
+                                        log.info("Sending REJECTED SMS to customer | bookingId={}", savedBooking.getId());
+
+                                        smsService.sendBookingRejectedSmsToUser(savedBooking);
+                                    }
+
+                                    if (savedBooking.getStatus() == BookingStatus.CANCELLED) {
+                                        log.info("Sending CANCELLED SMS to customer | bookingId={}", savedBooking.getId());
+
+                                        smsService.sendBookingCancelledSmsToUser(savedBooking);
+
+                                        log.info("Sending CANCELLED SMS to partner | bookingId={}", savedBooking.getId());
+
+                                        smsService.sendBookingCancelledSmsToPartner(savedBooking);
+                                    }
+                                } catch (Exception ex) {
+                                    log.error("Booking status SMS sending failed | bookingId={}", savedBooking.getId(), ex);
+                                }
+                            }
+                        }
+                    );
+                } else {
+                    log.info("Booking status unchanged, SMS skipped | bookingId={}", savedBooking.getId());
+                }
+
+                return savedBooking;
+            });
     }
 
     /**

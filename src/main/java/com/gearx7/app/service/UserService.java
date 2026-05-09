@@ -83,24 +83,30 @@ public class UserService {
     }
 
     public User registerUser(AdminUserDTO userDTO, String password) {
+        log.info("SERVICE REGISTER START | login={} | email={}", userDTO.getLogin(), userDTO.getEmail());
         userRepository
             .findOneByLogin(userDTO.getLogin().toLowerCase())
             .ifPresent(existingUser -> {
+                log.warn("LOGIN ALREADY EXISTS | login={}", userDTO.getLogin());
                 boolean removed = removeNonActivatedUser(existingUser);
                 if (!removed) {
+                    log.error("REGISTER FAILED | login={} | reason=Username already used", userDTO.getLogin());
                     throw new UsernameAlreadyUsedException();
                 }
             });
         userRepository
             .findOneByEmailIgnoreCase(userDTO.getEmail())
             .ifPresent(existingUser -> {
+                log.warn("EMAIL ALREADY EXISTS | email={}", userDTO.getEmail());
                 boolean removed = removeNonActivatedUser(existingUser);
                 if (!removed) {
+                    log.error("REGISTER FAILED | email={} | reason=Email already used", userDTO.getEmail());
                     throw new EmailAlreadyUsedException();
                 }
             });
         User newUser = new User();
         String encryptedPassword = passwordEncoder.encode(password);
+        log.debug("PASSWORD ENCRYPTED | login={}", userDTO.getLogin());
         newUser.setLogin(userDTO.getLogin().toLowerCase());
         // new user gets initially a generated password
         newUser.setPassword(encryptedPassword);
@@ -128,10 +134,11 @@ public class UserService {
                 .map(Optional::get)
                 .collect(Collectors.toSet());
             newUser.setAuthorities(authorities);
+            log.info("AUTHORITIES ASSIGNED | login={} | roles={}", userDTO.getLogin(), authorities);
         }
         newUser.setPhone(userDTO.getPhone());
         userRepository.save(newUser);
-        log.debug("Created Information for User: {}", newUser);
+        log.info("USER SAVED SUCCESSFULLY | login={} | id={}", newUser.getLogin(), newUser.getId());
         return newUser;
     }
 
