@@ -43,10 +43,6 @@ public class AuthenticateController {
 
     private final JwtEncoder jwtEncoder;
 
-    private final OtpService otpService;
-
-    private final LoginCacheService loginCacheService;
-
     @Value("${jhipster.security.authentication.jwt.token-validity-in-seconds:0}")
     private long tokenValidityInSeconds;
 
@@ -55,74 +51,24 @@ public class AuthenticateController {
 
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
 
-    public AuthenticateController(
-        JwtEncoder jwtEncoder,
-        AuthenticationManagerBuilder authenticationManagerBuilder,
-        OtpService otpService,
-        LoginCacheService loginCacheService
-    ) {
+    public AuthenticateController(JwtEncoder jwtEncoder, AuthenticationManagerBuilder authenticationManagerBuilder) {
         this.jwtEncoder = jwtEncoder;
         this.authenticationManagerBuilder = authenticationManagerBuilder;
-        this.otpService = otpService;
-        this.loginCacheService = loginCacheService;
     }
 
     @PostMapping("/authenticate")
-    public ResponseEntity<?> authorize(@Valid @RequestBody LoginVM loginVM) {
-        log.info("LOGIN_ATTEMPT | username={}", loginVM.getUsername());
+    public ResponseEntity<JWTToken> authorize(@Valid @RequestBody LoginVM loginVM) {
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
             loginVM.getUsername(),
             loginVM.getPassword()
         );
 
-        // 1. authenticate
         Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
-        if (!loginCacheService.canSendOtp(loginVM.getUsername())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Please wait 60 seconds before requesting another OTP");
-        }
-
-        // 2. send OTP
-        otpService.sendOtpToUserWhileLogin(loginVM.getUsername());
-
-        // 3. store only if OTP success
-        loginCacheService.store(loginVM.getUsername(), authentication);
-
-        log.info("OTP_SENT | phone={}", loginVM.getUsername());
-
-        return ResponseEntity.ok("OTP sent successfully");
-    }
-
-    @PostMapping("/verify-otp")
-    public ResponseEntity<JWTToken> verifyOtp(@RequestBody OtpVM otpVM) {
-        log.info("OTP_VERIFY_REQUEST | phone={}", otpVM.getPhoneNumber());
-
-        //  Step 1: check OTP expiry FIRST
-        Authentication authentication = loginCacheService.get(otpVM.getPhoneNumber());
-
-        if (authentication == null) {
-            log.error("OTP_EXPIRED | phone={}", otpVM.getPhoneNumber());
-            throw new RuntimeException("OTP expired. Please login again.");
-        }
-
-        //  Step 2: verify OTP via MSG91
-        boolean isValid = otpService.verifyOtpToLogin(otpVM.getPhoneNumber(), otpVM.getOtp());
-
-        if (!isValid) {
-            log.warn("OTP_INVALID | phone={}", otpVM.getPhoneNumber());
-            throw new BadRequestAlertException("Invalid OTP. Please try again.", "Authentication", "InvalidOtp");
-        }
-
-        // Step 3: remove after use
-        loginCacheService.remove(otpVM.getPhoneNumber());
-
         SecurityContextHolder.getContext().setAuthentication(authentication);
-
-        // Step 4: generate JWT
-        String jwt = createToken(authentication, false);
-
-        log.info("LOGIN_SUCCESS | phone={}", otpVM.getPhoneNumber());
-
-        return ResponseEntity.ok(new JWTToken(jwt));
+        String jwt = this.createToken(authentication, loginVM.isRememberMe());
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.setBearerAuth(jwt);
+        return new ResponseEntity<>(new JWTToken(jwt), httpHeaders, HttpStatus.OK);
     }
 
     /**

@@ -88,7 +88,7 @@ public class MachineOperatorResource {
      */
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_PARTNER')") // Only admin and partner can delete operators
-    public ResponseEntity<Void> deleteMachineOperator(@PathVariable("id") Long operatorId) {
+    public ResponseEntity<String> deleteMachineOperator(@PathVariable("id") Long operatorId) {
         log.info("REST DELETE Operator START | operatorId={}", operatorId);
         if (operatorId == null) {
             log.error("Delete failed. Operator ID is null");
@@ -99,10 +99,7 @@ public class MachineOperatorResource {
 
         log.info("MachineOperator deleted successfully with ID : {}", operatorId);
 
-        return ResponseEntity
-            .noContent()
-            .headers(HeaderUtil.createEntityDeletionAlert(applicationName, false, ENTITY_NAME, operatorId.toString()))
-            .build();
+        return ResponseEntity.ok("Machine operator deleted successfully");
     }
 
     /**
@@ -162,5 +159,16 @@ public class MachineOperatorResource {
         MachineOperatorDetailsDTO dto = machineOperatorService.getById(id);
 
         return ResponseEntity.ok(dto);
+    }
+
+    @GetMapping("/machine/{machineId}")
+    public ResponseEntity<MachineOperatorDetailsDTO> getOperatorByMachineId(@PathVariable Long machineId) {
+        log.info("REST Request to get operator by machineId={}", machineId);
+
+        MachineOperatorDetailsDTO result = machineOperatorService.getOperatorByMachineId(machineId);
+
+        log.info("REST GET Operator by machine SUCCESS | machineId={} | operatorId={}", machineId, result.getOperatorId());
+
+        return ResponseEntity.ok(result);
     }
 }

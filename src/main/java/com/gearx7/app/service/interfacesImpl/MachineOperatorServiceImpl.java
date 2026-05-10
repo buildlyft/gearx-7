@@ -114,6 +114,11 @@ public class MachineOperatorServiceImpl implements MachineOperatorService {
         List<MachineOperator> operators = operatorRepo.findByPartnerIdWithRelations(partner.getId());
 
         log.info("GET Operators By Partner SUCCESS | partnerId={} | count={}", partner.getId(), operators.size());
+        if (operators.isEmpty()) {
+            log.warn("No operators found for partnerId={}", partner.getId());
+
+            throw new NotFoundAlertException("You don't have any operators", "MachineOperator", "operatorsNotFound");
+        }
 
         return operators.stream().map(this::mapToDTO).toList();
     }
@@ -134,6 +139,17 @@ public class MachineOperatorServiceImpl implements MachineOperatorService {
                 log.error("Operator NOT FOUND | operatorId={}", operatorId);
                 return new NotFoundAlertException("Operator not found", "MachineOperator", "OperatorNotFound");
             });
+        String login = SecurityUtils
+            .getCurrentUserLogin()
+            .orElseThrow(() -> new BadRequestAlertException("User not found", "User", "UserNotFound"));
+
+        boolean isAdmin = SecurityUtils.hasCurrentUserThisAuthority("ROLE_ADMIN");
+
+        if (!isAdmin && !operator.getPartner().getLogin().equals(login)) {
+            log.warn("Unauthorized operator patch attempt | operatorId={} | login={}", operatorId, login);
+
+            throw new BadRequestAlertException("You are not allowed to update this operator", "MachineOperator", "forbidden");
+        }
 
         String oldPhoto = operator.getImageUrl();
         String oldLicense = operator.getDocUrl();
@@ -200,6 +216,10 @@ public class MachineOperatorServiceImpl implements MachineOperatorService {
         List<MachineOperator> operators = operatorRepo.findAllWithRelations();
 
         log.info("GET ALL Operators SUCCESS | count={}", operators.size());
+        if (operators.isEmpty()) {
+            log.warn("No machine operators found");
+            throw new NotFoundAlertException("No machine operators available", "MachineOperator", "operatorsNotFound");
+        }
 
         return operators.stream().map(this::mapToDTO).toList();
     }
@@ -215,6 +235,17 @@ public class MachineOperatorServiceImpl implements MachineOperatorService {
                 log.error("Operator NOT FOUND | operatorId={}", operatorId);
                 return new NotFoundAlertException("Operator not found", "MachineOperator", "OperatorNotFound");
             });
+        String login = SecurityUtils
+            .getCurrentUserLogin()
+            .orElseThrow(() -> new BadRequestAlertException("User not found", "User", "UserNotFound"));
+
+        boolean isAdmin = SecurityUtils.hasCurrentUserThisAuthority("ROLE_ADMIN");
+
+        if (!isAdmin && !operator.getPartner().getLogin().equals(login)) {
+            log.warn("Unauthorized operator update attempt | operatorId={} | login={}", operatorId, login);
+
+            throw new BadRequestAlertException("You are not allowed to update this operator", "MachineOperator", "forbidden");
+        }
 
         String oldPhoto = operator.getImageUrl();
         String oldLicense = operator.getDocUrl();
@@ -285,6 +316,30 @@ public class MachineOperatorServiceImpl implements MachineOperatorService {
         return mapToDTO(operator);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public MachineOperatorDetailsDTO getOperatorByMachineId(Long machineId) {
+        log.info("SERVICE Request to get operator by machineId={}", machineId);
+
+        if (machineId == null) {
+            log.error("Get operator by machine failed | reason=machineId_is_null");
+
+            throw new BadRequestAlertException("Machine ID cannot be null", "machineOperator", "machineIdNull");
+        }
+
+        MachineOperator machineOperator = operatorRepo
+            .findByMachineId(machineId)
+            .orElseThrow(() -> {
+                log.error("Machine operator not found | machineId={}", machineId);
+
+                return new NotFoundAlertException("No operator assigned to this machine", "machineOperator", "machineOperatorNotFound");
+            });
+
+        log.info("Machine operator found successfully | machineId={} | operatorId={}", machineId, machineOperator.getId());
+
+        return mapToDTO(machineOperator);
+    }
+
     /* ============================================================
                           INTERNAL HELPERS
        ============================================================ */
@@ -326,6 +381,17 @@ public class MachineOperatorServiceImpl implements MachineOperatorService {
                 log.error("DELETE FAILED | Operator NOT FOUND | operatorId={}", operatorId);
                 return new NotFoundAlertException("Operator not found", "MachineOperator", "OperatorNotFound");
             });
+        String login = SecurityUtils
+            .getCurrentUserLogin()
+            .orElseThrow(() -> new BadRequestAlertException("User not found", "User", "UserNotFound"));
+
+        boolean isAdmin = SecurityUtils.hasCurrentUserThisAuthority("ROLE_ADMIN");
+
+        if (!isAdmin && !operator.getPartner().getLogin().equals(login)) {
+            log.warn("Unauthorized operator delete attempt | operatorId={} | login={}", operatorId, login);
+
+            throw new BadRequestAlertException("You are not allowed to delete this operator", "MachineOperator", "forbidden");
+        }
 
         try {
             safeDeleteCloudinary(operator.getImageUrl(), "photo", operatorId);

@@ -4,11 +4,7 @@ import static org.springframework.core.annotation.AnnotatedElementUtils.findMerg
 
 import jakarta.servlet.http.HttpServletRequest;
 import java.net.URI;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
@@ -61,6 +57,21 @@ public class ExceptionTranslator extends ResponseEntityExceptionHandler {
     public ResponseEntity<Object> handleAnyException(Throwable ex, NativeWebRequest request) {
         ProblemDetailWithCause pdCause = wrapAndCustomizeProblem(ex, request);
         return handleExceptionInternal((Exception) ex, pdCause, buildHeaders(ex), HttpStatusCode.valueOf(pdCause.getStatus()), request);
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<Object> handleAccessDeniedException(AccessDeniedException ex, NativeWebRequest request) {
+        Map<String, Object> body = new HashMap<>();
+
+        body.put("status", HttpStatus.FORBIDDEN.value());
+
+        body.put("error", "Forbidden");
+
+        body.put("message", "You are not authorized to perform this action");
+
+        body.put("path", request.getNativeRequest(HttpServletRequest.class).getRequestURI());
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
     }
 
     @Nullable

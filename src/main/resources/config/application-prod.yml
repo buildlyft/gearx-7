@@ -131,3 +131,9 @@ sms:
     auth-key: 165660AijPO1tt8riE596c8eb4
     sender-id: VEHTRK
     booking-user-template-id: 695e081b268710369224fc79
+
+otp:
+  msg91:
+    auth-key: 165660AijPO1tt8riE596c8eb4
+    sender-id: VEHTRK
+    otp-template-id: 695e081b268710369224fc79

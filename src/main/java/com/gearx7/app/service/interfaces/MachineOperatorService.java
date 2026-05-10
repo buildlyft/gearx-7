@@ -18,4 +18,6 @@ public interface MachineOperatorService {
     List<MachineOperatorDetailsDTO> getAllOperatorsByPartner();
 
     public MachineOperatorDetailsDTO update(Long operatorId, MachineOperatorDetailsDTO dto, MultipartFile photo, MultipartFile license);
+
+    MachineOperatorDetailsDTO getOperatorByMachineId(Long machineId);
 }

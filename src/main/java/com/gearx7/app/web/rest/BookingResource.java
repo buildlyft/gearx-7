@@ -8,6 +8,7 @@ import com.gearx7.app.security.SecurityUtils;
 import com.gearx7.app.service.BookingService;
 import com.gearx7.app.web.rest.errors.BadRequestAlertException;
 import com.gearx7.app.web.rest.errors.FailedValidator;
+import com.gearx7.app.web.rest.errors.NotFoundAlertException;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import java.net.URI;
@@ -235,13 +236,10 @@ public class BookingResource {
      * @return the {@link ResponseEntity} with status {@code 204 (NO_CONTENT)}.
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteBooking(@PathVariable("id") Long id) {
+    public ResponseEntity<String> deleteBooking(@PathVariable("id") Long id) {
         log.debug("REST request to delete Booking : {}", id);
         bookingService.delete(id);
-        return ResponseEntity
-            .noContent()
-            .headers(HeaderUtil.createEntityDeletionAlert(applicationName, false, ENTITY_NAME, id.toString()))
-            .build();
+        return ResponseEntity.ok("Booking deleted successfully");
     }
 
     /**
@@ -270,6 +268,9 @@ public class BookingResource {
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
 
         log.info("REST GET Bookings SUCCESS | totalElements={} | totalPages={}", page.getTotalElements(), page.getTotalPages());
+        if (page.isEmpty()) {
+            throw new NotFoundAlertException("You don't have any bookings", "Booking", "bookingsNotFound");
+        }
 
         return ResponseEntity.ok().headers(headers).body(page.getContent());
     }

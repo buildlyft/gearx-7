@@ -180,6 +180,15 @@ public class VehicleDocServiceImpl implements VehicleDocService {
         VehicleDocument doc = vehicleDocumentRepository
             .findById(id)
             .orElseThrow(() -> new NotFoundAlertException("Document not found with id " + id, "vehicleDocument", "documentNotFound"));
+        String login = SecurityUtils.getCurrentUserLogin().orElseThrow(() -> new AccessDeniedException("User not authenticated"));
+
+        boolean isAdmin = SecurityUtils.hasCurrentUserThisAuthority(AuthoritiesConstants.ADMIN);
+
+        if (!isAdmin && !doc.getMachine().getUser().getLogin().equals(login)) {
+            log.warn("Unauthorized document delete attempt | documentId={} | login={}", id, login);
+
+            throw new AccessDeniedException("You are not allowed to delete this document");
+        }
 
         vehicleDocumentRepository.delete(doc);
 

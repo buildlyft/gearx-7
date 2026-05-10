@@ -3,6 +3,7 @@ package com.gearx7.app.web.rest;
 import com.gearx7.app.service.dto.VehicleDocumentDTO;
 import com.gearx7.app.service.dto.VehicleDocumentResponseDTO;
 import com.gearx7.app.service.interfaces.VehicleDocService;
+import com.gearx7.app.web.rest.errors.BadRequestAlertException;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,7 +42,8 @@ public class VehicleDocumentResource {
 
         if (files == null || files.length == 0) {
             log.warn("REST VALIDATION FAILED | No files provided | machineId={}", machineId);
-            return ResponseEntity.badRequest().build();
+
+            throw new BadRequestAlertException("Please upload at least one document", "vehicleDocument", "filesMissing");
         }
 
         VehicleDocumentResponseDTO response = vehicleDocService.uploadDocuments(machineId, uploadedBy, files);
@@ -78,10 +80,10 @@ public class VehicleDocumentResource {
     // ================= DELETE DOCUMENT =================
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_PARTNER')")
-    public ResponseEntity<Void> deleteDocument(@PathVariable Long id) {
+    public ResponseEntity<String> deleteDocument(@PathVariable Long id) {
         log.info("REST REQUEST | Delete document | id={}", id);
 
         vehicleDocService.deleteDocument(id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok("Document deleted successfully");
     }
 }

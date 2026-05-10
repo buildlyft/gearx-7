@@ -6,6 +6,7 @@ import com.gearx7.app.service.MachineService;
 import com.gearx7.app.service.dto.MachineDTO;
 import com.gearx7.app.service.mapper.UserMapper;
 import com.gearx7.app.web.rest.errors.BadRequestAlertException;
+import com.gearx7.app.web.rest.errors.NotFoundAlertException;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import java.net.URI;
@@ -123,7 +124,7 @@ public class MachineResource {
         }
 
         if (!machineRepository.existsById(id)) {
-            throw new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound");
+            throw new NotFoundAlertException("Machine not found with id " + id, ENTITY_NAME, "machineNotFound");
         }
 
         MachineDTO result = machineService.update(machineDTO);
@@ -159,15 +160,15 @@ public class MachineResource {
         }
 
         if (!machineRepository.existsById(id)) {
-            throw new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound");
+            throw new NotFoundAlertException("Machine not found with id " + id, ENTITY_NAME, "machineNotFound");
         }
 
-        Optional<MachineDTO> result = machineService.partialUpdate(machineDTO);
+        MachineDTO result = machineService.partialUpdate(machineDTO);
 
-        return ResponseUtil.wrapOrNotFound(
-            result,
-            HeaderUtil.createEntityUpdateAlert(applicationName, false, ENTITY_NAME, machineDTO.getId().toString())
-        );
+        return ResponseEntity
+            .ok()
+            .headers(HeaderUtil.createEntityUpdateAlert(applicationName, false, ENTITY_NAME, machineDTO.getId().toString()))
+            .body(result);
     }
 
     /**
@@ -189,7 +190,14 @@ public class MachineResource {
         } else {
             page = machineService.findAll(pageable);
         }
+        // EMPTY CHECK
+        if (page.isEmpty()) {
+            log.warn("No machines found");
+
+            throw new NotFoundAlertException("No machines available", "Machine", "machinesNotFound");
+        }
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
+        log.info("Machines fetched successfully | count={}", page.getTotalElements());
         return ResponseEntity.ok().headers(headers).body(page.getContent());
     }
 
@@ -202,7 +210,10 @@ public class MachineResource {
     @GetMapping("/{id}")
     public ResponseEntity<MachineDTO> getMachine(@PathVariable("id") Long id) {
         log.debug("REST request to get Machine : {}", id);
-        return ResponseUtil.wrapOrNotFound(machineService.findOne(id));
+
+        MachineDTO machineDTO = machineService.findOne(id);
+
+        return ResponseEntity.ok(machineDTO);
     }
 
     /**
@@ -213,34 +224,21 @@ public class MachineResource {
      * nk ResponseEntity} with status {@code 204 (NO_CONTENT)}.
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteMachine(@PathVariable("id") Long id) {
+    public ResponseEntity<String> deleteMachine(@PathVariable("id") Long id) {
         log.debug("REST request to delete Machine : {}", id);
         machineService.delete(id);
-        return ResponseEntity
-            .noContent()
-            .headers(HeaderUtil.createEntityDeletionAlert(applicationName, false, ENTITY_NAME, id.toString()))
-            .build();
+        return ResponseEntity.ok("Machine deleted successfully");
     }
 
     @GetMapping("/without-operator")
     public ResponseEntity<List<MachineDTO>> getMachinesWithoutOperator() {
         log.info("REST request to get Machines without active operator");
 
-        try {
-            List<MachineDTO> list = machineService.findMachinesWithoutOperator();
+        List<MachineDTO> list = machineService.findMachinesWithoutOperator();
 
-            if (list == null || list.isEmpty()) {
-                log.info("REST response: No machines available without operator");
-                return ResponseEntity.noContent().build();
-            }
+        log.info("REST response: {} machines returned without operator", list.size());
 
-            log.info("REST response: {} machines returned without operator", list.size());
-
-            return ResponseEntity.ok(list);
-        } catch (Exception ex) {
-            log.error("Error while fetching machines without operator", ex);
-            throw ex;
-        }
+        return ResponseEntity.ok(list);
     }
 
     @GetMapping("/search")
@@ -280,8 +278,14 @@ public class MachineResource {
         List<MachineDTO> machines = machineService.searchMachines(typeId, categoryId, subcategoryId, startDateTime, endDateTime, lat, lon);
 
         if (machines == null || machines.isEmpty()) {
-            log.info("Search completed. No machines found.");
-            return ResponseEntity.noContent().build();
+            log.info(
+                "Search completed | no machines found | typeId={} | categoryId={} | subcategoryId={}",
+                typeId,
+                categoryId,
+                subcategoryId
+            );
+
+            throw new NotFoundAlertException("No machines found for selected dates and location", ENTITY_NAME, "machineNotAvailable");
         }
         log.info("StartingDate : {} , EndingDate : {} ", startDateTime, endDateTime);
         log.info("Search completed. {} machines found.", machines.size());
@@ -298,11 +302,6 @@ public class MachineResource {
         log.info("REST request | Get machines | ownerId={}", ownerId);
 
         List<MachineDTO> machines = machineService.getMachinesByOwner(ownerId);
-
-        if (machines.isEmpty()) {
-            log.info("Response: No machines found");
-            return ResponseEntity.noContent().build();
-        }
 
         log.info("REST GET Machines SUCCESS | count={}", machines.size());
 

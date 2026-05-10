@@ -122,61 +122,77 @@ public class MachineService {
      * @return the persisted entity.
      */
     @Transactional
-    public Optional<MachineDTO> partialUpdate(MachineDTO machineDTO) {
+    public MachineDTO partialUpdate(MachineDTO machineDTO) {
         log.debug("Request to partially update Machine : {}", machineDTO);
 
-        return machineRepository
+        Machine existingMachine = machineRepository
             .findById(machineDTO.getId())
-            .map(existingMachine -> {
-                String login = SecurityUtils
-                    .getCurrentUserLogin()
-                    .orElseThrow(() -> new BadRequestAlertException("User not found", "User", "UserNotFound"));
+            .orElseThrow(() -> {
+                log.warn("Machine not found | id={}", machineDTO.getId());
 
-                // Machine ownership check
-                if (!existingMachine.getUser().getLogin().equals(login)) {
-                    throw new BadRequestAlertException("You are not allowed to modify this machine", "Machine", "forbidden");
-                }
-                // update normal fields
-                machineMapper.partialUpdate(existingMachine, machineDTO);
+                return new NotFoundAlertException("Machine not found with id " + machineDTO.getId(), "Machine", "machineNotFound");
+            });
 
-                // ==============================
-                // OPERATOR ASSIGNMENT
-                // ==============================
-                if (machineDTO.getOperatorId() != null) {
-                    MachineOperator operator = machineOperatorRepository
-                        .findById(machineDTO.getOperatorId())
-                        .orElseThrow(() -> new BadRequestAlertException("Operator not found", "MachineOperator", "OperatorNotFound"));
+        String login = SecurityUtils
+            .getCurrentUserLogin()
+            .orElseThrow(() -> new NotFoundAlertException("User not found", "User", "userNotFound"));
 
-                    // OPERATOR OWNERSHIP CHECK
-                    if (!operator.getPartner().getLogin().equals(login)) {
-                        throw new BadRequestAlertException("You are not allowed to use this operator", "MachineOperator", "forbidden");
-                    }
-                    // Step 1: remove old operator from machine
-                    MachineOperator oldOperator = existingMachine.getOperator();
+        // MACHINE OWNERSHIP CHECK
+        boolean isAdmin = SecurityUtils.hasCurrentUserThisAuthority("ROLE_ADMIN");
 
-                    if (oldOperator != null && !oldOperator.getId().equals(operator.getId())) {
-                        oldOperator.setMachine(null);
-                    }
+        if (!isAdmin && !existingMachine.getUser().getLogin().equals(login)) {
+            log.warn("Unauthorized machine update attempt | machineId={} | login={}", existingMachine.getId(), login);
 
-                    // Step 2: remove operator from previous machine (if exists)
-                    Machine oldMachine = operator.getMachine();
+            throw new BadRequestAlertException("You are not allowed to modify this machine", "Machine", "forbidden");
+        }
 
-                    if (oldMachine != null && !oldMachine.getId().equals(existingMachine.getId())) {
-                        oldMachine.setOperator(null);
-                        machineRepository.saveAndFlush(oldMachine);
-                    }
+        // UPDATE NORMAL FIELDS
+        machineMapper.partialUpdate(existingMachine, machineDTO);
 
-                    // Step 3: assign new operator
-                    existingMachine.setOperator(operator);
-                    operator.setMachine(existingMachine);
+        // OPERATOR ASSIGNMENT
+        if (machineDTO.getOperatorId() != null) {
+            MachineOperator operator = machineOperatorRepository
+                .findById(machineDTO.getOperatorId())
+                .orElseThrow(() -> {
+                    log.warn("Operator not found | operatorId={}", machineDTO.getOperatorId());
 
-                    log.info("Operator assigned/replaced | machineId={} | operatorId={}", existingMachine.getId(), operator.getId());
-                }
+                    return new NotFoundAlertException("Operator not found", "MachineOperator", "operatorNotFound");
+                });
 
-                return existingMachine;
-            })
-            .map(machineRepository::save)
-            .map(machineMapper::toDto);
+            // OPERATOR OWNERSHIP CHECK
+            if (!isAdmin && !operator.getPartner().getLogin().equals(login)) {
+                throw new BadRequestAlertException("You are not allowed to use this operator", "MachineOperator", "forbidden");
+            }
+
+            // REMOVE OLD OPERATOR FROM MACHINE
+            MachineOperator oldOperator = existingMachine.getOperator();
+
+            if (oldOperator != null && !oldOperator.getId().equals(operator.getId())) {
+                oldOperator.setMachine(null);
+            }
+
+            // REMOVE OPERATOR FROM PREVIOUS MACHINE
+            Machine oldMachine = operator.getMachine();
+
+            if (oldMachine != null && !oldMachine.getId().equals(existingMachine.getId())) {
+                oldMachine.setOperator(null);
+
+                machineRepository.saveAndFlush(oldMachine);
+            }
+
+            // ASSIGN NEW OPERATOR
+            existingMachine.setOperator(operator);
+
+            operator.setMachine(existingMachine);
+
+            log.info("Operator assigned/replaced | machineId={} | operatorId={}", existingMachine.getId(), operator.getId());
+        }
+
+        Machine updatedMachine = machineRepository.save(existingMachine);
+
+        log.info("Machine partially updated successfully | id={}", updatedMachine.getId());
+
+        return machineMapper.toDto(updatedMachine);
     }
 
     /**
@@ -191,33 +207,43 @@ public class MachineService {
 
         Machine existingMachine = machineRepository
             .findById(machineDTO.getId())
-            .orElseThrow(() -> new BadRequestAlertException("Machine not found", "Machine", "notfound"));
+            .orElseThrow(() -> {
+                log.warn("Machine not found | id={}", machineDTO.getId());
+
+                return new NotFoundAlertException("Machine not found with id " + machineDTO.getId(), "Machine", "machineNotFound");
+            });
 
         String login = SecurityUtils
             .getCurrentUserLogin()
-            .orElseThrow(() -> new BadRequestAlertException("User not found", "User", "notfound"));
+            .orElseThrow(() -> new NotFoundAlertException("User not found", "User", "userNotFound"));
 
-        // Machine ownership check
-        if (!existingMachine.getUser().getLogin().equals(login)) {
-            throw new BadRequestAlertException("You are not allowed to modify this machine", "Machine", "forbidden");
+        // OWNERSHIP CHECK
+        boolean isAdmin = SecurityUtils.hasCurrentUserThisAuthority("ROLE_ADMIN");
+
+        if (!isAdmin && !existingMachine.getUser().getLogin().equals(login)) {
+            log.warn("Unauthorized update attempt | machineId={} | login={}", existingMachine.getId(), login);
+
+            throw new BadRequestAlertException("You are not allowed to update this machine", "Machine", "forbidden");
         }
 
-        // ==============================
         // UPDATE NORMAL FIELDS
-        // ==============================
         machineMapper.partialUpdate(existingMachine, machineDTO);
 
-        // ==============================
         // OPERATOR ASSIGNMENT
-        // ==============================
         if (machineDTO.getOperatorId() != null) {
             MachineOperator operator = machineOperatorRepository
                 .findById(machineDTO.getOperatorId())
-                .orElseThrow(() -> new RuntimeException("Operator not found"));
+                .orElseThrow(() -> {
+                    log.warn("Operator not found | operatorId={}", machineDTO.getOperatorId());
 
-            // ==============================
-            // 1. REMOVE OPERATOR FROM OLD MACHINE (CRITICAL)
-            // ==============================
+                    return new NotFoundAlertException("Operator not found", "MachineOperator", "operatorNotFound");
+                });
+            // OPERATOR OWNERSHIP CHECK
+            if (!isAdmin && !operator.getPartner().getLogin().equals(login)) {
+                throw new BadRequestAlertException("You are not allowed to use this operator", "MachineOperator", "forbidden");
+            }
+
+            // REMOVE OPERATOR FROM OLD MACHINE
             Machine previousMachine = operator.getMachine();
 
             if (previousMachine != null && !previousMachine.getId().equals(existingMachine.getId())) {
@@ -226,27 +252,21 @@ public class MachineService {
                 machineRepository.saveAndFlush(previousMachine);
             }
 
-            // ==============================
-            // 2. REMOVE OLD OPERATOR FROM CURRENT MACHINE
-            // ==============================
+            // REMOVE OLD OPERATOR FROM CURRENT MACHINE
             MachineOperator oldOperator = existingMachine.getOperator();
 
             if (oldOperator != null && !oldOperator.getId().equals(operator.getId())) {
                 oldOperator.setMachine(null);
             }
 
-            // ==============================
-            // 3. ASSIGN NEW OPERATOR
-            // ==============================
+            // ASSIGN NEW OPERATOR
             existingMachine.setOperator(operator);
             operator.setMachine(existingMachine);
         }
-        // ==============================
-        // SAVE
-        // ==============================
+
         Machine saved = machineRepository.save(existingMachine);
 
-        log.info("PUT | Machine updated successfully | id={}", saved.getId());
+        log.info("Machine updated successfully | id={}", saved.getId());
 
         return machineMapper.toDto(saved);
     }
@@ -279,12 +299,20 @@ public class MachineService {
      * @return the entity.
      */
     @Transactional(readOnly = true)
-    public Optional<MachineDTO> findOne(Long id) {
+    public MachineDTO findOne(Long id) {
         log.info("Request to get Machine : {}", id);
 
-        Optional<MachineDTO> results = machineRepository.findById(id).map(machineMapper::toDto);
-        log.info("Found Machine with id {} ", id);
-        return results;
+        Machine machine = machineRepository
+            .findById(id)
+            .orElseThrow(() -> {
+                log.warn("Machine not found | id={}", id);
+
+                return new NotFoundAlertException("Machine not found with id " + id, "Machine", "machineNotFound");
+            });
+
+        log.info("Found Machine with id {}", id);
+
+        return machineMapper.toDto(machine);
     }
 
     /**
@@ -293,8 +321,29 @@ public class MachineService {
      * @param id the id of the entity.
      */
     public void delete(Long id) {
-        log.debug("Request to delete Machine : {}", id);
-        machineRepository.deleteById(id);
+        log.info("Request to delete Machine : {}", id);
+        Machine machine = machineRepository
+            .findById(id)
+            .orElseThrow(() -> {
+                log.warn("Machine not found | id={}", id);
+
+                return new NotFoundAlertException("Machine not found with id " + id, "Machine", "machineNotFound");
+            });
+        String login = SecurityUtils
+            .getCurrentUserLogin()
+            .orElseThrow(() -> new NotFoundAlertException("User not found", "User", "userNotFound"));
+
+        boolean isAdmin = SecurityUtils.hasCurrentUserThisAuthority("ROLE_ADMIN");
+
+        if (!isAdmin && !machine.getUser().getLogin().equals(login)) {
+            log.warn("Unauthorized delete attempt | machineId={} | login={}", machine.getId(), login);
+
+            throw new BadRequestAlertException("You are not allowed to delete this machine", "Machine", "forbidden");
+        }
+
+        machineRepository.delete(machine);
+
+        log.info("Machine deleted successfully | id={}", id);
     }
 
     /**
@@ -360,10 +409,12 @@ public class MachineService {
         List<Machine> machines = machineRepository.findMachinesWithoutOperator();
 
         if (machines.isEmpty()) {
-            log.info("No machines found without active operator");
-        } else {
-            log.info("Found {} machines without active operator", machines.size());
+            log.warn("No machines found without active operator");
+
+            throw new NotFoundAlertException("No machines available without operator", "Machine", "machinesWithoutOperatorNotFound");
         }
+
+        log.info("Found {} machines without active operator", machines.size());
 
         return machineMapper.toDto(machines);
     }
@@ -406,8 +457,15 @@ public class MachineService {
         }
 
         if (machines.isEmpty()) {
-            log.warn("No machines found");
-            return List.of();
+            if (isAdmin) {
+                log.warn("No machines found for ownerId={}", ownerId);
+
+                throw new NotFoundAlertException("No machines found for this partner", "Machine", "machinesNotFound");
+            }
+
+            log.warn("Partner has no machines | login={}", SecurityUtils.getCurrentUserLogin().orElse("UNKNOWN"));
+
+            throw new NotFoundAlertException("You don't have any machines", "Machine", "machinesNotFound");
         }
 
         log.info("Machines fetched | count={}", machines.size());

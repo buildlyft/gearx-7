@@ -25,8 +25,8 @@ public class NotFoundAlertException extends ErrorResponseException {
                 .instance()
                 .withStatus(HttpStatus.NOT_FOUND.value())
                 .withType(type)
-                .withTitle(defaultMessage)
-                .withProperty("message", "error." + errorKey)
+                .withTitle(HttpStatus.NOT_FOUND.getReasonPhrase())
+                .withProperty("message", defaultMessage)
                 .withProperty("params", entityName)
                 .build(),
             null

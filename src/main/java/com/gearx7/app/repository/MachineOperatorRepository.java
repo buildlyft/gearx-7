@@ -43,4 +43,6 @@ public interface MachineOperatorRepository extends JpaRepository<MachineOperator
         """
     )
     Optional<MachineOperator> findOneWithRelations(@Param("id") Long id);
+
+    Optional<MachineOperator> findByMachineId(Long machineId);
 }
