@@ -68,6 +68,17 @@ public class Booking implements Serializable {
     @Column(name = "cancelled_date")
     private Instant cancelledDate;
 
+    @Column(name = "customer_address")
+    private String customerAddress;
+
+    public String getCustomerAddress() {
+        return customerAddress;
+    }
+
+    public void setCustomerAddress(String customerAddress) {
+        this.customerAddress = customerAddress;
+    }
+
     public Instant getCancelledDate() {
         return cancelledDate;
     }
@@ -269,6 +280,7 @@ public class Booking implements Serializable {
             ", customerLat=" + getCustomerLat() +
             ", customerLong=" + getCustomerLong() +
             ", createdDate='" + getCreatedDate() + "'" +
+            ", customerAddress='" + getCustomerAddress() + "'" +
             "}";
     }
 }

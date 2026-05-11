@@ -6,6 +6,7 @@ import com.gearx7.app.domain.User;
 import com.gearx7.app.repository.*;
 import com.gearx7.app.security.AuthoritiesConstants;
 import com.gearx7.app.security.SecurityUtils;
+import com.gearx7.app.service.LocationIQService;
 import com.gearx7.app.service.dto.MachineDTO;
 import com.gearx7.app.service.mapper.MachineMapper;
 import com.gearx7.app.web.rest.errors.BadRequestAlertException;
@@ -48,6 +49,8 @@ public class MachineService {
 
     private final MachineOperatorRepository machineOperatorRepository;
 
+    private final LocationIQService locationIQService;
+
     public MachineService(
         MachineRepository machineRepository,
         MachineMapper machineMapper,
@@ -55,7 +58,8 @@ public class MachineService {
         SubcategoryRepository subCategoryRepository,
         UserRepository userRepository,
         TypeRepository typeRepository,
-        MachineOperatorRepository machineOperatorRepository
+        MachineOperatorRepository machineOperatorRepository,
+        LocationIQService locationIQService
     ) {
         this.machineRepository = machineRepository;
         this.machineMapper = machineMapper;
@@ -64,6 +68,7 @@ public class MachineService {
         this.userRepository = userRepository;
         this.typeRepository = typeRepository;
         this.machineOperatorRepository = machineOperatorRepository;
+        this.locationIQService = locationIQService;
     }
 
     /**
@@ -97,7 +102,11 @@ public class MachineService {
         validateHierarchy(machineDTO.getTypeId(), machineDTO.getCategoryId(), machineDTO.getSubcategoryId());
 
         Machine machine = machineMapper.toEntity(machineDTO);
+        if (machine.getLatitude() != null && machine.getLongitude() != null) {
+            String address = locationIQService.getAddress(machine.getLatitude(), machine.getLongitude());
 
+            machine.setMachineAddress(address);
+        }
         // ADMIN Flow: specify partner user
         if (SecurityUtils.hasCurrentUserThisAuthority(AuthoritiesConstants.ADMIN)) {
             log.debug("ADMIN flow: assigning partner user");
@@ -148,6 +157,11 @@ public class MachineService {
 
         // UPDATE NORMAL FIELDS
         machineMapper.partialUpdate(existingMachine, machineDTO);
+        if (existingMachine.getLatitude() != null && existingMachine.getLongitude() != null) {
+            String address = locationIQService.getAddress(existingMachine.getLatitude(), existingMachine.getLongitude());
+
+            existingMachine.setMachineAddress(address);
+        }
 
         // OPERATOR ASSIGNMENT
         if (machineDTO.getOperatorId() != null) {
@@ -228,8 +242,13 @@ public class MachineService {
 
         // UPDATE NORMAL FIELDS
         machineMapper.partialUpdate(existingMachine, machineDTO);
+        if (existingMachine.getLatitude() != null && existingMachine.getLongitude() != null) {
+            String address = locationIQService.getAddress(existingMachine.getLatitude(), existingMachine.getLongitude());
 
-        // OPERATOR ASSIGNMENT
+            existingMachine.setMachineAddress(address);
+        }
+
+        // OPERATOR ASSIGNMENTs
         if (machineDTO.getOperatorId() != null) {
             MachineOperator operator = machineOperatorRepository
                 .findById(machineDTO.getOperatorId())

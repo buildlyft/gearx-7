@@ -35,6 +35,9 @@ public interface MachineMapper extends EntityMapper<MachineDTO, Machine> {
     @Mapping(target = "login", source = "login")
     UserDTO toDtoUserLogin(User user);
 
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    void partialUpdate(@MappingTarget Machine entity, MachineDTO dto);
+
     /**
      * Maps a {@link Long} ID to a {@link Category} entity.
      *

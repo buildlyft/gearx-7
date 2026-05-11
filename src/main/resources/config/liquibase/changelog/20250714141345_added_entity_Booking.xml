@@ -109,5 +109,11 @@
         </addColumn>
     </changeSet>
 
+    <changeSet id="202605111700" author="Ganesh">
+        <addColumn tableName="booking">
+            <column name="customer_address" type="varchar(1000)"/>
+        </addColumn>
+    </changeSet>
+
 
 </databaseChangeLog>

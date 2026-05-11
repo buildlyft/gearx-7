@@ -8,6 +8,7 @@ import com.gearx7.app.repository.BookingRepository;
 import com.gearx7.app.repository.MachineRepository;
 import com.gearx7.app.repository.UserRepository;
 import com.gearx7.app.security.SecurityUtils;
+import com.gearx7.app.service.LocationIQService;
 import com.gearx7.app.service.interfaces.SmsService;
 import com.gearx7.app.web.rest.errors.BadRequestAlertException;
 import com.gearx7.app.web.rest.errors.NotFoundAlertException;
@@ -42,6 +43,8 @@ public class BookingService {
 
     private final SmsService smsService;
 
+    private final LocationIQService locationIQService;
+
     //    private final MachineOperatorRepository machineOperatorRepository;
     //
     //    private final VehicleDocumentRepository vehicleDocumentRepository;
@@ -50,7 +53,8 @@ public class BookingService {
         BookingRepository bookingRepository,
         MachineRepository machineRepository,
         UserRepository userRepository,
-        SmsService smsService
+        SmsService smsService,
+        LocationIQService locationIQService
         //  MachineOperatorRepository machineOperatorRepository,
         // VehicleDocumentRepository vehicleDocumentRepository
     ) {
@@ -58,6 +62,7 @@ public class BookingService {
         this.machineRepository = machineRepository;
         this.userRepository = userRepository;
         this.smsService = smsService;
+        this.locationIQService = locationIQService;
         //this.machineOperatorRepository=machineOperatorRepository;
         // this.vehicleDocumentRepository=vehicleDocumentRepository;
     }
@@ -112,6 +117,11 @@ public class BookingService {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Machine is already booked for the selected time period.");
             }
         }
+        if (booking.getCustomerLat() != null && booking.getCustomerLong() != null) {
+            String address = locationIQService.getAddress(booking.getCustomerLat(), booking.getCustomerLong());
+
+            booking.setCustomerAddress(address);
+        }
 
         Booking savedBooking = bookingRepository.save(booking);
         log.info("Booking saved successfully | bookingId={}", savedBooking.getId());
@@ -143,6 +153,11 @@ public class BookingService {
      */
     public Booking update(Booking booking) {
         log.debug("Request to update Booking : {}", booking);
+        if (booking.getCustomerLat() != null && booking.getCustomerLong() != null) {
+            String address = locationIQService.getAddress(booking.getCustomerLat(), booking.getCustomerLong());
+
+            booking.setCustomerAddress(address);
+        }
         return bookingRepository.save(booking);
     }
 
@@ -208,6 +223,12 @@ public class BookingService {
                     log.info("Updating customerLong | bookingId={} | value={}", existingBooking.getId(), booking.getCustomerLong());
 
                     existingBooking.setCustomerLong(booking.getCustomerLong());
+                }
+
+                if (existingBooking.getCustomerLat() != null && existingBooking.getCustomerLong() != null) {
+                    String address = locationIQService.getAddress(existingBooking.getCustomerLat(), existingBooking.getCustomerLong());
+
+                    existingBooking.setCustomerAddress(address);
                 }
 
                 if (booking.getCreatedDate() != null) {

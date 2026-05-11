@@ -1,10 +1,12 @@
 package com.gearx7.app.service.dto;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import java.io.Serializable;
 import java.time.Instant;
 import java.time.LocalDate;
-import java.util.List;
 
 public class MachineOperatorDetailsDTO implements Serializable {
 
@@ -13,15 +15,24 @@ public class MachineOperatorDetailsDTO implements Serializable {
     /* ===== IDs ===== */
 
     private Long operatorId; // response
-    private Long partnerId; // request
+    private Long partnerId; // response
     private Long machineId; // response
     private boolean active; // response
 
     /* ===== Operator Info ===== */
-
+    @NotBlank(message = "Please Enter Driver name")
+    @Size(min = 3, max = 100, message = "Driver name must be between 3 and 100 characters")
     private String driverName;
+
+    @NotBlank(message = "Please Enter Operator contact")
+    @Pattern(regexp = "^[0-9]\\d{9}$", message = "Invalid mobile number")
     private String operatorContact;
+
+    @NotBlank(message = "Please Enter Address")
+    @Size(min = 3, max = 1000, message = "Address must be between 3 and 1000 characters")
     private String address;
+
+    @NotNull(message = "Please Select License issue date")
     private LocalDate licenseIssueDate;
 
     private String docUrl;

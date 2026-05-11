@@ -272,5 +272,11 @@
 
     </changeSet>
 
+    <changeSet id="202605111711" author="Ganesh">
+        <addColumn tableName="machine">
+            <column name="machine_address" type="varchar(1000)"/>
+        </addColumn>
+    </changeSet>
+
 
 </databaseChangeLog>

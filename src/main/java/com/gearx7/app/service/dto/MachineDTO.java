@@ -2,7 +2,9 @@ package com.gearx7.app.service.dto;
 
 import com.gearx7.app.domain.MachineOperator;
 import com.gearx7.app.domain.enumeration.MachineStatus;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -16,36 +18,42 @@ public class MachineDTO implements Serializable {
 
     private Long id;
 
-    @NotNull
+    @NotBlank(message = "Please Enter Machine name")
+    @Size(min = 3, max = 100, message = "Machine name must be between 3 and 100 characters")
     private String name;
 
-    @NotNull
+    @NotBlank(message = "Please Select Brand")
+    @Size(min = 2, max = 50, message = "Brand must be between 2 and 50 characters")
     private String brand;
 
     private String tag;
 
+    @NotBlank(message = "Please Enter Model")
+    @Size(min = 2, max = 50, message = "Model must be between 2 and 50 characters")
     private String model;
 
     private String vinNumber;
 
+    @NotBlank(message = "Please Enter Chassis Number")
     private String chassisNumber;
 
     private String description;
 
+    @NotNull(message = "Please Select Capacity in Ton")
     private Integer capacityTon;
 
-    @NotNull
+    @NotNull(message = "Please Enter Rate Per Hour")
     private BigDecimal ratePerHour;
 
-    @NotNull
+    @NotNull(message = "Please Enter Rate Per Day")
     private BigDecimal ratePerDay;
 
     private Integer minimumUsageHours;
 
-    @NotNull
+    @NotNull(message = "Please Select Latitude")
     private Double latitude;
 
-    @NotNull
+    @NotNull(message = "Please Select Longitude")
     private Double longitude;
 
     private BigDecimal transportationCharge;
@@ -70,13 +78,13 @@ public class MachineDTO implements Serializable {
 
     private BigDecimal totalDailyRate;
 
-    @NotNull(message = "Type is required")
+    @NotNull(message = "Please Select  Type")
     private Long typeId;
 
-    @NotNull(message = "Category is required")
+    @NotNull(message = "Please Select Category")
     private Long categoryId;
 
-    @NotNull(message = "Subcategory is required")
+    @NotNull(message = "Please Select Subcategory")
     private Long subcategoryId;
 
     private Long operatorId;
@@ -93,7 +101,18 @@ public class MachineDTO implements Serializable {
 
     private String insuranceNo;
 
+    @NotNull(message = "Please Enter Manufacturing Date")
     private Long mfgDate;
+
+    private String machineAddress;
+
+    public String getMachineAddress() {
+        return machineAddress;
+    }
+
+    public void setMachineAddress(String address) {
+        this.machineAddress = address;
+    }
 
     public Long getOperatorId() {
         return operatorId;
@@ -484,6 +503,10 @@ public class MachineDTO implements Serializable {
             '\'' +
             ", mfgDate=" +
             mfgDate +
+            '\'' +
+            ", address='" +
+            getMachineAddress() +
+            '\'' +
             '}'
         );
     }

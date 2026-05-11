@@ -28,6 +28,24 @@ public class Msg91SmsService implements SmsService {
     @Value("${sms.msg91.sender-id}")
     private String senderId;
 
+    @Value("${sms.templates.booking-created-user}")
+    private String bookingCreatedUserTemplate;
+
+    @Value("${sms.templates.booking-created-partner}")
+    private String bookingCreatedPartnerTemplate;
+
+    @Value("${sms.templates.booking-accepted}")
+    private String bookingAcceptedTemplate;
+
+    @Value("${sms.templates.booking-rejected}")
+    private String bookingRejectedTemplate;
+
+    @Value("${sms.templates.booking-cancelled-user}")
+    private String bookingCancelledUserTemplate;
+
+    @Value("${sms.templates.booking-cancelled-partner}")
+    private String bookingCancelledPartnerTemplate;
+
     private final RestTemplate restTemplate = new RestTemplate();
 
     // =========================================================
@@ -55,23 +73,16 @@ public class Msg91SmsService implements SmsService {
 
         String endDate = DateTimeUtil.formatInstantForSms(booking.getEndDateTime());
 
-        String message =
-            "Hello " +
-            user.getFirstName() +
-            " " +
-            user.getLastName() +
-            ", your booking " +
-            booking.getId() +
-            " has been created successfully." +
-            " Machine: " +
-            booking.getMachine().getBrand() +
-            ". From: " +
-            startDate +
-            ". To: " +
-            endDate +
-            ". Status: " +
-            booking.getStatus() +
-            ". Thanks for choosing Gearx7.";
+        String message = String.format(
+            bookingCreatedUserTemplate,
+            user.getFirstName(),
+            user.getLastName(),
+            booking.getId(),
+            booking.getMachine().getBrand(),
+            startDate,
+            endDate,
+            booking.getStatus()
+        );
 
         sendSms(user.getPhone(), message, "BOOKING_CREATED_USER", booking.getId());
     }
@@ -101,25 +112,17 @@ public class Msg91SmsService implements SmsService {
 
         String endDate = DateTimeUtil.formatInstantForSms(booking.getEndDateTime());
 
-        String message =
-            "Hello " +
-            partner.getFirstName() +
-            " " +
-            partner.getLastName() +
-            ", your machine has been booked successfully." +
-            " Booking ID: " +
-            booking.getId() +
-            ". Customer: " +
-            booking.getUser().getFirstName() +
-            ". Machine: " +
-            booking.getMachine().getBrand() +
-            ". From: " +
-            startDate +
-            ". To: " +
-            endDate +
-            ". Status: " +
-            booking.getStatus() +
-            ". Thanks for choosing Gearx7.";
+        String message = String.format(
+            bookingCreatedPartnerTemplate,
+            partner.getFirstName(),
+            partner.getLastName(),
+            booking.getId(),
+            booking.getUser().getFirstName(),
+            booking.getMachine().getBrand(),
+            startDate,
+            endDate,
+            booking.getStatus()
+        );
 
         sendSms(partner.getPhone(), message, "BOOKING_CREATED_PARTNER", booking.getId());
     }
@@ -144,16 +147,7 @@ public class Msg91SmsService implements SmsService {
             user.getId(),
             maskPhone(user.getPhone())
         );
-
-        String message =
-            "Hello " +
-            user.getFirstName() +
-            " " +
-            user.getLastName() +
-            ", your booking " +
-            booking.getId() +
-            " has been ACCEPTED." +
-            " Thank you for choosing Gearx7.";
+        String message = String.format(bookingAcceptedTemplate, user.getFirstName(), user.getLastName(), booking.getId());
 
         sendSms(user.getPhone(), message, "BOOKING_ACCEPTED", booking.getId());
     }
@@ -179,16 +173,7 @@ public class Msg91SmsService implements SmsService {
             maskPhone(user.getPhone())
         );
 
-        String message =
-            "Hello " +
-            user.getFirstName() +
-            " " +
-            user.getLastName() +
-            ", your booking " +
-            booking.getId() +
-            " has been REJECTED." +
-            " Please try another machine." +
-            " Thank you for choosing Gearx7.";
+        String message = String.format(bookingRejectedTemplate, user.getFirstName(), user.getLastName(), booking.getId());
 
         sendSms(user.getPhone(), message, "BOOKING_REJECTED", booking.getId());
     }
@@ -214,15 +199,7 @@ public class Msg91SmsService implements SmsService {
             maskPhone(user.getPhone())
         );
 
-        String message =
-            "Hello " +
-            user.getFirstName() +
-            " " +
-            user.getLastName() +
-            ", your booking " +
-            booking.getId() +
-            " has been cancelled successfully." +
-            " Thank you for choosing Gearx7.";
+        String message = String.format(bookingCancelledUserTemplate, user.getFirstName(), user.getLastName(), booking.getId());
 
         sendSms(user.getPhone(), message, "BOOKING_CANCELLED_USER", booking.getId());
     }
@@ -248,17 +225,13 @@ public class Msg91SmsService implements SmsService {
             maskPhone(partner.getPhone())
         );
 
-        String message =
-            "Hello " +
-            partner.getFirstName() +
-            " " +
-            partner.getLastName() +
-            ", booking " +
-            booking.getId() +
-            " has been cancelled by the customer." +
-            " Machine: " +
-            booking.getMachine().getBrand() +
-            ". Thank you for choosing Gearx7.";
+        String message = String.format(
+            bookingCancelledPartnerTemplate,
+            partner.getFirstName(),
+            partner.getLastName(),
+            booking.getId(),
+            booking.getMachine().getBrand()
+        );
 
         sendSms(partner.getPhone(), message, "BOOKING_CANCELLED_PARTNER", booking.getId());
     }

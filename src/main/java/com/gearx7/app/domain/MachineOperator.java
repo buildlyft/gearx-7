@@ -2,7 +2,9 @@ package com.gearx7.app.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import java.io.Serializable;
 import java.time.Instant;
@@ -21,6 +23,8 @@ public class MachineOperator implements Serializable {
     private Long id;
 
     @Column(name = "driver_name")
+    @NotBlank(message = "Please Enter Driver name")
+    @Size(min = 3, max = 100, message = "Driver name must be between 3 and 100 characters")
     private String driverName;
 
     @OneToOne(mappedBy = "operator")
@@ -28,12 +32,16 @@ public class MachineOperator implements Serializable {
     private Machine machine;
 
     @Column(name = "operator_contact")
+    @NotBlank(message = "Please Enter Operator contact")
+    @Pattern(regexp = "^[0-9]\\d{9}$", message = "Invalid mobile number")
     private String operatorContact;
 
     @Column(name = "license_issue_date")
+    @NotNull(message = "License issue date is required")
     private LocalDate licenseIssueDate;
 
     @Column(name = "address", length = 1000)
+    @NotBlank(message = "Address is required")
     private String address;
 
     @Column(name = "created_at")

@@ -3,6 +3,7 @@ package com.gearx7.app.domain;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.gearx7.app.domain.enumeration.MachineStatus;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -29,7 +30,6 @@ public class Machine implements Serializable {
     @Column(name = "name")
     private String name;
 
-    @NotNull
     @Column(name = "brand", nullable = false)
     private String brand;
 
@@ -51,22 +51,21 @@ public class Machine implements Serializable {
     @Column(name = "capacity_ton")
     private Integer capacityTon;
 
-    @NotNull
     @Column(name = "rate_per_hour", precision = 21, scale = 2, nullable = false)
     private BigDecimal ratePerHour;
 
-    @NotNull
+    @NotNull(message = "Please Enter Rate Per Day")
     @Column(name = "rate_per_day", precision = 21, scale = 2, nullable = false)
     private BigDecimal ratePerDay;
 
     @Column(name = "minimum_usage_hours")
     private Integer minimumUsageHours;
 
-    @NotNull
+    @NotNull(message = "Please Select Latitude")
     @Column(name = "latitude", nullable = false)
     private Double latitude;
 
-    @NotNull
+    @NotNull(message = "Please Select Longitude")
     @Column(name = "longitude", nullable = false)
     private Double longitude;
 
@@ -79,12 +78,12 @@ public class Machine implements Serializable {
     @Column(name = "serviceability_range_km")
     private Integer serviceabilityRangeKm;
 
-    @NotNull
+    @NotNull(message = "Please Select Status")
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     private MachineStatus status;
 
-    @NotNull
+    @NotNull(message = "Please Enter Created Date")
     @Column(name = "created_date", nullable = false)
     private Instant createdDate;
 
@@ -94,7 +93,7 @@ public class Machine implements Serializable {
     @ManyToOne(fetch = FetchType.LAZY)
     @JsonIgnoreProperties(value = { "categories" }, allowSetters = true)
     @JoinColumn(name = "type_id", nullable = false)
-    @NotNull(message = "Type is required")
+    @NotNull(message = "Please Select Type")
     private Type typeEntity;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -134,6 +133,17 @@ public class Machine implements Serializable {
 
     @Column(name = "mfg_date")
     private Long mfgDate;
+
+    @Column(name = "machine_address")
+    private String machineAddress;
+
+    public String getMachineAddress() {
+        return machineAddress;
+    }
+
+    public void setMachineAddress(String machineAddress) {
+        this.machineAddress = machineAddress;
+    }
 
     public MachineOperator getOperator() {
         return operator;
@@ -575,6 +585,9 @@ public class Machine implements Serializable {
             '\'' +
             ", mfgDate=" +
             mfgDate +
+            ", address='" +
+            machineAddress +
+            '\'' +
             '}'
         );
     }

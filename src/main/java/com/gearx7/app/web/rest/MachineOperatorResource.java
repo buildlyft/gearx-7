@@ -4,6 +4,7 @@ import com.gearx7.app.repository.MachineOperatorRepository;
 import com.gearx7.app.service.dto.MachineOperatorDetailsDTO;
 import com.gearx7.app.service.interfaces.MachineOperatorService;
 import com.gearx7.app.web.rest.errors.BadRequestAlertException;
+import jakarta.validation.Valid;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,7 +48,7 @@ public class MachineOperatorResource {
     @PostMapping(value = "/create_and_assign", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_PARTNER')") // Only admin and partner can create and assign operators
     public ResponseEntity<MachineOperatorDetailsDTO> createOperator(
-        @ModelAttribute MachineOperatorDetailsDTO dto,
+        @ModelAttribute @Valid MachineOperatorDetailsDTO dto,
         @RequestPart(value = "photo", required = true) MultipartFile photo,
         @RequestPart(value = "license", required = true) MultipartFile license
     ) {

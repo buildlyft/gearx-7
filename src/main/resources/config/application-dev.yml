@@ -107,6 +107,19 @@ cloudinary:
 
 # this is SMS service congiguration
 sms:
+  templates:
+    booking-created-user: 'Hello %s %s, your booking %s has been created successfully. Machine: %s. From: %s. To: %s. Status: %s. Thanks for choosing Gearx7.'
+
+    booking-created-partner: 'Hello %s %s, your machine has been booked successfully. Booking ID: %s. Customer: %s. Machine: %s. From: %s. To: %s. Status: %s. Thanks for choosing Gearx7.'
+
+    booking-accepted: 'Hello %s %s, your booking %s has been ACCEPTED. Thank you for choosing Gearx7.'
+
+    booking-rejected: 'Hello %s %s, your booking %s has been REJECTED. Please try another machine. Thank you for choosing Gearx7.'
+
+    booking-cancelled-user: 'Hello %s %s, your booking %s has been cancelled successfully. Thank you for choosing Gearx7.'
+
+    booking-cancelled-partner: 'Hello %s %s, booking %s has been cancelled by the customer. Machine: %s. Thank you for choosing Gearx7.'
+
   msg91:
     auth-key: 165660AijPO1tt8riE596c8eb4
     sender-id: VEHTRK
@@ -117,3 +130,7 @@ otp:
     auth-key: 165660AijPO1tt8riE596c8eb4
     sender-id: VEHTRK
     otp-template-id: 695e081b268710369224fc79
+
+locationiq:
+  api-key: pk.185919f9a8d1c5539f39a4da2b58b488
+  url: https://us1.locationiq.com/v1/reverse
