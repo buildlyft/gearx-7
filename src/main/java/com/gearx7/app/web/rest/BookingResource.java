@@ -6,6 +6,7 @@ import com.gearx7.app.repository.UserRepository;
 import com.gearx7.app.security.AuthoritiesConstants;
 import com.gearx7.app.security.SecurityUtils;
 import com.gearx7.app.service.BookingService;
+import com.gearx7.app.service.dto.ApiResponse;
 import com.gearx7.app.web.rest.errors.BadRequestAlertException;
 import com.gearx7.app.web.rest.errors.FailedValidator;
 import com.gearx7.app.web.rest.errors.NotFoundAlertException;
@@ -24,6 +25,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -67,7 +69,7 @@ public class BookingResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PostMapping("")
-    public ResponseEntity<Booking> createBooking(@Valid @RequestBody Booking booking) throws URISyntaxException {
+    public ResponseEntity<ApiResponse<Booking>> createBooking(@Valid @RequestBody Booking booking) throws URISyntaxException {
         log.info(
             "REST REQUEST for Creating booking | machineId={}, userId={}, startDateTime={}, endDateTime={}",
             booking.getMachine() != null ? booking.getMachine().getId() : null,
@@ -116,7 +118,7 @@ public class BookingResource {
 
         Booking finalResult = bookingWithRelations.orElse(result);
 
-        return ResponseEntity.created(new URI("/api/bookings/" + finalResult.getId())).body(finalResult);
+        return ResponseEntity.status(HttpStatus.CREATED).body(new ApiResponse<>(true, 201, "Booking created successfully", finalResult));
     }
 
     /**
@@ -130,27 +132,20 @@ public class BookingResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PutMapping("/{id}")
-    public ResponseEntity<Booking> updateBooking(
+    public ResponseEntity<ApiResponse<Booking>> updateBooking(
         @PathVariable(value = "id", required = false) final Long id,
         @Valid @RequestBody Booking booking
     ) throws URISyntaxException {
         log.debug("REST request to update Booking : {}, {}", id, booking);
         if (booking.getId() == null) {
-            throw new BadRequestAlertException("Invalid id", ENTITY_NAME, "idnull");
+            throw new BadRequestAlertException("Invalid id", ENTITY_NAME, "IdNull");
         }
         if (!Objects.equals(id, booking.getId())) {
-            throw new BadRequestAlertException("Invalid ID", ENTITY_NAME, "idinvalid");
-        }
-
-        if (!bookingRepository.existsById(id)) {
-            throw new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound");
+            throw new BadRequestAlertException("Invalid ID", ENTITY_NAME, "IdInvalid");
         }
 
         Booking result = bookingService.update(booking);
-        return ResponseEntity
-            .ok()
-            .headers(HeaderUtil.createEntityUpdateAlert(applicationName, false, ENTITY_NAME, booking.getId().toString()))
-            .body(result);
+        return ResponseEntity.ok(new ApiResponse<>(true, 200, "Booking updated successfully", result));
     }
 
     /**
@@ -165,28 +160,27 @@ public class BookingResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PatchMapping(value = "/{id}", consumes = { "application/json", "application/merge-patch+json" })
-    public ResponseEntity<Booking> partialUpdateBooking(
+    public ResponseEntity<ApiResponse<Booking>> partialUpdateBooking(
         @PathVariable(value = "id", required = false) final Long id,
         @NotNull @RequestBody Booking booking
     ) throws URISyntaxException {
         log.debug("REST request to partial update Booking partially : {}, {}", id, booking);
         if (booking.getId() == null) {
-            throw new BadRequestAlertException("Invalid id", ENTITY_NAME, "idnull");
+            throw new BadRequestAlertException("Invalid id", ENTITY_NAME, "IdNull");
         }
         if (!Objects.equals(id, booking.getId())) {
-            throw new BadRequestAlertException("Invalid ID", ENTITY_NAME, "idinvalid");
+            throw new BadRequestAlertException("Invalid ID", ENTITY_NAME, "IdInvalid");
         }
 
         if (!bookingRepository.existsById(id)) {
-            throw new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound");
+            throw new NotFoundAlertException("Booking not found with ID: " + id, ENTITY_NAME, "BookingIdNotFound");
         }
 
         Optional<Booking> result = bookingService.partialUpdate(booking);
 
-        return ResponseUtil.wrapOrNotFound(
-            result,
-            HeaderUtil.createEntityUpdateAlert(applicationName, false, ENTITY_NAME, booking.getId().toString())
-        );
+        Booking updatedBooking = result.orElseThrow(() -> new NotFoundAlertException("Booking not found", ENTITY_NAME, "bookingNotFound"));
+
+        return ResponseEntity.ok(new ApiResponse<>(true, 200, "Booking updated successfully", updatedBooking));
     }
 
     /**
@@ -197,7 +191,7 @@ public class BookingResource {
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of bookings in body.
      */
     @GetMapping("")
-    public ResponseEntity<List<Booking>> getAllBookings(
+    public ResponseEntity<ApiResponse<List<Booking>>> getAllBookings(
         @PageableDefault(sort = "id", direction = Sort.Direction.DESC) Pageable pageable,
         @RequestParam(name = "eagerload", required = false, defaultValue = "true") boolean eagerload
     ) {
@@ -213,7 +207,13 @@ public class BookingResource {
             page = bookingRepository.findByUserIsCurrentUser(pageable);
         }
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
-        return ResponseEntity.ok().headers(headers).body(page.getContent());
+
+        return ResponseEntity
+            .ok()
+            .headers(headers)
+            .body(
+                new ApiResponse<>(true, 200, page.isEmpty() ? "No bookings available" : "Bookings fetched successfully", page.getContent())
+            );
     }
 
     /**
@@ -223,10 +223,13 @@ public class BookingResource {
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the booking, or with status {@code 404 (Not Found)}.
      */
     @GetMapping("/{id}")
-    public ResponseEntity<Booking> getBooking(@PathVariable("id") Long id) {
+    public ResponseEntity<ApiResponse<Booking>> getBooking(@PathVariable("id") Long id) {
         log.debug("REST request to get Booking : {}", id);
-        Optional<Booking> booking = bookingService.findOne(id);
-        return ResponseUtil.wrapOrNotFound(booking);
+        Booking booking = bookingService
+            .findOne(id)
+            .orElseThrow(() -> new NotFoundAlertException("Booking not found with id " + id, ENTITY_NAME, "bookingNotFound"));
+
+        return ResponseEntity.ok(new ApiResponse<>(true, 200, "Booking fetched successfully", booking));
     }
 
     /**
@@ -236,10 +239,10 @@ public class BookingResource {
      * @return the {@link ResponseEntity} with status {@code 204 (NO_CONTENT)}.
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteBooking(@PathVariable("id") Long id) {
+    public ResponseEntity<ApiResponse<?>> deleteBooking(@PathVariable("id") Long id) {
         log.debug("REST request to delete Booking : {}", id);
         bookingService.delete(id);
-        return ResponseEntity.ok("Booking deleted successfully");
+        return ResponseEntity.ok(new ApiResponse<>(true, 200, "Booking deleted successfully", null));
     }
 
     /**
@@ -252,7 +255,7 @@ public class BookingResource {
      */
     @GetMapping("/by-owner")
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_PARTNER')")
-    public ResponseEntity<List<Booking>> getBookingsByOwner(
+    public ResponseEntity<ApiResponse<List<Booking>>> getBookingsByOwner(
         @RequestParam(required = false) Long ownerId,
         @PageableDefault(sort = "id", direction = Sort.Direction.DESC) Pageable pageable
     ) {
@@ -268,10 +271,15 @@ public class BookingResource {
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
 
         log.info("REST GET Bookings SUCCESS | totalElements={} | totalPages={}", page.getTotalElements(), page.getTotalPages());
-        if (page.isEmpty()) {
+        /*if (page.isEmpty()) {
             throw new NotFoundAlertException("You don't have any bookings", "Booking", "bookingsNotFound");
-        }
+        }*/
 
-        return ResponseEntity.ok().headers(headers).body(page.getContent());
+        return ResponseEntity
+            .ok()
+            .headers(headers)
+            .body(
+                new ApiResponse<>(true, 200, page.isEmpty() ? "No bookings available" : "Bookings fetched successfully", page.getContent())
+            );
     }
 }

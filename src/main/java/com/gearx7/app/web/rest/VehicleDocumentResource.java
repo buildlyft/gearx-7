@@ -1,5 +1,6 @@
 package com.gearx7.app.web.rest;
 
+import com.gearx7.app.service.dto.ApiResponse;
 import com.gearx7.app.service.dto.VehicleDocumentDTO;
 import com.gearx7.app.service.dto.VehicleDocumentResponseDTO;
 import com.gearx7.app.service.interfaces.VehicleDocService;
@@ -28,7 +29,7 @@ public class VehicleDocumentResource {
     // Upload documents
     @PostMapping("/bulk-upload")
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_PARTNER')")
-    public ResponseEntity<VehicleDocumentResponseDTO> upload(
+    public ResponseEntity<ApiResponse<VehicleDocumentResponseDTO>> upload(
         @RequestParam Long machineId,
         @RequestParam(required = false) Long uploadedBy,
         @RequestParam MultipartFile[] files
@@ -50,40 +51,61 @@ public class VehicleDocumentResource {
 
         log.info("REST RESPONSE | Upload success | machineId={}", machineId);
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        return ResponseEntity
+            .status(HttpStatus.CREATED)
+            .body(new ApiResponse<>(true, 201, "Vehicle documents uploaded successfully for machine id: " + machineId, response));
     }
 
     // Get machine docs
     @GetMapping("/machine/{machineId}")
-    public ResponseEntity<VehicleDocumentResponseDTO> getMachineDocs(@PathVariable Long machineId) {
+    public ResponseEntity<ApiResponse<VehicleDocumentResponseDTO>> getMachineDocs(@PathVariable Long machineId) {
         log.info("REST REQUEST | Get machine documents | machineId={}", machineId);
 
-        return ResponseEntity.ok(vehicleDocService.getMachineDocuments(machineId));
+        VehicleDocumentResponseDTO response = vehicleDocService.getMachineDocuments(machineId);
+
+        return ResponseEntity.ok(
+            new ApiResponse<>(
+                true,
+                200,
+                response.getDocuments().isEmpty() ? "No vehicle documents available" : "Vehicle documents fetched successfully",
+                response
+            )
+        );
     }
 
     // Get all docs
     @GetMapping("/all")
-    public ResponseEntity<List<VehicleDocumentResponseDTO>> getAllDocs() {
+    public ResponseEntity<ApiResponse<List<VehicleDocumentResponseDTO>>> getAllDocs() {
         log.info("REST REQUEST | Get all documents");
-        return ResponseEntity.ok(vehicleDocService.getAllDocuments());
+        List<VehicleDocumentResponseDTO> response = vehicleDocService.getAllDocuments();
+
+        return ResponseEntity.ok(
+            new ApiResponse<>(
+                true,
+                200,
+                response.isEmpty() ? "No vehicle documents available" : "Vehicle documents fetched successfully",
+                response
+            )
+        );
     }
 
     // ================= GET SINGLE DOCUMENT =================
     @GetMapping("/{id}")
-    public ResponseEntity<VehicleDocumentDTO> getDocument(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<VehicleDocumentDTO>> getDocument(@PathVariable Long id) {
         log.info("REST REQUEST | Get document by id | id={}", id);
 
         VehicleDocumentDTO dto = vehicleDocService.getDocumentById(id);
-        return ResponseEntity.ok(dto);
+
+        return ResponseEntity.ok(new ApiResponse<>(true, 200, "Vehicle document fetched successfully", dto));
     }
 
     // ================= DELETE DOCUMENT =================
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_PARTNER')")
-    public ResponseEntity<String> deleteDocument(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<?>> deleteDocument(@PathVariable Long id) {
         log.info("REST REQUEST | Delete document | id={}", id);
 
         vehicleDocService.deleteDocument(id);
-        return ResponseEntity.ok("Document deleted successfully");
+        return ResponseEntity.ok(new ApiResponse<>(true, 200, "Vehicle document deleted successfully", null));
     }
 }

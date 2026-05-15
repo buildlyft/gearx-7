@@ -100,6 +100,10 @@ jhipster:
 
 # application:
 
+gearx7:
+  machine:
+    search-radius-km: 15.0
+
 cloudinary:
   cloud_name: dlszistcj
   api_key: 698842318943615

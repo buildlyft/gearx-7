@@ -1,6 +1,6 @@
 package com.gearx7.app.web.rest;
 
-import com.gearx7.app.repository.MachineOperatorRepository;
+import com.gearx7.app.service.dto.ApiResponse;
 import com.gearx7.app.service.dto.MachineOperatorDetailsDTO;
 import com.gearx7.app.service.interfaces.MachineOperatorService;
 import com.gearx7.app.web.rest.errors.BadRequestAlertException;
@@ -15,7 +15,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import tech.jhipster.web.util.HeaderUtil;
 
 @RestController
 @RequestMapping("/api/machine-operators")
@@ -47,7 +46,7 @@ public class MachineOperatorResource {
      */
     @PostMapping(value = "/create_and_assign", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_PARTNER')") // Only admin and partner can create and assign operators
-    public ResponseEntity<MachineOperatorDetailsDTO> createOperator(
+    public ResponseEntity<ApiResponse<MachineOperatorDetailsDTO>> createOperator(
         @ModelAttribute @Valid MachineOperatorDetailsDTO dto,
         @RequestPart(value = "photo", required = true) MultipartFile photo,
         @RequestPart(value = "license", required = true) MultipartFile license
@@ -62,12 +61,14 @@ public class MachineOperatorResource {
 
         log.info("REST Operator created successfully | operatorId={}", result.getOperatorId());
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(result);
+        return ResponseEntity
+            .status(HttpStatus.CREATED)
+            .body(new ApiResponse<>(true, 201, "Operator created successfully with id " + result.getOperatorId(), result));
     }
 
     @PatchMapping(value = "/{operatorId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_PARTNER')")
-    public ResponseEntity<MachineOperatorDetailsDTO> partialUpdateOperator(
+    public ResponseEntity<ApiResponse<MachineOperatorDetailsDTO>> partialUpdateOperator(
         @PathVariable Long operatorId,
         @ModelAttribute MachineOperatorDetailsDTO dto,
         @RequestPart(value = "photo", required = false) MultipartFile photo,
@@ -79,7 +80,7 @@ public class MachineOperatorResource {
 
         log.info("REST PATCH Operator SUCCESS | operatorId={}", operatorId);
 
-        return ResponseEntity.ok(result);
+        return ResponseEntity.ok(new ApiResponse<>(true, 200, "Operator updated successfully with id " + result.getOperatorId(), result));
     }
 
     /**
@@ -89,7 +90,7 @@ public class MachineOperatorResource {
      */
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_PARTNER')") // Only admin and partner can delete operators
-    public ResponseEntity<String> deleteMachineOperator(@PathVariable("id") Long operatorId) {
+    public ResponseEntity<ApiResponse<?>> deleteMachineOperator(@PathVariable("id") Long operatorId) {
         log.info("REST DELETE Operator START | operatorId={}", operatorId);
         if (operatorId == null) {
             log.error("Delete failed. Operator ID is null");
@@ -100,7 +101,7 @@ public class MachineOperatorResource {
 
         log.info("MachineOperator deleted successfully with ID : {}", operatorId);
 
-        return ResponseEntity.ok("Machine operator deleted successfully");
+        return ResponseEntity.ok(new ApiResponse<>(true, 200, "Operator deleted successfully with Id " + operatorId, null));
     }
 
     /**
@@ -110,14 +111,18 @@ public class MachineOperatorResource {
 
     @GetMapping("/all")
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_PARTNER')")
-    public ResponseEntity<List<MachineOperatorDetailsDTO>> getAllOperators() {
+    public ResponseEntity<ApiResponse<?>> getAllOperators() {
         log.info("REST Request to get all machine operators");
 
         List<MachineOperatorDetailsDTO> operators = machineOperatorService.getAllOperators();
 
         log.info("REST GET ALL Operators SUCCESS | count={}", operators.size());
 
-        return ResponseEntity.ok(operators);
+        if (operators.isEmpty()) {
+            return ResponseEntity.ok(new ApiResponse<>(true, 200, "Right now no machine operators available", List.of()));
+        }
+
+        return ResponseEntity.ok(new ApiResponse<>(true, 200, "Operators data fetched successfully for all partners", operators));
     }
 
     /**
@@ -126,19 +131,25 @@ public class MachineOperatorResource {
      */
     @GetMapping("/partner")
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_PARTNER')")
-    public ResponseEntity<List<MachineOperatorDetailsDTO>> getOperatorsByPartner() {
+    public ResponseEntity<ApiResponse<?>> getOperatorsByPartner() {
         log.info("REST GET Operators by Partner START");
 
         List<MachineOperatorDetailsDTO> result = machineOperatorService.getAllOperatorsByPartner();
 
         log.info("REST GET Operators by Partner SUCCESS | count={}", result.size());
 
-        return ResponseEntity.ok(result);
+        if (result.isEmpty()) {
+            log.info("No operators found for current partner");
+
+            return ResponseEntity.ok(new ApiResponse<>(true, 200, "Right now you don't have any operators", List.of()));
+        }
+
+        return ResponseEntity.ok(new ApiResponse<>(true, 200, "Operators fetched successfully for current partner", result));
     }
 
     @PutMapping(value = "/{operatorId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_PARTNER')")
-    public ResponseEntity<MachineOperatorDetailsDTO> updateOperator(
+    public ResponseEntity<ApiResponse<MachineOperatorDetailsDTO>> updateOperator(
         @PathVariable Long operatorId,
         @ModelAttribute MachineOperatorDetailsDTO dto,
         @RequestPart(value = "photo", required = false) MultipartFile photo,
@@ -150,26 +161,33 @@ public class MachineOperatorResource {
 
         log.info("REST PUT Operator SUCCESS | operatorId={}", operatorId);
 
-        return ResponseEntity.ok(result);
+        return ResponseEntity.ok(new ApiResponse<>(true, 200, "Operator updated successfully with id " + result.getOperatorId(), result));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<MachineOperatorDetailsDTO> getOperatorById(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<MachineOperatorDetailsDTO>> getOperatorById(@PathVariable Long id) {
         log.info("REST GET Operator BY ID | operatorId={}", id);
 
         MachineOperatorDetailsDTO dto = machineOperatorService.getById(id);
 
-        return ResponseEntity.ok(dto);
+        return ResponseEntity.ok(new ApiResponse<>(true, 200, "Operator data fetched successfully with id :" + id, dto));
     }
 
     @GetMapping("/machine/{machineId}")
-    public ResponseEntity<MachineOperatorDetailsDTO> getOperatorByMachineId(@PathVariable Long machineId) {
+    public ResponseEntity<ApiResponse<?>> getOperatorByMachineId(@PathVariable Long machineId) {
         log.info("REST Request to get operator by machineId={}", machineId);
 
         MachineOperatorDetailsDTO result = machineOperatorService.getOperatorByMachineId(machineId);
 
+        if (result == null) {
+            log.info("No operator found for machineId={}", machineId);
+            return ResponseEntity.ok(new ApiResponse<>(true, 200, "Right now machine doesn't have any operator", List.of()));
+        }
+
         log.info("REST GET Operator by machine SUCCESS | machineId={} | operatorId={}", machineId, result.getOperatorId());
 
-        return ResponseEntity.ok(result);
+        return ResponseEntity.ok(
+            new ApiResponse<>(true, 200, "Machine operator data fetched successfully for machineId " + machineId, result)
+        );
     }
 }

@@ -23,15 +23,15 @@ public class Booking implements Serializable {
     @Column(name = "id")
     private Long id;
 
-    @NotNull
+    @NotNull(message = "Start date and time must not be null")
     @Column(name = "start_date_time", nullable = false)
     private Instant startDateTime;
 
-    @NotNull
+    @NotNull(message = "End date and time must not be null")
     @Column(name = "end_date_time", nullable = false)
     private Instant endDateTime;
 
-    @NotNull
+    @NotNull(message = "Booking status must not be null")
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     private BookingStatus status;
@@ -43,9 +43,11 @@ public class Booking implements Serializable {
     private String worksiteImageUrl;
 
     @Column(name = "customer_lat")
+    @NotNull(message = "Customer latitude must not be null")
     private Double customerLat;
 
     @Column(name = "customer_long")
+    @NotNull(message = "Customer longitude must not be null")
     private Double customerLong;
 
     @Column(name = "created_date")
@@ -55,6 +57,7 @@ public class Booking implements Serializable {
     @JsonIgnoreProperties(value = { "password", "authorities", "activationKey", "resetKey" }, allowSetters = true)
     private User user;
 
+    @NotNull(message = "Machine must not be null")
     @ManyToOne(fetch = FetchType.LAZY)
     @JsonIgnoreProperties(value = { "user", "bookings", "operators", "documents" }, allowSetters = true)
     private Machine machine;

@@ -3,6 +3,7 @@ package com.gearx7.app.web.rest;
 import com.gearx7.app.repository.MachineRepository;
 import com.gearx7.app.repository.UserRepository;
 import com.gearx7.app.service.MachineService;
+import com.gearx7.app.service.dto.ApiResponse;
 import com.gearx7.app.service.dto.MachineDTO;
 import com.gearx7.app.service.mapper.UserMapper;
 import com.gearx7.app.web.rest.errors.BadRequestAlertException;
@@ -27,6 +28,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -73,7 +75,7 @@ public class MachineResource {
      */
     @PostMapping("")
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_PARTNER')")
-    public ResponseEntity<MachineDTO> createMachine(@Valid @RequestBody MachineDTO machineDTO) throws URISyntaxException {
+    public ResponseEntity<ApiResponse<MachineDTO>> createMachine(@Valid @RequestBody MachineDTO machineDTO) throws URISyntaxException {
         log.info("REST request to create Machine. Payload: {}", machineDTO);
 
         if (machineDTO.getId() != null) {
@@ -94,9 +96,8 @@ public class MachineResource {
         log.info("Machine created successfully with ID: {}", result.getId());
 
         return ResponseEntity
-            .created(new URI("/api/machines/" + result.getId()))
-            .headers(HeaderUtil.createEntityCreationAlert(applicationName, false, ENTITY_NAME, result.getId().toString()))
-            .body(result);
+            .status(HttpStatus.CREATED)
+            .body(new ApiResponse<>(true, 201, "Machine created successfully with id : " + result.getId(), result));
     }
 
     /**
@@ -111,7 +112,7 @@ public class MachineResource {
      */
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_PARTNER')")
-    public ResponseEntity<MachineDTO> updateMachine(
+    public ResponseEntity<ApiResponse<MachineDTO>> updateMachine(
         @PathVariable(value = "id", required = false) final Long id,
         @Valid @RequestBody MachineDTO machineDTO
     ) throws URISyntaxException {
@@ -128,10 +129,7 @@ public class MachineResource {
         }
 
         MachineDTO result = machineService.update(machineDTO);
-        return ResponseEntity
-            .ok()
-            .headers(HeaderUtil.createEntityUpdateAlert(applicationName, false, ENTITY_NAME, machineDTO.getId().toString()))
-            .body(result);
+        return ResponseEntity.ok(new ApiResponse<>(true, 200, "Machine updated successfully", result));
     }
 
     /**
@@ -147,7 +145,7 @@ public class MachineResource {
      */
     @PatchMapping(value = "/{id}", consumes = { "application/json", "application/merge-patch+json" })
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_PARTNER')")
-    public ResponseEntity<MachineDTO> partialUpdateMachine(
+    public ResponseEntity<ApiResponse<MachineDTO>> partialUpdateMachine(
         @PathVariable(value = "id", required = false) final Long id,
         @NotNull @RequestBody MachineDTO machineDTO
     ) throws URISyntaxException {
@@ -165,10 +163,7 @@ public class MachineResource {
 
         MachineDTO result = machineService.partialUpdate(machineDTO);
 
-        return ResponseEntity
-            .ok()
-            .headers(HeaderUtil.createEntityUpdateAlert(applicationName, false, ENTITY_NAME, machineDTO.getId().toString()))
-            .body(result);
+        return ResponseEntity.ok(new ApiResponse<>(true, 200, "Machine updated successfully", result));
     }
 
     /**
@@ -179,7 +174,7 @@ public class MachineResource {
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of machines in body.
      */
     @GetMapping("")
-    public ResponseEntity<List<MachineDTO>> getAllMachines(
+    public ResponseEntity<ApiResponse<List<MachineDTO>>> getAllMachines(
         @org.springdoc.core.annotations.ParameterObject Pageable pageable,
         @RequestParam(name = "eagerload", required = false, defaultValue = "true") boolean eagerload
     ) {
@@ -190,15 +185,16 @@ public class MachineResource {
         } else {
             page = machineService.findAll(pageable);
         }
-        // EMPTY CHECK
-        if (page.isEmpty()) {
-            log.warn("No machines found");
-
-            throw new NotFoundAlertException("No machines available", "Machine", "machinesNotFound");
-        }
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
+
         log.info("Machines fetched successfully | count={}", page.getTotalElements());
-        return ResponseEntity.ok().headers(headers).body(page.getContent());
+
+        return ResponseEntity
+            .ok()
+            .headers(headers)
+            .body(
+                new ApiResponse<>(true, 200, page.isEmpty() ? "No machines available" : "Machines fetched successfully", page.getContent())
+            );
     }
 
     /**
@@ -208,12 +204,12 @@ public class MachineResource {
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the machineDTO, or with status {@code 404 (Not Found)}.
      */
     @GetMapping("/{id}")
-    public ResponseEntity<MachineDTO> getMachine(@PathVariable("id") Long id) {
+    public ResponseEntity<ApiResponse<MachineDTO>> getMachine(@PathVariable("id") Long id) {
         log.debug("REST request to get Machine : {}", id);
 
         MachineDTO machineDTO = machineService.findOne(id);
 
-        return ResponseEntity.ok(machineDTO);
+        return ResponseEntity.ok(new ApiResponse<>(true, 200, "Machine details fetched successfully", machineDTO));
     }
 
     /**
@@ -224,25 +220,28 @@ public class MachineResource {
      * nk ResponseEntity} with status {@code 204 (NO_CONTENT)}.
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteMachine(@PathVariable("id") Long id) {
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_PARTNER')") // Only admin and partner can delete machines
+    public ResponseEntity<ApiResponse<?>> deleteMachine(@PathVariable("id") Long id) {
         log.debug("REST request to delete Machine : {}", id);
         machineService.delete(id);
-        return ResponseEntity.ok("Machine deleted successfully");
+        return ResponseEntity.ok(new ApiResponse<>(true, 200, "Machine deleted successfully", null));
     }
 
     @GetMapping("/without-operator")
-    public ResponseEntity<List<MachineDTO>> getMachinesWithoutOperator() {
+    public ResponseEntity<ApiResponse<List<MachineDTO>>> getMachinesWithoutOperator() {
         log.info("REST request to get Machines without active operator");
 
         List<MachineDTO> list = machineService.findMachinesWithoutOperator();
 
         log.info("REST response: {} machines returned without operator", list.size());
 
-        return ResponseEntity.ok(list);
+        return ResponseEntity.ok(
+            new ApiResponse<>(true, 200, list.isEmpty() ? "No machines available without operator" : "Machines fetched successfully", list)
+        );
     }
 
     @GetMapping("/search")
-    public ResponseEntity<List<MachineDTO>> searchMachines(
+    public ResponseEntity<ApiResponse<List<MachineDTO>>> searchMachines(
         @RequestParam Long typeId,
         @RequestParam Long categoryId,
         @RequestParam Long subcategoryId,
@@ -284,12 +283,17 @@ public class MachineResource {
                 categoryId,
                 subcategoryId
             );
-
-            throw new NotFoundAlertException("No machines found for selected dates and location", ENTITY_NAME, "machineNotAvailable");
         }
         log.info("StartingDate : {} , EndingDate : {} ", startDateTime, endDateTime);
         log.info("Search completed. {} machines found.", machines.size());
-        return ResponseEntity.ok(machines);
+        return ResponseEntity.ok(
+            new ApiResponse<>(
+                true,
+                200,
+                machines.isEmpty() ? "No machines found for selected dates and location" : "Machines fetched successfully",
+                machines
+            )
+        );
     }
 
     /**if login as a admin , then admin must be provided with ownerId to get machines of that owner.
@@ -298,14 +302,16 @@ public class MachineResource {
 
     @GetMapping("/by-owner")
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_PARTNER')")
-    public ResponseEntity<List<MachineDTO>> getMachinesByOwner(@RequestParam(required = false) Long ownerId) {
+    public ResponseEntity<ApiResponse<List<MachineDTO>>> getMachinesByOwner(@RequestParam(required = false) Long ownerId) {
         log.info("REST request | Get machines | ownerId={}", ownerId);
 
         List<MachineDTO> machines = machineService.getMachinesByOwner(ownerId);
 
         log.info("REST GET Machines SUCCESS | count={}", machines.size());
 
-        return ResponseEntity.ok(machines);
+        return ResponseEntity.ok(
+            new ApiResponse<>(true, 200, machines.isEmpty() ? "No machines available" : "Machines fetched successfully", machines)
+        );
     }
 
     /**

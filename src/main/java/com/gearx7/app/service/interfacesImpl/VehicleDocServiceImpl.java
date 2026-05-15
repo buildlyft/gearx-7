@@ -61,6 +61,7 @@ public class VehicleDocServiceImpl implements VehicleDocService {
         validatePermission(machineId);
 
         Machine machine = getMachine(machineId);
+        validateMachineOwnership(machine);
         User uploader = resolveUploader(uploadedBy);
 
         List<VehicleDocumentDTO> uploadedDocs = new ArrayList<>();
@@ -213,7 +214,7 @@ public class VehicleDocServiceImpl implements VehicleDocService {
             .findById(id)
             .orElseThrow(() -> {
                 log.error("DATA ERROR | Machine not found | machineId={}", id);
-                return new NotFoundAlertException("Machine not found with id " + id, "machine", "machineNotFound");
+                return new NotFoundAlertException("Machine not found with given id : " + id, "machine", "machineNotFound");
             });
     }
 
@@ -223,7 +224,7 @@ public class VehicleDocServiceImpl implements VehicleDocService {
                 .findById(uploadedBy)
                 .orElseThrow(() -> {
                     log.error("DATA ERROR | UploadedBy user not found | userId={}", uploadedBy);
-                    return new NotFoundAlertException("User not found with id " + uploadedBy, "user", "userNotFound");
+                    return new NotFoundAlertException("User not found with given id :" + uploadedBy, "user", "userNotFound");
                 });
         }
 
@@ -257,5 +258,16 @@ public class VehicleDocServiceImpl implements VehicleDocService {
         return name.contains(".")
             ? name.substring(0, name.lastIndexOf('.')).toUpperCase().replaceAll("[^A-Z0-9_]", "_")
             : name.toUpperCase();
+    }
+
+    private void validateMachineOwnership(Machine machine) {
+        boolean isAdmin = SecurityUtils.hasCurrentUserThisAuthority(AuthoritiesConstants.ADMIN);
+
+        String login = SecurityUtils.getCurrentUserLogin().orElseThrow(() -> new AccessDeniedException("User not authenticated"));
+
+        if (!isAdmin && !machine.getUser().getLogin().equals(login)) {
+            log.warn("SECURITY VIOLATION | Unauthorized vehicle document upload | machineId={} | login={}", machine.getId(), login);
+            throw new AccessDeniedException("You are not allowed to access this vehicle");
+        }
     }
 }

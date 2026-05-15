@@ -119,6 +119,9 @@ jhipster:
 # https://www.jhipster.tech/common-application-properties/
 # ===================================================================
 # application:
+gearx7:
+  machine:
+    search-radius-km: 15.0
 
 cloudinary:
   cloud_name: dacla2c6s

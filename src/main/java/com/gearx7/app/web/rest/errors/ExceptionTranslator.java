@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.context.request.NativeWebRequest;
+import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 import tech.jhipster.config.JHipsterConstants;
@@ -53,7 +54,7 @@ public class ExceptionTranslator extends ResponseEntityExceptionHandler {
         this.env = env;
     }
 
-    @ExceptionHandler
+    @ExceptionHandler(Throwable.class)
     public ResponseEntity<Object> handleAnyException(Throwable ex, NativeWebRequest request) {
         ProblemDetailWithCause pdCause = wrapAndCustomizeProblem(ex, request);
         return handleExceptionInternal((Exception) ex, pdCause, buildHeaders(ex), HttpStatusCode.valueOf(pdCause.getStatus()), request);
@@ -61,17 +62,94 @@ public class ExceptionTranslator extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<Object> handleAccessDeniedException(AccessDeniedException ex, NativeWebRequest request) {
-        Map<String, Object> body = new HashMap<>();
+        Map<String, Object> body = new LinkedHashMap<>();
 
-        body.put("status", HttpStatus.FORBIDDEN.value());
+        body.put("status", false);
 
-        body.put("error", "Forbidden");
+        body.put("statusCode", 403);
 
-        body.put("message", "You are not authorized to perform this action");
+        body.put("message", ex.getMessage());
+
+        body.put("data", null);
 
         body.put("path", request.getNativeRequest(HttpServletRequest.class).getRequestURI());
 
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
+    }
+
+    @ExceptionHandler(BadRequestAlertException.class)
+    public ResponseEntity<Object> handleBadRequestException(BadRequestAlertException ex, NativeWebRequest request) {
+        Map<String, Object> body = new LinkedHashMap<>();
+
+        body.put("status", false);
+
+        body.put("statusCode", 400);
+
+        body.put("message", ex.getProblemDetailWithCause().getProperties().get("message"));
+
+        body.put("data", null);
+
+        body.put("path", request.getNativeRequest(HttpServletRequest.class).getRequestURI());
+
+        return ResponseEntity.badRequest().body(body);
+    }
+
+    @ExceptionHandler(NotFoundAlertException.class)
+    public ResponseEntity<Object> handleNotFoundException(NotFoundAlertException ex, NativeWebRequest request) {
+        Map<String, Object> body = new LinkedHashMap<>();
+
+        body.put("status", false);
+
+        body.put("statusCode", 404);
+
+        body.put("message", ex.getProblemDetailWithCause().getProperties().get("message"));
+
+        body.put("data", null);
+
+        body.put("path", request.getNativeRequest(HttpServletRequest.class).getRequestURI());
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<Object> handleGlobalException(Exception ex, NativeWebRequest request) {
+        Map<String, Object> body = new LinkedHashMap<>();
+
+        body.put("status", false);
+
+        body.put("statusCode", 500);
+
+        body.put("message", "Internal server error");
+
+        body.put("data", null);
+
+        body.put("path", request.getNativeRequest(HttpServletRequest.class).getRequestURI());
+
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(body);
+    }
+
+    @Override
+    protected ResponseEntity<Object> handleMethodArgumentNotValid(
+        MethodArgumentNotValidException ex,
+        HttpHeaders headers,
+        HttpStatusCode status,
+        WebRequest request
+    ) {
+        Map<String, Object> body = new LinkedHashMap<>();
+
+        body.put("status", false);
+
+        body.put("statusCode", 400);
+
+        body.put("message", "Invalid request parameters");
+
+        body.put("errors", getFieldErrors(ex));
+
+        body.put("data", null);
+
+        body.put("path", ((ServletWebRequest) request).getRequest().getRequestURI());
+
+        return ResponseEntity.badRequest().body(body);
     }
 
     @Nullable

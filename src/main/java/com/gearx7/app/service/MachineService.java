@@ -6,19 +6,20 @@ import com.gearx7.app.domain.User;
 import com.gearx7.app.repository.*;
 import com.gearx7.app.security.AuthoritiesConstants;
 import com.gearx7.app.security.SecurityUtils;
-import com.gearx7.app.service.LocationIQService;
 import com.gearx7.app.service.dto.MachineDTO;
 import com.gearx7.app.service.mapper.MachineMapper;
 import com.gearx7.app.web.rest.errors.BadRequestAlertException;
 import com.gearx7.app.web.rest.errors.NotFoundAlertException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.*;
-import java.time.temporal.ChronoUnit;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
-import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
@@ -32,6 +33,9 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional
 public class MachineService {
+
+    @Value("${gearx7.machine.search-radius-km}")
+    private double searchRadiusKm;
 
     private final Logger log = LoggerFactory.getLogger(MachineService.class);
 
@@ -152,7 +156,7 @@ public class MachineService {
         if (!isAdmin && !existingMachine.getUser().getLogin().equals(login)) {
             log.warn("Unauthorized machine update attempt | machineId={} | login={}", existingMachine.getId(), login);
 
-            throw new BadRequestAlertException("You are not allowed to modify this machine", "Machine", "forbidden");
+            throw new AccessDeniedException("You are not allowed to modify this machine");
         }
 
         // UPDATE NORMAL FIELDS
@@ -170,12 +174,16 @@ public class MachineService {
                 .orElseThrow(() -> {
                     log.warn("Operator not found | operatorId={}", machineDTO.getOperatorId());
 
-                    return new NotFoundAlertException("Operator not found", "MachineOperator", "operatorNotFound");
+                    return new NotFoundAlertException(
+                        "Operator not found with given Id : " + machineDTO.getOperatorId(),
+                        "MachineOperator",
+                        "operatorNotFound"
+                    );
                 });
 
             // OPERATOR OWNERSHIP CHECK
             if (!isAdmin && !operator.getPartner().getLogin().equals(login)) {
-                throw new BadRequestAlertException("You are not allowed to use this operator", "MachineOperator", "forbidden");
+                throw new AccessDeniedException("You are not allowed to use this operator");
             }
 
             // REMOVE OLD OPERATOR FROM MACHINE
@@ -237,7 +245,7 @@ public class MachineService {
         if (!isAdmin && !existingMachine.getUser().getLogin().equals(login)) {
             log.warn("Unauthorized update attempt | machineId={} | login={}", existingMachine.getId(), login);
 
-            throw new BadRequestAlertException("You are not allowed to update this machine", "Machine", "forbidden");
+            throw new AccessDeniedException("You are not allowed to update this machine");
         }
 
         // UPDATE NORMAL FIELDS
@@ -259,7 +267,7 @@ public class MachineService {
                 });
             // OPERATOR OWNERSHIP CHECK
             if (!isAdmin && !operator.getPartner().getLogin().equals(login)) {
-                throw new BadRequestAlertException("You are not allowed to use this operator", "MachineOperator", "forbidden");
+                throw new AccessDeniedException("You are not allowed to use this operator");
             }
 
             // REMOVE OPERATOR FROM OLD MACHINE
@@ -324,8 +332,7 @@ public class MachineService {
         Machine machine = machineRepository
             .findById(id)
             .orElseThrow(() -> {
-                log.warn("Machine not found | id={}", id);
-
+                log.info("Machine not found | id={}", id);
                 return new NotFoundAlertException("Machine not found with id " + id, "Machine", "machineNotFound");
             });
 
@@ -357,7 +364,7 @@ public class MachineService {
         if (!isAdmin && !machine.getUser().getLogin().equals(login)) {
             log.warn("Unauthorized delete attempt | machineId={} | login={}", machine.getId(), login);
 
-            throw new BadRequestAlertException("You are not allowed to delete this machine", "Machine", "forbidden");
+            throw new AccessDeniedException("You are not allowed to delete this machine");
         }
 
         machineRepository.delete(machine);
@@ -388,11 +395,9 @@ public class MachineService {
         Double userLat,
         Double userLon
     ) {
-        final double RADIUS_KM = 15.0;
-
         log.info(
             "Searching within {} KM radius for typeId={}, categoryId={}, subcategoryId={}, start={}, end={}, lat={}, lon={}",
-            RADIUS_KM,
+            searchRadiusKm,
             typeId,
             categoryId,
             subcategoryId,
@@ -405,7 +410,7 @@ public class MachineService {
         validateHierarchy(typeId, categoryId, subcategoryId);
         validateLocation(userLat, userLon);
 
-        BoundingBox box = calculateBoundingBox(userLat, userLon, RADIUS_KM);
+        BoundingBox box = calculateBoundingBox(userLat, userLon, searchRadiusKm);
 
         List<Machine> machines = machineRepository.searchWithinRadius(
             subcategoryId,
@@ -415,7 +420,7 @@ public class MachineService {
             box.maxLat,
             box.minLon,
             box.maxLon,
-            RADIUS_KM
+            searchRadiusKm
         );
 
         return machines.stream().map(machine -> calculatePricing(machine, start, end)).toList();
@@ -426,12 +431,6 @@ public class MachineService {
         log.info("Request to fetch Machines without active operator");
 
         List<Machine> machines = machineRepository.findMachinesWithoutOperator();
-
-        if (machines.isEmpty()) {
-            log.warn("No machines found without active operator");
-
-            throw new NotFoundAlertException("No machines available without operator", "Machine", "machinesWithoutOperatorNotFound");
-        }
 
         log.info("Found {} machines without active operator", machines.size());
 
@@ -449,8 +448,8 @@ public class MachineService {
         if (isAdmin) {
             //  ADMIN FLOW
             if (ownerId == null) {
-                log.warn("ADMIN FLOW | ownerId missing");
-                throw new BadRequestAlertException("PartnerId (ownerId) is required for admin", "machine", "ownerIdMissing");
+                log.info("ADMIN FLOW | ownerId missing");
+                throw new BadRequestAlertException("Owner id is required for admin users", "machine", "ownerIdMissing");
             }
 
             if (!userRepository.existsById(ownerId)) {
@@ -477,14 +476,9 @@ public class MachineService {
 
         if (machines.isEmpty()) {
             if (isAdmin) {
-                log.warn("No machines found for ownerId={}", ownerId);
-
-                throw new NotFoundAlertException("No machines found for this partner", "Machine", "machinesNotFound");
+                log.info("No machines found for ownerId={}", ownerId);
             }
-
-            log.warn("Partner has no machines | login={}", SecurityUtils.getCurrentUserLogin().orElse("UNKNOWN"));
-
-            throw new NotFoundAlertException("You don't have any machines", "Machine", "machinesNotFound");
+            log.info("Partner has no machines | login={}", SecurityUtils.getCurrentUserLogin().orElse("UNKNOWN"));
         }
 
         log.info("Machines fetched | count={}", machines.size());
@@ -493,7 +487,11 @@ public class MachineService {
     }
 
     private User getCurrentLoggedInUser() {
-        String login = SecurityUtils.getCurrentUserLogin().orElseThrow(() -> new IllegalStateException("No logged-in user"));
+        String login = SecurityUtils
+            .getCurrentUserLogin()
+            .orElseThrow(() -> {
+                throw new AccessDeniedException("User authentication required");
+            });
 
         return userRepository.findOneByLogin(login).orElseThrow(() -> new UsernameNotFoundException("User not found"));
     }
@@ -512,14 +510,14 @@ public class MachineService {
             .findById(partnerId)
             .orElseThrow(() -> {
                 log.error("Partner user not found with ID: {}", partnerId);
-                return new BadRequestAlertException("Partner user does not exist", "machine", "usernotfound");
+                return new NotFoundAlertException("Partner user does not exist", "machine", "UserNotFound");
             });
 
         boolean isPartner = partner.getAuthorities().stream().anyMatch(a -> AuthoritiesConstants.PARTNER.equals(a.getName()));
 
         if (!isPartner) {
             log.error("User {} is not a PARTNER", partnerId);
-            throw new BadRequestAlertException("Machine can be created only for PARTNER users", "machine", "invalidpartner");
+            throw new BadRequestAlertException("Machine can be created only for PARTNER users", "machine", "InvalidPartner");
         }
         log.debug("Partner validation successful for user ID: {}", partnerId);
 
@@ -531,18 +529,26 @@ public class MachineService {
 
         if (!typeRepository.existsById(typeId)) {
             log.error("Type not found: {}", typeId);
-            throw new BadRequestAlertException("Type not found", "type", "typeNotFound");
+            throw new NotFoundAlertException("Selected machine type does not exist", "type", "typeNotFound");
         }
         log.debug("Validating Category {} belongs to Type {}", categoryId, typeId);
         if (!categoryRepository.existsByIdAndTypeId(categoryId, typeId)) {
             log.error("Invalid Category {} for Type {}", categoryId, typeId);
-            throw new BadRequestAlertException("Invalid Category for Type", "category", "invalidTypeCategory");
+            throw new BadRequestAlertException(
+                "Selected category does not belong to the selected machine type",
+                "category",
+                "invalidTypeCategory"
+            );
         }
 
         log.debug("Validating Subcategory {} belongs to Category {}", subcategoryId, categoryId);
         if (!subCategoryRepository.existsByIdAndCategoryId(subcategoryId, categoryId)) {
             log.error("Invalid Subcategory {} for Category {}", subcategoryId, categoryId);
-            throw new BadRequestAlertException("Invalid Subcategory for Category", "subcategory", "invalidCategorySubcategory");
+            throw new BadRequestAlertException(
+                "Selected subcategory does not belong to the selected category",
+                "subcategory",
+                "invalidCategorySubcategory"
+            );
         }
 
         log.debug("Hierarchy validation passed");
@@ -550,7 +556,7 @@ public class MachineService {
 
     private void validateLocation(Double lat, Double lon) {
         if (lat < -90 || lat > 90 || lon < -180 || lon > 180) throw new BadRequestAlertException(
-            "Invalid coordinates",
+            "Please provide valid location coordinates",
             "machine",
             "invalidLocation"
         );
@@ -572,7 +578,7 @@ public class MachineService {
 
         if (start == null || end == null || end.isBefore(start)) {
             log.error("Invalid booking time | start={} | end={}", start, end);
-            throw new IllegalArgumentException("Invalid booking time");
+            throw new BadRequestAlertException("End date and time must be after start date and time", "machine", "invalidBookingTime");
         }
 
         ZoneId IST = ZoneId.of("Asia/Kolkata");

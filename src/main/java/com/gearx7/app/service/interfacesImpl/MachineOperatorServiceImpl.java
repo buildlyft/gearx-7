@@ -3,6 +3,7 @@ package com.gearx7.app.service.interfacesImpl;
 import com.gearx7.app.domain.MachineOperator;
 import com.gearx7.app.domain.User;
 import com.gearx7.app.repository.MachineOperatorRepository;
+import com.gearx7.app.repository.MachineRepository;
 import com.gearx7.app.repository.UserRepository;
 import com.gearx7.app.security.SecurityUtils;
 import com.gearx7.app.service.dto.MachineOperatorDetailsDTO;
@@ -12,8 +13,10 @@ import com.gearx7.app.web.rest.errors.BadRequestAlertException;
 import com.gearx7.app.web.rest.errors.NotFoundAlertException;
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -27,15 +30,18 @@ public class MachineOperatorServiceImpl implements MachineOperatorService {
     private final MachineOperatorRepository operatorRepo;
     private final DocumentStorageService storageService;
     private final UserRepository userRepository;
+    private final MachineRepository machineRepository;
 
     public MachineOperatorServiceImpl(
         MachineOperatorRepository operatorRepo,
         DocumentStorageService storageService,
-        UserRepository userRepository
+        UserRepository userRepository,
+        MachineRepository machineRepository
     ) {
         this.operatorRepo = operatorRepo;
         this.storageService = storageService;
         this.userRepository = userRepository;
+        this.machineRepository = machineRepository;
     }
 
     /* ============================================================
@@ -114,11 +120,6 @@ public class MachineOperatorServiceImpl implements MachineOperatorService {
         List<MachineOperator> operators = operatorRepo.findByPartnerIdWithRelations(partner.getId());
 
         log.info("GET Operators By Partner SUCCESS | partnerId={} | count={}", partner.getId(), operators.size());
-        if (operators.isEmpty()) {
-            log.warn("No operators found for partnerId={}", partner.getId());
-
-            throw new NotFoundAlertException("You don't have any operators", "MachineOperator", "operatorsNotFound");
-        }
 
         return operators.stream().map(this::mapToDTO).toList();
     }
@@ -216,9 +217,10 @@ public class MachineOperatorServiceImpl implements MachineOperatorService {
         List<MachineOperator> operators = operatorRepo.findAllWithRelations();
 
         log.info("GET ALL Operators SUCCESS | count={}", operators.size());
+
         if (operators.isEmpty()) {
-            log.warn("No machine operators found");
-            throw new NotFoundAlertException("No machine operators available", "MachineOperator", "operatorsNotFound");
+            log.info("No machine operators found");
+            return List.of();
         }
 
         return operators.stream().map(this::mapToDTO).toList();
@@ -308,7 +310,11 @@ public class MachineOperatorServiceImpl implements MachineOperatorService {
             .findOneWithRelations(operatorId)
             .orElseThrow(() -> {
                 log.error("Operator NOT FOUND | operatorId={}", operatorId);
-                return new NotFoundAlertException("Operator not found", "MachineOperator", "OperatorNotFound");
+                return new NotFoundAlertException(
+                    "Operator not found with given id : " + operatorId,
+                    "MachineOperator",
+                    "OperatorNotFound"
+                );
             });
 
         log.info("GET Operator BY ID SUCCESS | operatorId={}", operatorId);
@@ -326,16 +332,20 @@ public class MachineOperatorServiceImpl implements MachineOperatorService {
 
             throw new BadRequestAlertException("Machine ID cannot be null", "machineOperator", "machineIdNull");
         }
+        machineRepository
+            .findById(machineId)
+            .orElseThrow(() -> new NotFoundAlertException("Machine not found with given id : " + machineId, "Machine", "machineNotFound"));
 
-        MachineOperator machineOperator = operatorRepo
-            .findByMachineId(machineId)
-            .orElseThrow(() -> {
-                log.error("Machine operator not found | machineId={}", machineId);
+        Optional<MachineOperator> machineOperatorOpt = operatorRepo.findByMachineId(machineId);
 
-                return new NotFoundAlertException("No operator assigned to this machine", "machineOperator", "machineOperatorNotFound");
-            });
+        if (machineOperatorOpt.isEmpty()) {
+            log.info("Operator not assigned to this machine | machineId={}", machineId);
+            return null;
+        }
 
-        log.info("Machine operator found successfully | machineId={} | operatorId={}", machineId, machineOperator.getId());
+        MachineOperator machineOperator = machineOperatorOpt.orElseThrow();
+
+        log.info("Operator found for machineId={} | operatorId={}", machineId, machineOperator.getId());
 
         return mapToDTO(machineOperator);
     }
@@ -379,7 +389,7 @@ public class MachineOperatorServiceImpl implements MachineOperatorService {
             .findById(operatorId)
             .orElseThrow(() -> {
                 log.error("DELETE FAILED | Operator NOT FOUND | operatorId={}", operatorId);
-                return new NotFoundAlertException("Operator not found", "MachineOperator", "OperatorNotFound");
+                return new NotFoundAlertException("Operator not found with given id :" + operatorId, "MachineOperator", "OperatorNotFound");
             });
         String login = SecurityUtils
             .getCurrentUserLogin()
@@ -390,7 +400,7 @@ public class MachineOperatorServiceImpl implements MachineOperatorService {
         if (!isAdmin && !operator.getPartner().getLogin().equals(login)) {
             log.warn("Unauthorized operator delete attempt | operatorId={} | login={}", operatorId, login);
 
-            throw new BadRequestAlertException("You are not allowed to delete this operator", "MachineOperator", "forbidden");
+            throw new AccessDeniedException("You are not allowed to delete this operator");
         }
 
         try {
@@ -408,7 +418,7 @@ public class MachineOperatorServiceImpl implements MachineOperatorService {
         }
     }
 
-    /* ==========================================================
+    /* ======== ==================================================
                        REQUEST VALIDATION
    ========================================================== */
 

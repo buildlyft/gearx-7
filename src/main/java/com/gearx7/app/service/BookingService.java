@@ -7,8 +7,8 @@ import com.gearx7.app.domain.enumeration.BookingStatus;
 import com.gearx7.app.repository.BookingRepository;
 import com.gearx7.app.repository.MachineRepository;
 import com.gearx7.app.repository.UserRepository;
+import com.gearx7.app.security.AuthoritiesConstants;
 import com.gearx7.app.security.SecurityUtils;
-import com.gearx7.app.service.LocationIQService;
 import com.gearx7.app.service.interfaces.SmsService;
 import com.gearx7.app.web.rest.errors.BadRequestAlertException;
 import com.gearx7.app.web.rest.errors.NotFoundAlertException;
@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
@@ -153,6 +154,23 @@ public class BookingService {
      */
     public Booking update(Booking booking) {
         log.debug("Request to update Booking : {}", booking);
+        Booking existingBooking = bookingRepository
+            .findById(booking.getId())
+            .orElseThrow(() -> new NotFoundAlertException("Booking not found with id " + booking.getId(), "booking", "bookingNotFound"));
+
+        String login = SecurityUtils.getCurrentUserLogin().orElseThrow(() -> new AccessDeniedException("Partner authentication required"));
+
+        boolean isAdmin = SecurityUtils.hasCurrentUserThisAuthority(AuthoritiesConstants.ADMIN);
+
+        boolean isPartnerOwner = existingBooking.getMachine().getUser().getLogin().equals(login);
+
+        boolean isBookingOwner = existingBooking.getUser().getLogin().equals(login);
+
+        if (!isAdmin && !isPartnerOwner && !isBookingOwner) {
+            log.info("Unauthorized booking update attempt | bookingId={} | login={}", existingBooking.getId(), login);
+            throw new AccessDeniedException("You are not allowed to update this booking");
+        }
+
         if (booking.getCustomerLat() != null && booking.getCustomerLong() != null) {
             String address = locationIQService.getAddress(booking.getCustomerLat(), booking.getCustomerLong());
 
@@ -175,6 +193,16 @@ public class BookingService {
             .findById(booking.getId())
             .map(existingBooking -> {
                 BookingStatus oldStatus = existingBooking.getStatus();
+                String login = SecurityUtils
+                    .getCurrentUserLogin()
+                    .orElseThrow(() -> new AccessDeniedException("User authentication required"));
+
+                boolean isAdmin = SecurityUtils.hasCurrentUserThisAuthority(AuthoritiesConstants.ADMIN);
+
+                if (!isAdmin && !existingBooking.getMachine().getUser().getLogin().equals(login)) {
+                    log.warn("Unauthorized booking update attempt | bookingId={} | login={}", existingBooking.getId(), login);
+                    throw new AccessDeniedException("You are not allowed to update this booking");
+                }
 
                 log.info("Existing booking found | bookingId={} | oldStatus={}", existingBooking.getId(), oldStatus);
 
