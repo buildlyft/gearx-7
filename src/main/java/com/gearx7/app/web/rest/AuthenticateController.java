@@ -4,11 +4,8 @@ import static com.gearx7.app.security.SecurityUtils.AUTHORITIES_KEY;
 import static com.gearx7.app.security.SecurityUtils.JWT_ALGORITHM;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.gearx7.app.service.interfaces.LoginCacheService;
-import com.gearx7.app.service.interfaces.OtpService;
-import com.gearx7.app.web.rest.errors.BadRequestAlertException;
+import com.gearx7.app.service.dto.ApiResponse;
 import com.gearx7.app.web.rest.vm.LoginVM;
-import com.gearx7.app.web.rest.vm.OtpVM;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import java.time.Instant;
@@ -30,7 +27,6 @@ import org.springframework.security.oauth2.jwt.JwtClaimsSet;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 /**
  * Controller to authenticate users.
@@ -57,7 +53,7 @@ public class AuthenticateController {
     }
 
     @PostMapping("/authenticate")
-    public ResponseEntity<JWTToken> authorize(@Valid @RequestBody LoginVM loginVM) {
+    public ResponseEntity<ApiResponse<JWTToken>> authorize(@Valid @RequestBody LoginVM loginVM) {
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
             loginVM.getUsername(),
             loginVM.getPassword()
@@ -68,7 +64,10 @@ public class AuthenticateController {
         String jwt = this.createToken(authentication, loginVM.isRememberMe());
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.setBearerAuth(jwt);
-        return new ResponseEntity<>(new JWTToken(jwt), httpHeaders, HttpStatus.OK);
+        return ResponseEntity
+            .ok()
+            .headers(httpHeaders)
+            .body(new ApiResponse<>(true, HttpStatus.OK.value(), "Login successful", new JWTToken(jwt)));
     }
 
     /**
@@ -78,9 +77,11 @@ public class AuthenticateController {
      * @return the login if the user is authenticated.
      */
     @GetMapping("/authenticate")
-    public String isAuthenticated(HttpServletRequest request) {
+    public ResponseEntity<ApiResponse<String>> isAuthenticated(HttpServletRequest request) {
         log.debug("REST request to check if the current user is authenticated");
-        return request.getRemoteUser();
+        return ResponseEntity.ok(
+            new ApiResponse<>(true, HttpStatus.OK.value(), "User authenticated successfully", request.getRemoteUser())
+        );
     }
 
     public String createToken(Authentication authentication, boolean rememberMe) {

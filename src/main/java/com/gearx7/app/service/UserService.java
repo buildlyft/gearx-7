@@ -9,6 +9,7 @@ import com.gearx7.app.security.AuthoritiesConstants;
 import com.gearx7.app.security.SecurityUtils;
 import com.gearx7.app.service.dto.AdminUserDTO;
 import com.gearx7.app.service.dto.UserDTO;
+import com.gearx7.app.web.rest.errors.PhoneNumberAlreadyUsedException;
 import com.gearx7.app.web.rest.vm.ManagedUserVM;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -104,6 +105,18 @@ public class UserService {
                     throw new EmailAlreadyUsedException();
                 }
             });
+        userRepository
+            .findOneByPhone(userDTO.getPhone())
+            .ifPresent(existingUser -> {
+                log.warn("PHONE ALREADY EXISTS | phone={}", userDTO.getPhone());
+
+                boolean removed = removeNonActivatedUser(existingUser);
+
+                if (!removed) {
+                    throw new PhoneNumberAlreadyUsedException();
+                }
+            });
+
         User newUser = new User();
         String encryptedPassword = passwordEncoder.encode(password);
         log.debug("PASSWORD ENCRYPTED | login={}", userDTO.getLogin());
@@ -153,12 +166,30 @@ public class UserService {
 
     public User createUser(AdminUserDTO userDTO) {
         User user = new User();
+        userRepository
+            .findOneByLogin(userDTO.getLogin().toLowerCase())
+            .ifPresent(existingUser -> {
+                throw new UsernameAlreadyUsedException();
+            });
+
+        userRepository
+            .findOneByEmailIgnoreCase(userDTO.getEmail())
+            .ifPresent(existingUser -> {
+                throw new EmailAlreadyUsedException();
+            });
+
+        userRepository
+            .findOneByPhone(userDTO.getPhone())
+            .ifPresent(existingUser -> {
+                throw new PhoneNumberAlreadyUsedException();
+            });
         user.setLogin(userDTO.getLogin().toLowerCase());
         user.setFirstName(userDTO.getFirstName());
         user.setLastName(userDTO.getLastName());
         if (userDTO.getEmail() != null) {
             user.setEmail(userDTO.getEmail().toLowerCase());
         }
+        user.setPhone(userDTO.getPhone());
         user.setImageUrl(userDTO.getImageUrl());
         if (userDTO.getLangKey() == null) {
             user.setLangKey(Constants.DEFAULT_LANGUAGE); // default language

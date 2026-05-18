@@ -1,21 +1,17 @@
 package com.gearx7.app.web.rest;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gearx7.app.domain.Subcategory;
 import com.gearx7.app.repository.SubcategoryRepository;
 import com.gearx7.app.service.SubcategoryService;
+import com.gearx7.app.service.dto.ApiResponse;
 import com.gearx7.app.service.dto.SubCategoryDTO;
 import com.gearx7.app.service.interfaces.DocumentStorageService;
 import com.gearx7.app.web.rest.errors.BadRequestAlertException;
 import com.gearx7.app.web.rest.errors.NotFoundAlertException;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springdoc.core.annotations.ParameterObject;
@@ -23,14 +19,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
-import tech.jhipster.web.util.HeaderUtil;
 import tech.jhipster.web.util.PaginationUtil;
-import tech.jhipster.web.util.ResponseUtil;
 
 /**
  * REST controller for managing {@link Subcategory}.
@@ -71,7 +66,7 @@ public class SubcategoryResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PostMapping(value = "", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<SubCategoryDTO> createSubcategory(
+    public ResponseEntity<ApiResponse<SubCategoryDTO>> createSubcategory(
         @Valid @RequestPart("subcategory") SubCategoryDTO subCategoryDTO,
         @RequestPart("file") MultipartFile image
     ) throws URISyntaxException {
@@ -81,9 +76,10 @@ public class SubcategoryResource {
         }
         SubCategoryDTO result = subcategoryService.save(subCategoryDTO, image);
         return ResponseEntity
-            .created(new URI("/api/subcategories/" + result.getId()))
-            .headers(HeaderUtil.createEntityCreationAlert(applicationName, false, ENTITY_NAME, result.getId().toString()))
-            .body(result);
+            .status(HttpStatus.CREATED)
+            .body(
+                new ApiResponse<>(true, HttpStatus.CREATED.value(), "Subcategory created successfully with id " + result.getId(), result)
+            );
     }
 
     /**
@@ -98,7 +94,7 @@ public class SubcategoryResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<SubCategoryDTO> updateSubcategory(
+    public ResponseEntity<ApiResponse<SubCategoryDTO>> updateSubcategory(
         @PathVariable(value = "id", required = false) final Long id,
         @Valid @RequestPart("subcategory") SubCategoryDTO subcategoryDTO,
         @RequestPart(value = "file", required = false) MultipartFile image
@@ -112,10 +108,7 @@ public class SubcategoryResource {
         }
 
         SubCategoryDTO result = subcategoryService.update(subcategoryDTO, image);
-        return ResponseEntity
-            .ok()
-            .headers(HeaderUtil.createEntityUpdateAlert(applicationName, false, ENTITY_NAME, result.getId().toString()))
-            .body(result);
+        return ResponseEntity.ok(new ApiResponse<>(true, HttpStatus.OK.value(), "Subcategory updated successfully", result));
     }
 
     /**
@@ -131,7 +124,7 @@ public class SubcategoryResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PatchMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<SubCategoryDTO> partialUpdateSubcategory(
+    public ResponseEntity<ApiResponse<SubCategoryDTO>> partialUpdateSubcategory(
         @PathVariable(value = "id", required = false) final Long id,
         @RequestPart("subcategory") SubCategoryDTO subCategoryDTO,
         @RequestPart(value = "file", required = false) MultipartFile image
@@ -148,10 +141,7 @@ public class SubcategoryResource {
 
         SubCategoryDTO result = subcategoryService.partialUpdate(subCategoryDTO, image);
 
-        return ResponseEntity
-            .ok()
-            .headers(HeaderUtil.createEntityUpdateAlert(applicationName, false, ENTITY_NAME, result.getId().toString()))
-            .body(result);
+        return ResponseEntity.ok(new ApiResponse<>(true, HttpStatus.OK.value(), "Subcategory partially updated successfully", result));
     }
 
     /**
@@ -161,11 +151,18 @@ public class SubcategoryResource {
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of subcategories in body.
      */
     @GetMapping("")
-    public ResponseEntity<List<SubCategoryDTO>> getAllSubcategories(@ParameterObject Pageable pageable) {
+    public ResponseEntity<ApiResponse<List<SubCategoryDTO>>> getAllSubcategories(@ParameterObject Pageable pageable) {
         log.debug("REST request to get a page of Subcategories");
         Page<SubCategoryDTO> page = subcategoryService.findAll(pageable);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
-        return ResponseEntity.ok().headers(headers).body(page.getContent());
+        return ResponseEntity.ok(
+            new ApiResponse<>(
+                true,
+                HttpStatus.OK.value(),
+                page.getContent().isEmpty() ? "Subcategories data not available" : "Subcategories data fetched successfully",
+                page.getContent()
+            )
+        );
     }
 
     /**
@@ -175,10 +172,13 @@ public class SubcategoryResource {
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the subcategory, or with status {@code 404 (Not Found)}.
      */
     @GetMapping("/{id}")
-    public ResponseEntity<SubCategoryDTO> getSubcategory(@PathVariable("id") Long id) {
+    public ResponseEntity<ApiResponse<SubCategoryDTO>> getSubcategory(@PathVariable("id") Long id) {
         log.debug("REST request to get Subcategory : {}", id);
-        Optional<SubCategoryDTO> subcategory = subcategoryService.findOne(id);
-        return ResponseUtil.wrapOrNotFound(subcategory);
+        SubCategoryDTO subcategory = subcategoryService
+            .findOne(id)
+            .orElseThrow(() -> new NotFoundAlertException("Subcategory not found with given id : " + id, ENTITY_NAME, "SubcategoryNotFound")
+            );
+        return ResponseEntity.ok(new ApiResponse<>(true, HttpStatus.OK.value(), "Subcategory data fetched successfully", subcategory));
     }
 
     /**
@@ -188,12 +188,9 @@ public class SubcategoryResource {
      * @return the {@link ResponseEntity} with status {@code 204 (NO_CONTENT)}.
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteSubcategory(@PathVariable("id") Long id) {
+    public ResponseEntity<ApiResponse<Void>> deleteSubcategory(@PathVariable("id") Long id) {
         log.debug("REST request to delete Subcategory : {}", id);
         subcategoryService.delete(id);
-        return ResponseEntity
-            .noContent()
-            .headers(HeaderUtil.createEntityDeletionAlert(applicationName, false, ENTITY_NAME, id.toString()))
-            .build();
+        return ResponseEntity.ok(new ApiResponse<>(true, HttpStatus.OK.value(), "Subcategory deleted successfully", null));
     }
 }

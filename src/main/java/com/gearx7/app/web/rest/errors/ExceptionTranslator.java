@@ -128,6 +128,35 @@ public class ExceptionTranslator extends ResponseEntityExceptionHandler {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(body);
     }
 
+    @ExceptionHandler(HttpMessageConversionException.class)
+    public ResponseEntity<Object> handleHttpMessageConversionException(HttpMessageConversionException ex, NativeWebRequest request) {
+        Map<String, Object> body = new LinkedHashMap<>();
+
+        body.put("status", false);
+
+        body.put("statusCode", 400);
+
+        body.put("message", "Invalid request payload");
+
+        List<Map<String, String>> errors = new ArrayList<>();
+
+        Map<String, String> error = new HashMap<>();
+
+        error.put("field", "requestBody");
+
+        error.put("message", "Malformed or invalid JSON request");
+
+        errors.add(error);
+
+        body.put("errors", errors);
+
+        body.put("data", null);
+
+        body.put("path", request.getNativeRequest(HttpServletRequest.class).getRequestURI());
+
+        return ResponseEntity.badRequest().body(body);
+    }
+
     @Override
     protected ResponseEntity<Object> handleMethodArgumentNotValid(
         MethodArgumentNotValidException ex,

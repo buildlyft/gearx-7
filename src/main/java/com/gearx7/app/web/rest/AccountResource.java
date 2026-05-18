@@ -9,14 +9,18 @@ import com.gearx7.app.security.SecurityUtils;
 import com.gearx7.app.service.MailService;
 import com.gearx7.app.service.UserService;
 import com.gearx7.app.service.dto.AdminUserDTO;
+import com.gearx7.app.service.dto.ApiResponse;
 import com.gearx7.app.service.dto.PasswordChangeDTO;
-import com.gearx7.app.web.rest.errors.*;
+import com.gearx7.app.web.rest.errors.AccountResourceException;
+import com.gearx7.app.web.rest.errors.EmailAlreadyUsedException;
+import com.gearx7.app.web.rest.errors.InvalidPasswordException;
+import com.gearx7.app.web.rest.errors.LoginAlreadyUsedException;
 import com.gearx7.app.web.rest.vm.KeyAndPasswordVM;
 import com.gearx7.app.web.rest.vm.ManagedUserVM;
 import jakarta.validation.Valid;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -42,13 +46,6 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api")
 public class AccountResource {
-
-    private static class AccountResourceException extends RuntimeException {
-
-        private AccountResourceException(String message) {
-            super(message);
-        }
-    }
 
     @Value("${jhipster.security.authentication.jwt.token-validity-in-seconds:0}")
     private long tokenValidityInSeconds;
@@ -90,8 +87,7 @@ public class AccountResource {
      * @throws LoginAlreadyUsedException {@code 400 (Bad Request)} if the login is already used.
      */
     @PostMapping("/register")
-    @ResponseStatus(HttpStatus.CREATED)
-    public ResponseEntity<AuthenticateController.JWTToken> registerAccount(@Valid @RequestBody ManagedUserVM managedUserVM) {
+    public ResponseEntity<ApiResponse<AuthenticateController.JWTToken>> registerAccount(@Valid @RequestBody ManagedUserVM managedUserVM) {
         log.info("REGISTER START | login={} | phone={}", managedUserVM.getLogin(), managedUserVM.getPhone());
 
         if (isPasswordLengthInvalid(managedUserVM.getPassword())) {
@@ -114,7 +110,17 @@ public class AccountResource {
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.setBearerAuth(jwt);
         log.info("REGISTER END | login={}", managedUserVM.getLogin());
-        return new ResponseEntity<>(new AuthenticateController.JWTToken(jwt), httpHeaders, HttpStatus.OK);
+        return ResponseEntity
+            .status(HttpStatus.CREATED)
+            .headers(httpHeaders)
+            .body(
+                new ApiResponse<>(
+                    true,
+                    HttpStatus.CREATED.value(),
+                    "User registered successfully",
+                    new AuthenticateController.JWTToken(jwt)
+                )
+            );
     }
 
     public String createToken(Authentication authentication, boolean rememberMe) {
@@ -153,11 +159,18 @@ public class AccountResource {
      * @throws RuntimeException {@code 500 (Internal Server Error)} if the user couldn't be activated.
      */
     @GetMapping("/activate")
-    public void activateAccount(@RequestParam(value = "key") String key) {
+    public ResponseEntity<ApiResponse<Void>> activateAccount(@RequestParam(value = "key") String key) {
         Optional<User> user = userService.activateRegistration(key);
         if (!user.isPresent()) {
             throw new AccountResourceException("No user was found for this activation key");
         }
+        return ResponseEntity.ok(new ApiResponse<>(
+                true,
+                HttpStatus.OK.value(),
+                "Account activated successfully",
+                null
+            )
+        );
     }
 
     /**
@@ -167,11 +180,19 @@ public class AccountResource {
      * @throws RuntimeException {@code 500 (Internal Server Error)} if the user couldn't be returned.
      */
     @GetMapping("/account")
-    public AdminUserDTO getAccount() {
-        return userService
+    public ResponseEntity<ApiResponse<AdminUserDTO>> getAccount() {
+        AdminUserDTO user = userService
             .getUserWithAuthorities()
             .map(AdminUserDTO::new)
             .orElseThrow(() -> new AccountResourceException("User could not be found"));
+
+        return ResponseEntity.ok(new ApiResponse<>(
+                true,
+                HttpStatus.OK.value(),
+                "Account data fetched successfully",
+                user
+            )
+        );
     }
 
     /**
@@ -182,7 +203,7 @@ public class AccountResource {
      * @throws RuntimeException {@code 500 (Internal Server Error)} if the user login wasn't found.
      */
     @PostMapping("/account")
-    public void saveAccount(@Valid @RequestBody AdminUserDTO userDTO) {
+    public ResponseEntity<ApiResponse<Void>> saveAccount(@Valid @RequestBody AdminUserDTO userDTO) {
         String userLogin = SecurityUtils
             .getCurrentUserLogin()
             .orElseThrow(() -> new AccountResourceException("Current user login not found"));
@@ -201,6 +222,13 @@ public class AccountResource {
             userDTO.getLangKey(),
             userDTO.getImageUrl()
         );
+        return ResponseEntity.ok(new ApiResponse<>(
+                true,
+                HttpStatus.OK.value(),
+                "Account updated successfully",
+                null
+            )
+        );
     }
 
     /**
@@ -210,11 +238,18 @@ public class AccountResource {
      * @throws InvalidPasswordException {@code 400 (Bad Request)} if the new password is incorrect.
      */
     @PostMapping(path = "/account/change-password")
-    public void changePassword(@RequestBody PasswordChangeDTO passwordChangeDto) {
+    public ResponseEntity<ApiResponse<Void>> changePassword(@RequestBody PasswordChangeDTO passwordChangeDto) {
         if (isPasswordLengthInvalid(passwordChangeDto.getNewPassword())) {
             throw new InvalidPasswordException();
         }
         userService.changePassword(passwordChangeDto.getCurrentPassword(), passwordChangeDto.getNewPassword());
+        return ResponseEntity.ok(new ApiResponse<>(
+                true,
+                HttpStatus.OK.value(),
+                "Password changed successfully",
+                null
+            )
+        );
     }
 
     /**
@@ -223,7 +258,7 @@ public class AccountResource {
      * @param mail the mail of the user.
      */
     @PostMapping(path = "/account/reset-password/init")
-    public void requestPasswordReset(@RequestBody String mail) {
+    public ResponseEntity<ApiResponse<Void>> requestPasswordReset(@RequestBody String mail) {
         Optional<User> user = userService.requestPasswordReset(mail);
         if (user.isPresent()) {
             mailService.sendPasswordResetMail(user.orElseThrow());
@@ -232,6 +267,13 @@ public class AccountResource {
             // but log that an invalid attempt has been made
             log.warn("Password reset requested for non existing mail");
         }
+        return ResponseEntity.ok(new ApiResponse<>(
+                true,
+                HttpStatus.OK.value(),
+                "Password reset email sent successfully",
+                null
+            )
+        );
     }
 
     /**
@@ -242,7 +284,7 @@ public class AccountResource {
      * @throws RuntimeException {@code 500 (Internal Server Error)} if the password could not be reset.
      */
     @PostMapping(path = "/account/reset-password/finish")
-    public void finishPasswordReset(@RequestBody KeyAndPasswordVM keyAndPassword) {
+    public ResponseEntity<ApiResponse<Void>> finishPasswordReset(@RequestBody KeyAndPasswordVM keyAndPassword) {
         if (isPasswordLengthInvalid(keyAndPassword.getNewPassword())) {
             throw new InvalidPasswordException();
         }
@@ -251,6 +293,13 @@ public class AccountResource {
         if (!user.isPresent()) {
             throw new AccountResourceException("No user was found for this reset key");
         }
+        return ResponseEntity.ok(new ApiResponse<>(
+                true,
+                HttpStatus.OK.value(),
+                "Password reset successfully",
+                null
+            )
+        );
     }
 
     private static boolean isPasswordLengthInvalid(String password) {

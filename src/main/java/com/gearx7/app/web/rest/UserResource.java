@@ -7,30 +7,28 @@ import com.gearx7.app.security.AuthoritiesConstants;
 import com.gearx7.app.service.MailService;
 import com.gearx7.app.service.UserService;
 import com.gearx7.app.service.dto.AdminUserDTO;
+import com.gearx7.app.service.dto.ApiResponse;
 import com.gearx7.app.web.rest.errors.BadRequestAlertException;
 import com.gearx7.app.web.rest.errors.EmailAlreadyUsedException;
 import com.gearx7.app.web.rest.errors.LoginAlreadyUsedException;
+import com.gearx7.app.web.rest.errors.NotFoundAlertException;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Pattern;
-import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.*;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
-import tech.jhipster.web.util.HeaderUtil;
-import tech.jhipster.web.util.PaginationUtil;
-import tech.jhipster.web.util.ResponseUtil;
 
 /**
  * REST controller for managing users.
@@ -107,7 +105,7 @@ public class UserResource {
      */
     @PostMapping("/users")
     @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
-    public ResponseEntity<User> createUser(@Valid @RequestBody AdminUserDTO userDTO) throws URISyntaxException {
+    public ResponseEntity<ApiResponse<User>> createUser(@Valid @RequestBody AdminUserDTO userDTO) throws URISyntaxException {
         log.debug("REST request to save User : {}", userDTO);
 
         if (userDTO.getId() != null) {
@@ -121,11 +119,8 @@ public class UserResource {
             User newUser = userService.createUser(userDTO);
             mailService.sendCreationEmail(newUser);
             return ResponseEntity
-                .created(new URI("/api/admin/users/" + newUser.getLogin()))
-                .headers(
-                    HeaderUtil.createAlert(applicationName, "A user is created with identifier " + newUser.getLogin(), newUser.getLogin())
-                )
-                .body(newUser);
+                .status(HttpStatus.CREATED)
+                .body(new ApiResponse<>(true, HttpStatus.CREATED.value(), "User created successfully", newUser));
         }
     }
 
@@ -139,7 +134,7 @@ public class UserResource {
      */
     @PutMapping("/users")
     @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
-    public ResponseEntity<AdminUserDTO> updateUser(@Valid @RequestBody AdminUserDTO userDTO) {
+    public ResponseEntity<ApiResponse<AdminUserDTO>> updateUser(@Valid @RequestBody AdminUserDTO userDTO) {
         log.debug("REST request to update User : {}", userDTO);
         Optional<User> existingUser = userRepository.findOneByEmailIgnoreCase(userDTO.getEmail());
         if (existingUser.isPresent() && (!existingUser.orElseThrow().getId().equals(userDTO.getId()))) {
@@ -151,10 +146,9 @@ public class UserResource {
         }
         Optional<AdminUserDTO> updatedUser = userService.updateUser(userDTO);
 
-        return ResponseUtil.wrapOrNotFound(
-            updatedUser,
-            HeaderUtil.createAlert(applicationName, "A user is updated with identifier " + userDTO.getLogin(), userDTO.getLogin())
-        );
+        AdminUserDTO result = updatedUser.orElseThrow(() -> new NotFoundAlertException("User not found", "user", "UserNotFound"));
+
+        return ResponseEntity.ok(new ApiResponse<>(true, HttpStatus.OK.value(), "User updated successfully", result));
     }
 
     /**
@@ -165,15 +159,24 @@ public class UserResource {
      */
     @GetMapping("/users")
     @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
-    public ResponseEntity<List<AdminUserDTO>> getAllUsers(@org.springdoc.core.annotations.ParameterObject Pageable pageable) {
+    public ResponseEntity<ApiResponse<List<AdminUserDTO>>> getAllUsers(@org.springdoc.core.annotations.ParameterObject Pageable pageable) {
         log.debug("REST request to get all User for an admin");
         if (!onlyContainsAllowedProperties(pageable)) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity
+                .badRequest()
+                .body(new ApiResponse<>(false, HttpStatus.BAD_REQUEST.value(), "Invalid pagination parameters", null));
         }
 
         final Page<AdminUserDTO> page = userService.getAllManagedUsers(pageable);
-        HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
-        return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
+
+        return ResponseEntity.ok(
+            new ApiResponse<>(
+                true,
+                HttpStatus.OK.value(),
+                page.getContent().isEmpty() ? "No users data available" : "Users data fetched successfully",
+                page.getContent()
+            )
+        );
     }
 
     private boolean onlyContainsAllowedProperties(Pageable pageable) {
@@ -188,9 +191,14 @@ public class UserResource {
      */
     @GetMapping("/users/{login}")
     @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
-    public ResponseEntity<AdminUserDTO> getUser(@PathVariable("login") @Pattern(regexp = Constants.LOGIN_REGEX) String login) {
+    public ResponseEntity<ApiResponse<AdminUserDTO>> getUser(@PathVariable("login") @Pattern(regexp = Constants.LOGIN_REGEX) String login) {
         log.debug("REST request to get User : {}", login);
-        return ResponseUtil.wrapOrNotFound(userService.getUserWithAuthoritiesByLogin(login).map(AdminUserDTO::new));
+        AdminUserDTO user = userService
+            .getUserWithAuthoritiesByLogin(login)
+            .map(AdminUserDTO::new)
+            .orElseThrow(() -> new NotFoundAlertException("User not found", "user", "UserNotFound"));
+
+        return ResponseEntity.ok(new ApiResponse<>(true, HttpStatus.OK.value(), "User data fetched successfully", user));
     }
 
     /**
@@ -201,12 +209,9 @@ public class UserResource {
      */
     @DeleteMapping("/users/{login}")
     @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
-    public ResponseEntity<Void> deleteUser(@PathVariable("login") @Pattern(regexp = Constants.LOGIN_REGEX) String login) {
+    public ResponseEntity<ApiResponse<Void>> deleteUser(@PathVariable("login") @Pattern(regexp = Constants.LOGIN_REGEX) String login) {
         log.debug("REST request to delete User: {}", login);
         userService.deleteUser(login);
-        return ResponseEntity
-            .noContent()
-            .headers(HeaderUtil.createAlert(applicationName, "A user is deleted with identifier " + login, login))
-            .build();
+        return ResponseEntity.ok(new ApiResponse<>(true, HttpStatus.OK.value(), "User deleted successfully", null));
     }
 }

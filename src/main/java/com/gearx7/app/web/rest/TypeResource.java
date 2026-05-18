@@ -3,12 +3,14 @@ package com.gearx7.app.web.rest;
 import com.gearx7.app.domain.Category;
 import com.gearx7.app.domain.Type;
 import com.gearx7.app.repository.TypeRepository;
+import com.gearx7.app.service.dto.ApiResponse;
 import com.gearx7.app.service.interfaces.TypeService;
 import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -46,11 +48,13 @@ public class TypeResource {
      */
     @PostMapping(value = "", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
-    public ResponseEntity<Type> createType(@Valid @RequestPart("type") Type type, @RequestPart("image") MultipartFile image) {
+    public ResponseEntity<ApiResponse<Type>> createType(@Valid @RequestPart("type") Type type, @RequestPart("image") MultipartFile image) {
         log.info("REST request to Create Type : {}", type);
         Type result = typeService.createType(type, image);
         log.info("Type is created successfully with id : {}", result.getId());
-        return ResponseEntity.created(URI.create("/api/types/" + result.getId())).body(result);
+        return ResponseEntity.ok(
+            new ApiResponse<>(true, HttpStatus.CREATED.value(), "Type created successfully with id : " + result.getId(), result)
+        );
     }
 
     /**
@@ -59,11 +63,18 @@ public class TypeResource {
      */
 
     @GetMapping("")
-    public ResponseEntity<List<Type>> getAllTypes() {
+    public ResponseEntity<ApiResponse<List<Type>>> getAllTypes() {
         log.info("REST request to get all Types");
         List<Type> types = typeService.getAllTypes();
         log.info("Returning {} types", types.size());
-        return ResponseEntity.ok(types);
+        return ResponseEntity.ok(
+            new ApiResponse<>(
+                true,
+                HttpStatus.OK.value(),
+                types.isEmpty() ? "Types are not available" : "Types data fetched successfully",
+                types
+            )
+        );
     }
 
     /**
@@ -73,19 +84,28 @@ public class TypeResource {
      */
 
     @GetMapping("/{id}")
-    public ResponseEntity<Type> getTypeById(@PathVariable(required = true, name = "id") Long id) {
+    public ResponseEntity<ApiResponse<Type>> getTypeById(@PathVariable(required = true, name = "id") Long id) {
         log.info("REST request to get Type by id : {}", id);
         Type type = typeService.getTypeById(id);
         log.info("Fetched Type : {}", type);
-        return ResponseEntity.ok(type);
+        return ResponseEntity.ok(new ApiResponse<>(true, HttpStatus.OK.value(), "Type data fetched successfully with id : " + id, type));
     }
 
     @GetMapping("/{typeId}/categories")
-    public ResponseEntity<List<Category>> getCategoriesByTypeId(@PathVariable("typeId") Long typeId) {
+    public ResponseEntity<ApiResponse<List<Category>>> getCategoriesByTypeId(@PathVariable("typeId") Long typeId) {
         log.info("REST request to get Categories for Type id : {}", typeId);
         List<Category> categories = typeService.getCategoriesByTypeId(typeId);
         log.info("Returning {} categories for Type id : {}", categories.size(), typeId);
-        return ResponseEntity.ok(categories);
+        return ResponseEntity.ok(
+            new ApiResponse(
+                true,
+                HttpStatus.OK.value(),
+                categories.isEmpty()
+                    ? "Categories are not available for Type id : " + typeId
+                    : "Categories data fetched successfully for Type id : " + typeId,
+                categories
+            )
+        );
     }
 
     /**
@@ -96,7 +116,7 @@ public class TypeResource {
 
     @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
-    public ResponseEntity<Type> updateType(
+    public ResponseEntity<ApiResponse<Type>> updateType(
         @PathVariable(required = true, name = "id") Long id,
         @Valid @RequestPart("type") Type type,
         @RequestPart(value = "image", required = false) MultipartFile image
@@ -104,7 +124,7 @@ public class TypeResource {
         log.info("REST request to update Type with id {} : {} ", id, type);
         Type updatedType = typeService.updateType(id, type, image);
         log.info("Type updated successfully with id: {}", id);
-        return ResponseEntity.ok(updatedType);
+        return ResponseEntity.ok(new ApiResponse<>(true, HttpStatus.OK.value(), "Type updated successfully with id : " + id, updatedType));
     }
 
     /**
@@ -114,10 +134,10 @@ public class TypeResource {
      */
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
-    public ResponseEntity<Void> deleteType(@PathVariable(required = true, name = "id") Long id) {
+    public ResponseEntity<ApiResponse<Void>> deleteType(@PathVariable(required = true, name = "id") Long id) {
         log.info("REST request to delete Type with id : {}", id);
         typeService.deleteType(id);
         log.info("Type deleted successfully with id: {}", id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(new ApiResponse<>(true, HttpStatus.NO_CONTENT.value(), "Type deleted successfully with id : " + id, null));
     }
 }

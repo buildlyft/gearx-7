@@ -6,8 +6,10 @@ import com.gearx7.app.domain.Subcategory;
 import com.gearx7.app.repository.CategoryRepository;
 import com.gearx7.app.repository.SubcategoryRepository;
 import com.gearx7.app.service.CategoryService;
+import com.gearx7.app.service.dto.ApiResponse;
 import com.gearx7.app.service.dto.CategoryDTO;
 import com.gearx7.app.web.rest.errors.BadRequestAlertException;
+import com.gearx7.app.web.rest.errors.NotFoundAlertException;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import java.net.URI;
@@ -21,6 +23,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -68,7 +71,7 @@ public class CategoryResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PostMapping(value = "", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<CategoryDTO> createCategory(
+    public ResponseEntity<ApiResponse<CategoryDTO>> createCategory(
         @Valid @RequestPart("category") CategoryDTO categoryDTO,
         @RequestPart("file") MultipartFile image
     ) throws URISyntaxException, JsonProcessingException {
@@ -79,15 +82,34 @@ public class CategoryResource {
         }
         CategoryDTO result = categoryService.save(categoryDTO, image);
         return ResponseEntity
-            .created(new URI("/api/categories/" + result.getId()))
-            .headers(HeaderUtil.createEntityCreationAlert(applicationName, false, ENTITY_NAME, result.getId().toString()))
-            .body(result);
+            .status(HttpStatus.CREATED)
+            .body(new ApiResponse<>(true, HttpStatus.CREATED.value(), "Category created successfully with id " + result.getId(), result));
     }
 
     @GetMapping("/{id}/subcategories")
-    public ResponseEntity<List<Subcategory>> getSubcategoriesByCategoryId(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<List<Subcategory>>> getSubcategoriesByCategoryId(@PathVariable Long id) {
+        log.info("REST request to get subcategories for Category ID: {}", id);
+        // CHECK CATEGORY EXISTS
+        if (!categoryRepository.existsById(id)) {
+            log.info("Category not found with ID: {}", id);
+            throw new NotFoundAlertException("Category not found with id : " + id, "category", "CategoryNotFound");
+        }
         List<Subcategory> subcategories = subcategoryRepository.findByCategoryId(id);
-        return ResponseEntity.ok().body(subcategories);
+        if (subcategories.isEmpty()) {
+            log.info("No subcategories found for Category ID: {}", id);
+        } else {
+            log.info("Found {} subcategories for Category ID: {}", subcategories.size(), id);
+        }
+        return ResponseEntity.ok(
+            new ApiResponse<>(
+                true,
+                HttpStatus.OK.value(),
+                subcategories.isEmpty()
+                    ? "Subcategories not found for Category ID: " + id
+                    : "Subcategories data fetched successfully based on the Category ID: " + id,
+                subcategories
+            )
+        );
     }
 
     /**
@@ -101,7 +123,7 @@ public class CategoryResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<CategoryDTO> updateCategory(
+    public ResponseEntity<ApiResponse<CategoryDTO>> updateCategory(
         @PathVariable(value = "id", required = false) final Long id,
         @Valid @RequestPart("category") CategoryDTO categoryDTO,
         @RequestPart(required = false, value = "file") MultipartFile image
@@ -115,10 +137,7 @@ public class CategoryResource {
         }
 
         CategoryDTO result = categoryService.update(categoryDTO, image);
-        return ResponseEntity
-            .ok()
-            .headers(HeaderUtil.createEntityUpdateAlert(applicationName, false, ENTITY_NAME, result.getId().toString()))
-            .body(result);
+        return ResponseEntity.ok(new ApiResponse<>(true, HttpStatus.OK.value(), "Category updated successfully", result));
     }
 
     /**
@@ -134,7 +153,7 @@ public class CategoryResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PatchMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<CategoryDTO> partialUpdateCategory(
+    public ResponseEntity<ApiResponse<CategoryDTO>> partialUpdateCategory(
         @PathVariable(value = "id", required = false) final Long id,
         @RequestPart("category") CategoryDTO categoryDTO,
         @RequestPart(value = "image", required = false) MultipartFile image
@@ -152,10 +171,7 @@ public class CategoryResource {
         CategoryDTO result = categoryService.partialUpdate(categoryDTO, image);
         log.info("Category partially updated successfully | id={}", result.getId());
 
-        return ResponseEntity
-            .ok()
-            .headers(HeaderUtil.createEntityUpdateAlert(applicationName, false, ENTITY_NAME, categoryDTO.getId().toString()))
-            .body(result);
+        return ResponseEntity.ok(new ApiResponse<>(true, HttpStatus.OK.value(), "Category partially updated successfully", result));
     }
 
     /**
@@ -165,11 +181,18 @@ public class CategoryResource {
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of categories in body.
      */
     @GetMapping("")
-    public ResponseEntity<List<CategoryDTO>> getAllCategories(@ParameterObject Pageable pageable) {
+    public ResponseEntity<ApiResponse<List<CategoryDTO>>> getAllCategories(@ParameterObject Pageable pageable) {
         log.debug("REST request to get a page of Categories");
         Page<CategoryDTO> page = categoryService.findAll(pageable);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
-        return ResponseEntity.ok().headers(headers).body(page.getContent());
+        return ResponseEntity.ok(
+            new ApiResponse<>(
+                true,
+                HttpStatus.OK.value(),
+                page.getContent().isEmpty() ? "Categories data not available" : "Categories data fetched successfully",
+                page.getContent()
+            )
+        );
     }
 
     /**
@@ -179,10 +202,17 @@ public class CategoryResource {
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the category, or with status {@code 404 (Not Found)}.
      */
     @GetMapping("/{id}")
-    public ResponseEntity<CategoryDTO> getCategory(@PathVariable("id") Long id) {
+    public ResponseEntity<ApiResponse<CategoryDTO>> getCategory(@PathVariable("id") Long id) {
         log.debug("REST request to get Category : {}", id);
         CategoryDTO category = categoryService.findOne(id);
-        return ResponseEntity.ok(category);
+        return ResponseEntity.ok(
+            new ApiResponse<>(
+                true,
+                HttpStatus.OK.value(),
+                category == null ? "Category not found with id: " + id : "Category data fetched successfully",
+                category
+            )
+        );
     }
 
     /**
@@ -192,12 +222,9 @@ public class CategoryResource {
      * @return the {@link ResponseEntity} with status {@code 204 (NO_CONTENT)}.
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteCategory(@PathVariable("id") Long id) {
+    public ResponseEntity<ApiResponse<Void>> deleteCategory(@PathVariable("id") Long id) {
         log.debug("REST request to delete Category : {}", id);
         categoryService.delete(id);
-        return ResponseEntity
-            .noContent()
-            .headers(HeaderUtil.createEntityDeletionAlert(applicationName, false, ENTITY_NAME, id.toString()))
-            .build();
+        return ResponseEntity.ok(new ApiResponse<>(true, HttpStatus.OK.value(), "Category deleted successfully", null));
     }
 }

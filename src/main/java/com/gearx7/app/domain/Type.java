@@ -18,7 +18,7 @@ public class Type {
     private Long id;
 
     @Column(name = "type_name", nullable = false, unique = true)
-    @NotBlank
+    @NotBlank(message = "Type name must not be blank")
     @Size(min = 3, max = 100)
     private String typeName;
 

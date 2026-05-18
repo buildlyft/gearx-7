@@ -69,7 +69,7 @@ public class SubcategoryService {
         Subcategory saved = subcategoryRepository.save(subcategory);
         String imageUrl = documentStorageService.uploadSubcategoryImage(image, saved.getId());
         saved.setImageUrl(imageUrl);
-        Subcategory finalSaved = subcategoryRepository.save(saved);
+        Subcategory finalSaved = subcategoryRepository.saveAndFlush(saved);
         log.info("Subcategory created successfully with ID: {}", finalSaved.getId());
         return subcategoryMapper.toDto(finalSaved);
     }

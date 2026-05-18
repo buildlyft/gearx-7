@@ -72,7 +72,7 @@ public class CategoryService {
         // Step 3: Update with real URL
         saved.setImageUrl(imageUrl);
 
-        Category finalCategory = categoryRepository.save(saved);
+        Category finalCategory = categoryRepository.saveAndFlush(saved);
 
         log.info("Category created successfully | id={}", finalCategory.getId());
 
