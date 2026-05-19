@@ -41,7 +41,11 @@
       <tbody>
         <tr *ngFor="let doc of documents; trackBy: trackId">
           <td>{{ doc.id }}</td>
-          <td>{{ doc.machineId }}</td>
+          <td>
+            <a [routerLink]="['/machine', doc.machineId, 'view']">
+              {{ doc.machineId }}
+            </a>
+          </td>
           <td>{{ doc.docType }}</td>
           <td>{{ doc.fileName }}</td>
           <td>
@@ -51,7 +55,11 @@
           </td>
           <td>{{ doc.contentType }}</td>
           <td>{{ doc.size }} bytes</td>
-          <td>{{ doc.uploadedBy }}</td>
+          <td>
+            <a [routerLink]="['/admin/user-management', doc.uploadedBy]">
+              {{ doc.uploadedBy }}
+            </a>
+          </td>
           <td>{{ doc.uploadedAt | date: 'medium' }}</td>
 
           <!-- Actions (EXACT same style as MachineOperator) -->

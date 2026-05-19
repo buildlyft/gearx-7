@@ -4,21 +4,6 @@
       <h2>Assign Operator</h2>
 
       <div>
-        <!-- Machine -->
-        <div class="mb-3">
-          <label class="form-label">Machine</label>
-
-          <select class="form-control" formControlName="machineId">
-            <option [ngValue]="null">Select Machine</option>
-
-            <option *ngFor="let m of machines" [ngValue]="m.id">{{ m.brand }} {{ m.model }}</option>
-          </select>
-
-          <small class="text-danger" *ngIf="editForm.get('machineId')?.invalid && editForm.get('machineId')?.touched">
-            Machine is required
-          </small>
-        </div>
-
         <!-- Driver Name -->
         <div class="mb-3">
           <label class="form-label">Driver Name</label>
@@ -27,6 +12,20 @@
           <small class="text-danger" *ngIf="editForm.get('driverName')?.invalid && editForm.get('driverName')?.touched">
             Driver name is required
           </small>
+        </div>
+
+        <!-- Operator Photo Upload -->
+        <div class="mb-3">
+          <label class="form-label">Upload Operator Photo</label>
+
+          <input type="file" class="form-control" accept="image/*" (change)="onPhotoChange($event)" />
+        </div>
+
+        <div *ngIf="photoPreviewUrl" class="mt-3">
+          <label class="form-label">Photo Preview</label>
+          <br />
+
+          <img [src]="photoPreviewUrl" alt="Photo Preview" width="200" style="border: 1px solid #ccc; border-radius: 6px" />
         </div>
 
         <!-- Contact -->
@@ -41,12 +40,6 @@
           <textarea class="form-control" rows="3" formControlName="address"></textarea>
         </div>
 
-        <!-- Active -->
-        <div class="mb-3">
-          <label class="form-label me-2">Active</label>
-          <input type="checkbox" formControlName="active" class="form-check-input" />
-        </div>
-
         <!-- License Date -->
         <div class="mb-3">
           <label class="form-label">License Issue Date</label>
@@ -56,12 +49,12 @@
         <!-- File Upload -->
         <div class="mb-3">
           <label class="form-label">Upload License Document</label>
-          <input type="file" class="form-control" accept="image/*" (change)="onFileChange($event)" />
+          <input type="file" class="form-control" accept="image/*" (change)="onLicenseChange($event)" />
         </div>
-        <div *ngIf="previewUrl" class="mt-3">
+        <div *ngIf="licensePreviewUrl" class="mt-3">
           <label class="form-label">License Preview</label>
           <br />
-          <img [src]="previewUrl" alt="License Preview" width="200" style="border: 1px solid #ccc; border-radius: 6px" />
+          <img [src]="licensePreviewUrl" alt="License Preview" width="200" style="border: 1px solid #ccc; border-radius: 6px" />
         </div>
       </div>
 

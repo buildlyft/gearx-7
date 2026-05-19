@@ -22,7 +22,11 @@ export class VehicleDocumentDeleteDialogComponent {
 
     this.vehicleDocumentService.deleteDocument(this.id).subscribe({
       next: () => this.activeModal.close('deleted'),
-      error: () => this.activeModal.dismiss(),
+      error: err => {
+        alert(err?.error?.message ?? "You don't have any access to delete vehicle documents from machine");
+
+        this.activeModal.dismiss();
+      },
     });
   }
 

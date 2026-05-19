@@ -3,7 +3,7 @@ import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 import { map } from 'rxjs/operators';
-
+import { ApiResponse } from 'app/core/models/api-response.model';
 import dayjs from 'dayjs/esm';
 
 import { isPresent } from 'app/core/util/operators';
@@ -38,39 +38,41 @@ export class MachineService {
   create(machine: NewMachine): Observable<EntityResponseType> {
     const copy = this.convertDateFromClient(machine);
     return this.http
-      .post<RestMachine>(this.resourceUrl, copy, { observe: 'response' })
+      .post<ApiResponse<RestMachine>>(this.resourceUrl, copy, { observe: 'response' })
       .pipe(map(res => this.convertResponseFromServer(res)));
   }
 
   update(machine: IMachine): Observable<EntityResponseType> {
     const copy = this.convertDateFromClient(machine);
     return this.http
-      .put<RestMachine>(`${this.resourceUrl}/${this.getMachineIdentifier(machine)}`, copy, { observe: 'response' })
+      .put<ApiResponse<RestMachine>>(`${this.resourceUrl}/${this.getMachineIdentifier(machine)}`, copy, { observe: 'response' })
       .pipe(map(res => this.convertResponseFromServer(res)));
   }
 
   partialUpdate(machine: PartialUpdateMachine): Observable<EntityResponseType> {
     const copy = this.convertDateFromClient(machine);
     return this.http
-      .patch<RestMachine>(`${this.resourceUrl}/${this.getMachineIdentifier(machine)}`, copy, { observe: 'response' })
+      .patch<ApiResponse<RestMachine>>(`${this.resourceUrl}/${this.getMachineIdentifier(machine)}`, copy, { observe: 'response' })
       .pipe(map(res => this.convertResponseFromServer(res)));
   }
 
   find(id: number): Observable<EntityResponseType> {
     return this.http
-      .get<RestMachine>(`${this.resourceUrl}/${id}`, { observe: 'response' })
+      .get<ApiResponse<RestMachine>>(`${this.resourceUrl}/${id}`, { observe: 'response' })
       .pipe(map(res => this.convertResponseFromServer(res)));
   }
 
   query(req?: any): Observable<EntityArrayResponseType> {
     const options = createRequestOption(req);
     return this.http
-      .get<RestMachine[]>(this.resourceUrl, { params: options, observe: 'response' })
+      .get<ApiResponse<RestMachine[]>>(this.resourceUrl, { params: options, observe: 'response' })
       .pipe(map(res => this.convertResponseArrayFromServer(res)));
   }
 
-  delete(id: number): Observable<HttpResponse<{}>> {
-    return this.http.delete(`${this.resourceUrl}/${id}`, { observe: 'response' });
+  delete(id: number): Observable<HttpResponse<ApiResponse<null>>> {
+    return this.http.delete<ApiResponse<null>>(`${this.resourceUrl}/${id}`, {
+      observe: 'response',
+    });
   }
 
   getMachineIdentifier(machine: Pick<IMachine, 'id'>): number {
@@ -83,7 +85,7 @@ export class MachineService {
 
   queryWithoutOperator(): Observable<EntityArrayResponseType> {
     return this.http
-      .get<RestMachine[]>(`${this.resourceUrl}/without-operator`, { observe: 'response' })
+      .get<ApiResponse<RestMachine[]>>(`${this.resourceUrl}/without-operator`, { observe: 'response' })
       .pipe(map(res => this.convertResponseArrayFromServer(res)));
   }
 
@@ -121,15 +123,15 @@ export class MachineService {
     };
   }
 
-  protected convertResponseFromServer(res: HttpResponse<RestMachine>): HttpResponse<IMachine> {
+  protected convertResponseFromServer(res: HttpResponse<ApiResponse<RestMachine>>): HttpResponse<IMachine> {
     return res.clone({
-      body: res.body ? this.convertDateFromServer(res.body) : null,
+      body: res.body?.data ? this.convertDateFromServer(res.body.data) : null,
     });
   }
 
-  protected convertResponseArrayFromServer(res: HttpResponse<RestMachine[]>): HttpResponse<IMachine[]> {
+  protected convertResponseArrayFromServer(res: HttpResponse<ApiResponse<RestMachine[]>>): HttpResponse<IMachine[]> {
     return res.clone({
-      body: res.body ? res.body.map(item => this.convertDateFromServer(item)) : null,
+      body: res.body?.data ? res.body.data.map(item => this.convertDateFromServer(item)) : null,
     });
   }
 }

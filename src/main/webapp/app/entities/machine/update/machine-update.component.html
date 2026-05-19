@@ -220,6 +220,18 @@
         </div>
 
         <div class="mb-3">
+          <label class="form-label">Assign Operator</label>
+          <div *ngIf="operators.length === 0" class="alert alert-warning">No operators available. Please create operator first.</div>
+          <select class="form-control" formControlName="operatorId">
+            <option [ngValue]="null">Select Operator</option>
+
+            <option *ngFor="let operator of operators" [ngValue]="operator.operatorId">
+              {{ operator.driverName }}
+            </option>
+          </select>
+        </div>
+
+        <div class="mb-3">
           <label class="form-label" for="field_createdDate">Created Date</label>
           <div class="d-flex">
             <input

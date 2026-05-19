@@ -39,7 +39,7 @@ export class MachineOperatorComponent implements OnInit {
   load(): void {
     this.isLoading = true;
 
-    this.machineOperatorService.getAllActive().subscribe({
+    this.machineOperatorService.getAllByPartner().subscribe({
       next: (res: HttpResponse<IMachineOperator[]>) => {
         this.machineOperators = res.body ?? [];
         this.isLoading = false;

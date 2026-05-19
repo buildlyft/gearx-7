@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Observable } from 'rxjs';
-
+import { map } from 'rxjs/operators';
+import { ApiResponse } from 'app/core/models/api-response.model';
 import { ApplicationConfigService } from 'app/core/config/application-config.service';
 import { IMachineOperator } from '../machineOperator.model';
 
@@ -17,31 +18,65 @@ export class MachineOperatorService {
     protected applicationConfigService: ApplicationConfigService,
   ) {}
 
-  getAllActive(): Observable<EntityArrayResponseType> {
-    return this.http.get<IMachineOperator[]>(`${this.resourceUrl}/active`, {
-      observe: 'response',
-    });
-  }
-
-  getByMachine(machineId: number): Observable<EntityResponseType> {
-    return this.http.get<IMachineOperator>(`${this.resourceUrl}/machine/${machineId}`, { observe: 'response' });
-  }
-
   create(formData: FormData): Observable<EntityResponseType> {
-    return this.http.post<IMachineOperator>(`${this.resourceUrl}/create_and_assign`, formData, { observe: 'response' });
+    return this.http
+      .post<ApiResponse<IMachineOperator>>(`${this.resourceUrl}/create_and_assign`, formData, {
+        observe: 'response',
+      })
+      .pipe(map(res => this.convertResponseFromServer(res)));
   }
 
-  reassign(machineId: number, formData: FormData): Observable<EntityResponseType> {
-    return this.http.put<IMachineOperator>(`${this.resourceUrl}/machine/${machineId}`, formData, { observe: 'response' });
+  getAllByPartner(): Observable<EntityArrayResponseType> {
+    return this.http
+      .get<ApiResponse<IMachineOperator[]>>(`${this.resourceUrl}/partner`, {
+        observe: 'response',
+      })
+      .pipe(map(res => this.convertResponseArrayFromServer(res)));
   }
 
-  delete(id: number): Observable<HttpResponse<{}>> {
-    return this.http.delete(`${this.resourceUrl}/${id}`, {
+  find(id: number): Observable<EntityResponseType> {
+    return this.http
+      .get<ApiResponse<IMachineOperator>>(`${this.resourceUrl}/${id}`, {
+        observe: 'response',
+      })
+      .pipe(map(res => this.convertResponseFromServer(res)));
+  }
+
+  update(operatorId: number, formData: FormData): Observable<EntityResponseType> {
+    return this.http
+      .put<ApiResponse<IMachineOperator>>(`${this.resourceUrl}/${operatorId}`, formData, {
+        observe: 'response',
+      })
+      .pipe(map(res => this.convertResponseFromServer(res)));
+  }
+
+  partialUpdate(operatorId: number, formData: FormData): Observable<EntityResponseType> {
+    return this.http
+      .patch<ApiResponse<IMachineOperator>>(`${this.resourceUrl}/${operatorId}`, formData, {
+        observe: 'response',
+      })
+      .pipe(map(res => this.convertResponseFromServer(res)));
+  }
+
+  delete(id: number): Observable<HttpResponse<ApiResponse<null>>> {
+    return this.http.delete<ApiResponse<null>>(`${this.resourceUrl}/${id}`, {
       observe: 'response',
     });
   }
 
   getMachineOperatorIdentifier(operator: Pick<IMachineOperator, 'operatorId'>): number {
     return operator.operatorId;
+  }
+
+  protected convertResponseFromServer(res: HttpResponse<ApiResponse<IMachineOperator>>): HttpResponse<IMachineOperator> {
+    return res.clone({
+      body: res.body?.data ?? null,
+    });
+  }
+
+  protected convertResponseArrayFromServer(res: HttpResponse<ApiResponse<IMachineOperator[]>>): HttpResponse<IMachineOperator[]> {
+    return res.clone({
+      body: res.body?.data ?? [],
+    });
   }
 }

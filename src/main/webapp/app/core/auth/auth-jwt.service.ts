@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-
+import { ApiResponse } from 'app/core/models/api-response.model';
 import { Login } from 'app/login/login.model';
 import { ApplicationConfigService } from '../config/application-config.service';
 import { StateStorageService } from './state-storage.service';
@@ -25,7 +25,7 @@ export class AuthServerProvider {
 
   login(credentials: Login): Observable<void> {
     return this.http
-      .post<JwtToken>(this.applicationConfigService.getEndpointFor('api/authenticate'), credentials)
+      .post<ApiResponse<JwtToken>>(this.applicationConfigService.getEndpointFor('api/authenticate'), credentials)
       .pipe(map(response => this.authenticateSuccess(response, credentials.rememberMe)));
   }
 
@@ -36,7 +36,7 @@ export class AuthServerProvider {
     });
   }
 
-  private authenticateSuccess(response: JwtToken, rememberMe: boolean): void {
-    this.stateStorageService.storeAuthenticationToken(response.id_token, rememberMe);
+  private authenticateSuccess(response: ApiResponse<JwtToken>, rememberMe: boolean): void {
+    this.stateStorageService.storeAuthenticationToken(response.data.id_token, rememberMe);
   }
 }

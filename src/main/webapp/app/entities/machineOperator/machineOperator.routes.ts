@@ -15,13 +15,13 @@ export const machineOperatorRoutes: Routes = [
     canActivate: [UserRouteAccessService],
   },
   {
-    path: ':machineId/view',
+    path: ':operatorId/view',
     loadComponent: () => import('./details/machineOperator-detail.component').then(m => m.MachineOperatorDetailComponent),
     resolve: { machineOperator: machineOperatorResolve },
     canActivate: [UserRouteAccessService],
   },
   {
-    path: ':machineId/edit',
+    path: ':operatorId/edit',
     loadComponent: () => import('./update/machineOperator-update.component').then(m => m.MachineOperatorUpdateComponent),
     resolve: { machineOperator: machineOperatorResolve },
     canActivate: [UserRouteAccessService],

@@ -19,6 +19,8 @@ import { ICategory } from 'app/entities/category/category.model';
 import { ISubcategory } from 'app/entities/subcategory/subcategory.model';
 import { TypeService } from 'app/entities/type/service/type.service';
 import { IType } from 'app/entities/type/type.model';
+import { IMachineOperator } from 'app/entities/machineOperator/machineOperator.model';
+import { MachineOperatorService } from 'app/entities/machineOperator/service/machineOperator.service';
 
 @Component({
   standalone: true,
@@ -30,6 +32,7 @@ export class MachineUpdateComponent implements OnInit {
   types: IType[] = [];
   categories: ICategory[] = [];
   subcategories: ISubcategory[] = [];
+  operators: IMachineOperator[] = [];
 
   isSaving = false;
   machine: IMachine | null = null;
@@ -47,6 +50,7 @@ export class MachineUpdateComponent implements OnInit {
     protected categoryService: CategoryService,
     protected subcategoryService: SubcategoryService,
     protected typeService: TypeService,
+    protected machineOperatorService: MachineOperatorService,
   ) {}
 
   compareUser = (o1: IUser | null, o2: IUser | null): boolean => this.userService.compareUser(o1, o2);
@@ -57,6 +61,7 @@ export class MachineUpdateComponent implements OnInit {
   ngOnInit(): void {
     this.loadUsers();
     this.loadTypes();
+    this.loadOperators();
 
     this.activatedRoute.data.subscribe(({ machine }) => {
       this.machine = machine;
@@ -89,6 +94,12 @@ export class MachineUpdateComponent implements OnInit {
   private loadTypes(): void {
     this.typeService.query().subscribe(res => {
       this.types = res.body ?? [];
+    });
+  }
+
+  private loadOperators(): void {
+    this.machineOperatorService.getAllByPartner().subscribe(res => {
+      this.operators = res.body ?? [];
     });
   }
 
@@ -153,8 +164,28 @@ export class MachineUpdateComponent implements OnInit {
   protected subscribeToSaveResponse(result: Observable<HttpResponse<IMachine>>): void {
     result.pipe(finalize(() => (this.isSaving = false))).subscribe({
       next: () => this.previousState(),
-      error: () => {},
+
+      error: err => {
+        const machine = this.machineFormService.getMachine(this.editForm);
+
+        alert(err?.error?.message ?? this.getAccessDeniedMessage(machine));
+      },
     });
+  }
+
+  private getAccessDeniedMessage(machine: any): string {
+    // create
+    if (machine.id === null) {
+      return "You don't have any access to create a machine";
+    }
+
+    // attach operator
+    if (machine.operatorId) {
+      return "You don't have any access to attach operator to a machine";
+    }
+
+    // update
+    return "You don't have any access to update a machine";
   }
 
   previousState(): void {

@@ -98,8 +98,10 @@ export class VehicleDocumentUpdateComponent implements OnInit {
         this.isSaving = false;
         this.router.navigate(['/vehicle-document']);
       },
-      error: () => {
+      error: err => {
         this.isSaving = false;
+
+        alert(err?.error?.message ?? "You don't have any access to attach vehicle documents to machine");
       },
     });
   }

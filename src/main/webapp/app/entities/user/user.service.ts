@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Observable } from 'rxjs';
-
+import { map } from 'rxjs/operators';
+import { ApiResponse } from 'app/core/models/api-response.model';
 import { ApplicationConfigService } from 'app/core/config/application-config.service';
 import { createRequestOption } from 'app/core/request/request-util';
 import { isPresent } from 'app/core/util/operators';
@@ -19,7 +20,12 @@ export class UserService {
 
   query(req?: Pagination): Observable<HttpResponse<IUser[]>> {
     const options = createRequestOption(req);
-    return this.http.get<IUser[]>(this.resourceUrl, { params: options, observe: 'response' });
+    return this.http
+      .get<ApiResponse<IUser[]>>(this.resourceUrl, {
+        params: options,
+        observe: 'response',
+      })
+      .pipe(map(res => this.convertResponseArrayFromServer(res)));
   }
 
   compareUser(o1: Pick<IUser, 'id'> | null, o2: Pick<IUser, 'id'> | null): boolean {
@@ -44,5 +50,11 @@ export class UserService {
       return [...usersToAdd, ...userCollection];
     }
     return userCollection;
+  }
+
+  protected convertResponseArrayFromServer(res: HttpResponse<ApiResponse<IUser[]>>): HttpResponse<IUser[]> {
+    return res.clone({
+      body: res.body?.data ?? [],
+    });
   }
 }

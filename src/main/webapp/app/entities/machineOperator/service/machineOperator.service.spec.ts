@@ -34,36 +34,52 @@ describe('MachineOperatorService', () => {
   });
 
   // ---------------------------------------------------
-  // GET ALL ACTIVE
+  // GET ALL operators by partner
   // ---------------------------------------------------
-  it('should retrieve all active operators', () => {
+  it('should retrieve all operators by partner', () => {
     const mockResponse = [{ operatorId: 1, driverName: 'Ravi' }];
 
-    service.getAllActive().subscribe(res => {
+    service.getAllByPartner().subscribe(res => {
       expect(res.body).toEqual(mockResponse);
     });
 
-    const req = httpMock.expectOne(`${mockApiUrl}/active`);
+    const req = httpMock.expectOne(`${mockApiUrl}/partner`);
+
     expect(req.request.method).toBe('GET');
 
-    req.flush(mockResponse);
+    req.flush({
+      success: true,
+      status: 200,
+      message: 'success',
+      data: mockResponse,
+    });
   });
 
   // ---------------------------------------------------
   // GET BY MACHINE
   // ---------------------------------------------------
-  it('should retrieve operator by machineId', () => {
-    const machineId = 123;
-    const mockResponse = { operatorId: 1, machineId };
+  it('should retrieve operator by id', () => {
+    const operatorId = 1;
 
-    service.getByMachine(machineId).subscribe(res => {
+    const mockResponse = {
+      operatorId: 1,
+      driverName: 'Ravi',
+    };
+
+    service.find(operatorId).subscribe(res => {
       expect(res.body).toEqual(mockResponse);
     });
 
-    const req = httpMock.expectOne(`${mockApiUrl}/machine/${machineId}`);
+    const req = httpMock.expectOne(`${mockApiUrl}/${operatorId}`);
+
     expect(req.request.method).toBe('GET');
 
-    req.flush(mockResponse);
+    req.flush({
+      success: true,
+      status: 200,
+      message: 'success',
+      data: mockResponse,
+    });
   });
 
   // ---------------------------------------------------
@@ -87,20 +103,29 @@ describe('MachineOperatorService', () => {
   // ---------------------------------------------------
   // REASSIGN
   // ---------------------------------------------------
-  it('should reassign operator with multipart form data', () => {
-    const machineId = 123;
-    const formData = new FormData();
-    formData.append('machineId', '123');
+  it('should update operator with multipart form data', () => {
+    const operatorId = 1;
 
-    service.reassign(machineId, formData).subscribe(res => {
+    const formData = new FormData();
+
+    formData.append('driverName', 'Ravi');
+
+    service.update(operatorId, formData).subscribe(res => {
       expect(res).toBeInstanceOf(HttpResponse);
     });
 
-    const req = httpMock.expectOne(`${mockApiUrl}/machine/${machineId}`);
+    const req = httpMock.expectOne(`${mockApiUrl}/${operatorId}`);
+
     expect(req.request.method).toBe('PUT');
+
     expect(req.request.body instanceof FormData).toBeTrue();
 
-    req.flush({ operatorId: 1 });
+    req.flush({
+      success: true,
+      status: 200,
+      message: 'updated',
+      data: { operatorId: 1 },
+    });
   });
 
   // ---------------------------------------------------
@@ -117,5 +142,30 @@ describe('MachineOperatorService', () => {
     expect(req.request.method).toBe('DELETE');
 
     req.flush({});
+  });
+
+  it('should partially update operator', () => {
+    const operatorId = 1;
+
+    const formData = new FormData();
+
+    formData.append('driverName', 'Ravi');
+
+    service.partialUpdate(operatorId, formData).subscribe(res => {
+      expect(res).toBeInstanceOf(HttpResponse);
+    });
+
+    const req = httpMock.expectOne(`${mockApiUrl}/${operatorId}`);
+
+    expect(req.request.method).toBe('PATCH');
+
+    expect(req.request.body instanceof FormData).toBeTrue();
+
+    req.flush({
+      success: true,
+      status: 200,
+      message: 'patched',
+      data: { operatorId: 1 },
+    });
   });
 });

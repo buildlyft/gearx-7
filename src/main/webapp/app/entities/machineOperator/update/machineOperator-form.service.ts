@@ -29,6 +29,7 @@ type MachineOperatorFormGroupContent = {
   address: FormControl<IMachineOperator['address']>;
   active: FormControl<IMachineOperator['active']>;
   licenseIssueDate: FormControl<IMachineOperator['licenseIssueDate']>;
+  imageUrl: FormControl<IMachineOperator['imageUrl']>;
   docUrl: FormControl<IMachineOperator['docUrl']>;
   createdAt: FormControl<IMachineOperator['createdAt']>;
 };
@@ -51,9 +52,7 @@ export class MachineOperatorFormService {
           validators: [],
         },
       ),
-      machineId: new FormControl<number | null>(machineOperatorRawValue.machineId ?? null, {
-        validators: [Validators.required],
-      }),
+      machineId: new FormControl<number | null>(machineOperatorRawValue.machineId ?? null),
       driverName: new FormControl(machineOperatorRawValue.driverName, {
         validators: [Validators.required, Validators.minLength(3)],
       }),
@@ -65,6 +64,7 @@ export class MachineOperatorFormService {
       licenseIssueDate: new FormControl(machineOperatorRawValue.licenseIssueDate, {
         validators: [Validators.required],
       }),
+      imageUrl: new FormControl(machineOperatorRawValue.imageUrl),
       docUrl: new FormControl(machineOperatorRawValue.docUrl),
       createdAt: new FormControl(machineOperatorRawValue.createdAt),
     });

@@ -1,21 +1,26 @@
-<div *ngIf="type">
-  <h2>Type</h2>
+<div class="d-flex justify-content-center">
+  <div class="col-8">
+    <div *ngIf="type">
+      <h2>Type</h2>
 
-  <dl class="row">
-    <dt>ID</dt>
-    <dd>{{ type.id }}</dd>
+      <dl class="row-md jh-entity-details">
+        <dt>ID</dt>
+        <dd>{{ type.id }}</dd>
 
-    <dt>Type Name</dt>
-    <dd>{{ type.typeName }}</dd>
-    <dt>Image URL</dt>
-    <dd>
-      <a *ngIf="type.imageUrl" [href]="type.imageUrl" target="_blank" rel="noopener noreferrer">
-        {{ type.imageUrl }}
-      </a>
-    </dd>
-  </dl>
+        <dt>Type Name</dt>
+        <dd>{{ type.typeName }}</dd>
 
-  <button (click)="previousState()" class="btn btn-info">Back</button>
+        <dt>Image URL</dt>
+        <dd>
+          <a *ngIf="type.imageUrl" [href]="type.imageUrl" target="_blank" rel="noopener noreferrer">
+            {{ type.imageUrl }}
+          </a>
+        </dd>
+      </dl>
 
-  <button [routerLink]="['/type', type.id, 'edit']" class="btn btn-primary">Edit</button>
+      <button (click)="previousState()" class="btn btn-info">Back</button>
+
+      <button [routerLink]="['/type', type.id, 'edit']" class="btn btn-primary">Edit</button>
+    </div>
+  </div>
 </div>

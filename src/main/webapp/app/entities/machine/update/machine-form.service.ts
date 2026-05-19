@@ -53,6 +53,7 @@ type MachineFormGroupContent = {
   typeId: FormControl<MachineFormRawValue['typeId']>;
   categoryId: FormControl<MachineFormRawValue['categoryId']>;
   subcategoryId: FormControl<MachineFormRawValue['subcategoryId']>;
+  operatorId: FormControl<MachineFormRawValue['operatorId']>;
   user: FormControl<MachineFormRawValue['user']>;
 };
 
@@ -82,7 +83,9 @@ export class MachineFormService {
       tag: new FormControl(machineRawValue.tag),
       model: new FormControl(machineRawValue.model),
       vinNumber: new FormControl(machineRawValue.vinNumber),
-      chassisNumber: new FormControl(machineRawValue.chassisNumber),
+      chassisNumber: new FormControl(machineRawValue.chassisNumber, {
+        validators: [Validators.required],
+      }),
       description: new FormControl(machineRawValue.description),
       capacityTon: new FormControl(machineRawValue.capacityTon),
       ratePerHour: new FormControl(machineRawValue.ratePerHour, {
@@ -117,7 +120,7 @@ export class MachineFormService {
       subcategoryId: new FormControl(machineRawValue.subcategoryId, {
         validators: [Validators.required],
       }),
-
+      operatorId: new FormControl(machineRawValue.operatorId),
       user: new FormControl(machineRawValue.user),
     });
   }

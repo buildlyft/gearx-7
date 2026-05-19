@@ -8,11 +8,11 @@ import { IMachineOperator } from '../machineOperator.model';
 import { MachineOperatorService } from '../service/machineOperator.service';
 
 export const machineOperatorResolve = (route: ActivatedRouteSnapshot) => {
-  const machineId = route.params['machineId'];
+  const operatorId = route.params['operatorId'];
 
-  if (machineId) {
+  if (operatorId) {
     return inject(MachineOperatorService)
-      .getByMachine(machineId)
+      .find(operatorId)
       .pipe(
         mergeMap((res: HttpResponse<IMachineOperator>) => {
           if (res.body) {

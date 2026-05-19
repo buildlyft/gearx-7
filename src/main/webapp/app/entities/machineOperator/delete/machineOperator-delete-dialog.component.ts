@@ -25,8 +25,16 @@ export class MachineOperatorDeleteDialogComponent {
   }
 
   confirmDelete(id: number): void {
-    this.machineOperatorService.delete(id).subscribe(() => {
-      this.activeModal.close(ITEM_DELETED_EVENT);
+    this.machineOperatorService.delete(id).subscribe({
+      next: () => {
+        this.activeModal.close(ITEM_DELETED_EVENT);
+      },
+
+      error: err => {
+        alert(err?.error?.message ?? "You don't have any access to delete machine operator");
+
+        this.activeModal.dismiss();
+      },
     });
   }
 }

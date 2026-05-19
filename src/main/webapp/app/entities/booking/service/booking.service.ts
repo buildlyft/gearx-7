@@ -3,6 +3,7 @@ import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 import { map } from 'rxjs/operators';
+import { ApiResponse } from 'app/core/models/api-response.model';
 
 import dayjs from 'dayjs/esm';
 
@@ -40,39 +41,41 @@ export class BookingService {
   create(booking: NewBooking): Observable<EntityResponseType> {
     const copy = this.convertDateFromClient(booking);
     return this.http
-      .post<RestBooking>(this.resourceUrl, copy, { observe: 'response' })
+      .post<ApiResponse<RestBooking>>(this.resourceUrl, copy, { observe: 'response' })
       .pipe(map(res => this.convertResponseFromServer(res)));
   }
 
   update(booking: IBooking): Observable<EntityResponseType> {
     const copy = this.convertDateFromClient(booking);
     return this.http
-      .put<RestBooking>(`${this.resourceUrl}/${this.getBookingIdentifier(booking)}`, copy, { observe: 'response' })
+      .put<ApiResponse<RestBooking>>(`${this.resourceUrl}/${this.getBookingIdentifier(booking)}`, copy, { observe: 'response' })
       .pipe(map(res => this.convertResponseFromServer(res)));
   }
 
   partialUpdate(booking: PartialUpdateBooking): Observable<EntityResponseType> {
     const copy = this.convertDateFromClient(booking);
     return this.http
-      .patch<RestBooking>(`${this.resourceUrl}/${this.getBookingIdentifier(booking)}`, copy, { observe: 'response' })
+      .patch<ApiResponse<RestBooking>>(`${this.resourceUrl}/${this.getBookingIdentifier(booking)}`, copy, { observe: 'response' })
       .pipe(map(res => this.convertResponseFromServer(res)));
   }
 
   find(id: number): Observable<EntityResponseType> {
     return this.http
-      .get<RestBooking>(`${this.resourceUrl}/${id}`, { observe: 'response' })
+      .get<ApiResponse<RestBooking>>(`${this.resourceUrl}/${id}`, { observe: 'response' })
       .pipe(map(res => this.convertResponseFromServer(res)));
   }
 
   query(req?: any): Observable<EntityArrayResponseType> {
     const options = createRequestOption(req);
     return this.http
-      .get<RestBooking[]>(this.resourceUrl, { params: options, observe: 'response' })
+      .get<ApiResponse<RestBooking[]>>(this.resourceUrl, { params: options, observe: 'response' })
       .pipe(map(res => this.convertResponseArrayFromServer(res)));
   }
 
-  delete(id: number): Observable<HttpResponse<{}>> {
-    return this.http.delete(`${this.resourceUrl}/${id}`, { observe: 'response' });
+  delete(id: number): Observable<HttpResponse<ApiResponse<null>>> {
+    return this.http.delete<ApiResponse<null>>(`${this.resourceUrl}/${id}`, {
+      observe: 'response',
+    });
   }
 
   getBookingIdentifier(booking: Pick<IBooking, 'id'>): number {
@@ -122,15 +125,15 @@ export class BookingService {
     };
   }
 
-  protected convertResponseFromServer(res: HttpResponse<RestBooking>): HttpResponse<IBooking> {
+  protected convertResponseFromServer(res: HttpResponse<ApiResponse<RestBooking>>): HttpResponse<IBooking> {
     return res.clone({
-      body: res.body ? this.convertDateFromServer(res.body) : null,
+      body: res.body?.data ? this.convertDateFromServer(res.body.data) : null,
     });
   }
 
-  protected convertResponseArrayFromServer(res: HttpResponse<RestBooking[]>): HttpResponse<IBooking[]> {
+  protected convertResponseArrayFromServer(res: HttpResponse<ApiResponse<RestBooking[]>>): HttpResponse<IBooking[]> {
     return res.clone({
-      body: res.body ? res.body.map(item => this.convertDateFromServer(item)) : null,
+      body: res.body?.data ? res.body.data.map(item => this.convertDateFromServer(item)) : null,
     });
   }
 }

@@ -26,6 +26,7 @@ export interface IMachine {
   typeId?: number | null;
   categoryId?: number | null;
   subcategoryId?: number | null;
+  operatorId?: number | null;
   user?: Pick<IUser, 'id' | 'login'> | null;
 }
 

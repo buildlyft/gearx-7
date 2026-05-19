@@ -88,7 +88,11 @@
               </td>
               <td>{{ category.name }}</td>
               <td>{{ category.description }}</td>
-              <td>{{ category.typeId }}</td>
+              <td>
+                <a [routerLink]="['/type', category.typeId, 'view']">
+                  {{ category.typeId }}
+                </a>
+              </td>
               <!--<td>
                 @if (category.image) {
                   <a (click)="openFile(category.image, category.imageContentType)">Open</a>

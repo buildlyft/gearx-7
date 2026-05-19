@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Observable } from 'rxjs';
-
+import { map } from 'rxjs/operators';
+import { ApiResponse } from 'app/core/models/api-response.model';
 import { isPresent } from 'app/core/util/operators';
 import { ApplicationConfigService } from 'app/core/config/application-config.service';
 import { createRequestOption } from 'app/core/request/request-util';
@@ -22,52 +23,83 @@ export class SubcategoryService {
   ) {}
 
   create(subcategory: NewSubcategory): Observable<EntityResponseType> {
-    return this.http.post<ISubcategory>(this.resourceUrl, subcategory, { observe: 'response' });
+    return this.http
+      .post<ApiResponse<ISubcategory>>(this.resourceUrl, subcategory, {
+        observe: 'response',
+      })
+      .pipe(map(res => this.convertResponseFromServer(res)));
   }
 
   update(subcategory: ISubcategory): Observable<EntityResponseType> {
-    return this.http.put<ISubcategory>(`${this.resourceUrl}/${this.getSubcategoryIdentifier(subcategory)}`, subcategory, {
-      observe: 'response',
-    });
+    return this.http
+      .put<ApiResponse<ISubcategory>>(`${this.resourceUrl}/${this.getSubcategoryIdentifier(subcategory)}`, subcategory, {
+        observe: 'response',
+      })
+      .pipe(map(res => this.convertResponseFromServer(res)));
   }
 
   createMultipart(formData: FormData) {
-    return this.http.post<ISubcategory>(this.resourceUrl, formData, { observe: 'response' });
+    return this.http
+      .post<ApiResponse<ISubcategory>>(this.resourceUrl, formData, {
+        observe: 'response',
+      })
+      .pipe(map(res => this.convertResponseFromServer(res)));
   }
 
   updateMultipart(id: number, formData: FormData) {
-    return this.http.put<ISubcategory>(`${this.resourceUrl}/${id}`, formData, { observe: 'response' });
+    return this.http
+      .put<ApiResponse<ISubcategory>>(`${this.resourceUrl}/${id}`, formData, {
+        observe: 'response',
+      })
+      .pipe(map(res => this.convertResponseFromServer(res)));
   }
 
   patchMultipart(id: number, formData: FormData) {
-    return this.http.patch<ISubcategory>(`${this.resourceUrl}/${id}`, formData, {
-      observe: 'response',
-    });
+    return this.http
+      .patch<ApiResponse<ISubcategory>>(`${this.resourceUrl}/${id}`, formData, {
+        observe: 'response',
+      })
+      .pipe(map(res => this.convertResponseFromServer(res)));
   }
 
   getSubcategoriesByCategory(categoryId: number): Observable<EntityArrayResponseType> {
-    return this.http.get<ISubcategory[]>(`${this.applicationConfigService.getEndpointFor('api/categories')}/${categoryId}/subcategories`, {
-      observe: 'response',
-    });
+    return this.http
+      .get<ApiResponse<ISubcategory[]>>(`${this.applicationConfigService.getEndpointFor('api/categories')}/${categoryId}/subcategories`, {
+        observe: 'response',
+      })
+      .pipe(map(res => this.convertResponseArrayFromServer(res)));
   }
 
   partialUpdate(subcategory: PartialUpdateSubcategory): Observable<EntityResponseType> {
-    return this.http.patch<ISubcategory>(`${this.resourceUrl}/${this.getSubcategoryIdentifier(subcategory)}`, subcategory, {
-      observe: 'response',
-    });
+    return this.http
+      .patch<ApiResponse<ISubcategory>>(`${this.resourceUrl}/${this.getSubcategoryIdentifier(subcategory)}`, subcategory, {
+        observe: 'response',
+      })
+      .pipe(map(res => this.convertResponseFromServer(res)));
   }
 
   find(id: number): Observable<EntityResponseType> {
-    return this.http.get<ISubcategory>(`${this.resourceUrl}/${id}`, { observe: 'response' });
+    return this.http
+      .get<ApiResponse<ISubcategory>>(`${this.resourceUrl}/${id}`, {
+        observe: 'response',
+      })
+      .pipe(map(res => this.convertResponseFromServer(res)));
   }
 
   query(req?: any): Observable<EntityArrayResponseType> {
     const options = createRequestOption(req);
-    return this.http.get<ISubcategory[]>(this.resourceUrl, { params: options, observe: 'response' });
+    return this.http
+      .get<ApiResponse<ISubcategory[]>>(this.resourceUrl, {
+        params: options,
+        observe: 'response',
+      })
+      .pipe(map(res => this.convertResponseArrayFromServer(res)));
   }
 
-  delete(id: number): Observable<HttpResponse<{}>> {
-    return this.http.delete(`${this.resourceUrl}/${id}`, { observe: 'response' });
+  delete(id: number): Observable<HttpResponse<ApiResponse<null>>> {
+    return this.http.delete<ApiResponse<null>>(`${this.resourceUrl}/${id}`, {
+      observe: 'response',
+    });
   }
 
   getSubcategoryIdentifier(subcategory: Pick<ISubcategory, 'id'>): number {
@@ -98,5 +130,17 @@ export class SubcategoryService {
       return [...subcategoriesToAdd, ...subcategoryCollection];
     }
     return subcategoryCollection;
+  }
+
+  protected convertResponseFromServer(res: HttpResponse<ApiResponse<ISubcategory>>): HttpResponse<ISubcategory> {
+    return res.clone({
+      body: res.body?.data ?? null,
+    });
+  }
+
+  protected convertResponseArrayFromServer(res: HttpResponse<ApiResponse<ISubcategory[]>>): HttpResponse<ISubcategory[]> {
+    return res.clone({
+      body: res.body?.data ?? [],
+    });
   }
 }

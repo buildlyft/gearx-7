@@ -25,8 +25,16 @@ export class MachineDeleteDialogComponent {
   }
 
   confirmDelete(id: number): void {
-    this.machineService.delete(id).subscribe(() => {
-      this.activeModal.close(ITEM_DELETED_EVENT);
+    this.machineService.delete(id).subscribe({
+      next: () => {
+        this.activeModal.close(ITEM_DELETED_EVENT);
+      },
+
+      error: err => {
+        alert(err?.error?.message ?? "You don't have any access to delete machine");
+
+        this.activeModal.dismiss();
+      },
     });
   }
 }
