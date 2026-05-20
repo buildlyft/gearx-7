@@ -69,6 +69,17 @@ export class MachineService {
       .pipe(map(res => this.convertResponseArrayFromServer(res)));
   }
 
+  getMachinesByOwner(req?: any): Observable<EntityArrayResponseType> {
+    const options = createRequestOption(req);
+
+    return this.http
+      .get<ApiResponse<RestMachine[]>>(`${this.resourceUrl}/by-owner`, {
+        params: options,
+        observe: 'response',
+      })
+      .pipe(map(res => this.convertResponseArrayFromServer(res)));
+  }
+
   delete(id: number): Observable<HttpResponse<ApiResponse<null>>> {
     return this.http.delete<ApiResponse<null>>(`${this.resourceUrl}/${id}`, {
       observe: 'response',

@@ -15,6 +15,7 @@ import { ASC, DESC, SORT, ITEM_DELETED_EVENT, DEFAULT_SORT_DATA } from 'app/conf
 import { IBooking } from '../booking.model';
 import { EntityArrayResponseType, BookingService } from '../service/booking.service';
 import { BookingDeleteDialogComponent } from '../delete/booking-delete-dialog.component';
+import { AccountService } from 'app/core/auth/account.service';
 
 @Component({
   standalone: true,
@@ -39,6 +40,9 @@ export class BookingComponent implements OnInit {
   predicate = 'id';
   ascending = false;
 
+  isPartner = false;
+  isUser = false;
+
   itemsPerPage = ITEMS_PER_PAGE;
   totalItems = 0;
   page = 1;
@@ -48,12 +52,19 @@ export class BookingComponent implements OnInit {
     protected activatedRoute: ActivatedRoute,
     public router: Router,
     protected modalService: NgbModal,
+    protected accountService: AccountService,
   ) {}
 
   trackId = (_index: number, item: IBooking): number => this.bookingService.getBookingIdentifier(item);
 
   ngOnInit(): void {
-    this.load();
+    this.accountService.identity().subscribe(account => {
+      this.isPartner = account?.authorities?.includes('ROLE_PARTNER') ?? false;
+
+      this.isUser = account?.authorities?.includes('ROLE_USER') ?? false;
+
+      this.load();
+    });
   }
 
   delete(booking: IBooking): void {
@@ -126,6 +137,10 @@ export class BookingComponent implements OnInit {
       eagerload: true,
       sort: this.getSortQueryParam(predicate, ascending),
     };
+    if (this.isPartner) {
+      return this.bookingService.getBookingsByOwner(queryObject).pipe(tap(() => (this.isLoading = false)));
+    }
+
     return this.bookingService.query(queryObject).pipe(tap(() => (this.isLoading = false)));
   }
 

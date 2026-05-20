@@ -17,6 +17,7 @@ import { EntityArrayResponseType, MachineService } from '../service/machine.serv
 import { MachineDeleteDialogComponent } from '../delete/machine-delete-dialog.component';
 import { TypeService } from 'app/entities/type/service/type.service';
 import { IType } from 'app/entities/type/type.model';
+import { AccountService } from 'app/core/auth/account.service';
 
 @Component({
   standalone: true,
@@ -42,6 +43,9 @@ export class MachineComponent implements OnInit {
   predicate = 'id';
   ascending = true;
 
+  isPartner = false;
+  isUser = false;
+
   itemsPerPage = ITEMS_PER_PAGE;
   totalItems = 0;
   page = 1;
@@ -52,12 +56,23 @@ export class MachineComponent implements OnInit {
     public router: Router,
     protected modalService: NgbModal,
     protected typeService: TypeService,
+    protected accountService: AccountService,
   ) {}
 
   trackId = (_index: number, item: IMachine): number => this.machineService.getMachineIdentifier(item);
 
   ngOnInit(): void {
-    this.load();
+    this.accountService.identity(true).subscribe(account => {
+      console.log(account);
+
+      this.isPartner = account?.authorities?.includes('ROLE_PARTNER') || false;
+
+      this.isUser = account?.authorities?.includes('ROLE_USER') || false;
+
+      console.log(this.isPartner);
+
+      this.load();
+    });
 
     this.typeService.query().subscribe(res => {
       this.types = res.body ?? [];
@@ -134,6 +149,10 @@ export class MachineComponent implements OnInit {
       eagerload: true,
       sort: this.getSortQueryParam(predicate, ascending),
     };
+    if (this.isPartner) {
+      return this.machineService.getMachinesByOwner().pipe(tap(() => (this.isLoading = false)));
+    }
+
     return this.machineService.query(queryObject).pipe(tap(() => (this.isLoading = false)));
   }
 

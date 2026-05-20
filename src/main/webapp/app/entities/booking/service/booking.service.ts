@@ -82,6 +82,17 @@ export class BookingService {
     return booking.id;
   }
 
+  getBookingsByOwner(req?: any): Observable<EntityArrayResponseType> {
+    const options = createRequestOption(req);
+
+    return this.http
+      .get<ApiResponse<RestBooking[]>>(`${this.resourceUrl}/by-owner`, {
+        params: options,
+        observe: 'response',
+      })
+      .pipe(map(res => this.convertResponseArrayFromServer(res)));
+  }
+
   compareBooking(o1: Pick<IBooking, 'id'> | null, o2: Pick<IBooking, 'id'> | null): boolean {
     return o1 && o2 ? this.getBookingIdentifier(o1) === this.getBookingIdentifier(o2) : o1 === o2;
   }
