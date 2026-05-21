@@ -74,7 +74,7 @@ public class ExceptionTranslator extends ResponseEntityExceptionHandler {
 
         String method = httpRequest.getMethod();
 
-        String message = "You are not authorized to perform this action.";
+        String message = ex.getMessage();
 
         // ================= MACHINES =================
 
@@ -87,8 +87,6 @@ public class ExceptionTranslator extends ResponseEntityExceptionHandler {
                 message = "You are not allowed to update machines.";
             } else if ("DELETE".equals(method)) {
                 message = "You are not allowed to delete machines.";
-            } else {
-                message = "You are not allowed to manage machines.";
             }
         }
         // ================= MACHINE OPERATORS =================
@@ -102,8 +100,6 @@ public class ExceptionTranslator extends ResponseEntityExceptionHandler {
                 message = "You are not allowed to delete machine operators.";
             } else if ("GET".equals(method) && path.contains(("/partner"))) {
                 message = "You are not allowed to access partner machine operators.";
-            } else {
-                message = "You are not allowed to manage machine operators.";
             }
         }
         // ================= VEHICLE DOCUMENTS =================
@@ -113,8 +109,6 @@ public class ExceptionTranslator extends ResponseEntityExceptionHandler {
                 message = "You are not allowed to upload vehicle documents.";
             } else if ("DELETE".equals(method)) {
                 message = "You are not allowed to delete vehicle documents.";
-            } else {
-                message = "You are not allowed to manage vehicle documents.";
             }
         }
         // ================= BOOKINGS =================
@@ -122,10 +116,42 @@ public class ExceptionTranslator extends ResponseEntityExceptionHandler {
         else if (path.contains("/api/bookings")) {
             if (path.contains("/by-owner")) {
                 message = "You are not allowed to access partner bookings.";
-            } else {
-                message = "You are not authorized to manage bookings.";
             }
         }
+        // ================= TYPES =================
+
+        else if (path.contains("/api/types")) {
+            if ("POST".equals(method)) {
+                message = "Only admins can create types.";
+            } else if ("PUT".equals(method) || "PATCH".equals(method)) {
+                message = "Only admins can update types.";
+            } else if ("DELETE".equals(method)) {
+                message = "Only admins can delete types.";
+            }
+        }
+        // ================= CATEGORIES =================
+
+        else if (path.contains("/api/categories")) {
+            if ("POST".equals(method)) {
+                message = "Only admins can create categories.";
+            } else if ("PUT".equals(method) || "PATCH".equals(method)) {
+                message = "Only admins can update categories.";
+            } else if ("DELETE".equals(method)) {
+                message = "Only admins can delete categories.";
+            }
+        }
+        // ================= SUBCATEGORIES =================
+
+        else if (path.contains("/api/subcategories")) {
+            if ("POST".equals(method)) {
+                message = "Only admins can create subcategories.";
+            } else if ("PUT".equals(method) || "PATCH".equals(method)) {
+                message = "Only admins can update subcategories.";
+            } else if ("DELETE".equals(method)) {
+                message = "Only admins can delete subcategories.";
+            }
+        }
+
         body.put("message", message);
         body.put("data", null);
         body.put("path", path);

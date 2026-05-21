@@ -22,6 +22,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -66,6 +67,7 @@ public class SubcategoryResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PostMapping(value = "", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<ApiResponse<SubCategoryDTO>> createSubcategory(
         @Valid @RequestPart("subcategory") SubCategoryDTO subCategoryDTO,
         @RequestPart("file") MultipartFile image
@@ -94,6 +96,7 @@ public class SubcategoryResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<ApiResponse<SubCategoryDTO>> updateSubcategory(
         @PathVariable(value = "id", required = false) final Long id,
         @Valid @RequestPart("subcategory") SubCategoryDTO subcategoryDTO,
@@ -124,6 +127,7 @@ public class SubcategoryResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PatchMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<ApiResponse<SubCategoryDTO>> partialUpdateSubcategory(
         @PathVariable(value = "id", required = false) final Long id,
         @RequestPart("subcategory") SubCategoryDTO subCategoryDTO,
@@ -188,6 +192,7 @@ public class SubcategoryResource {
      * @return the {@link ResponseEntity} with status {@code 204 (NO_CONTENT)}.
      */
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<ApiResponse<Void>> deleteSubcategory(@PathVariable("id") Long id) {
         log.debug("REST request to delete Subcategory : {}", id);
         subcategoryService.delete(id);

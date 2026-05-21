@@ -199,9 +199,43 @@ public class BookingService {
 
                 boolean isAdmin = SecurityUtils.hasCurrentUserThisAuthority(AuthoritiesConstants.ADMIN);
 
-                if (!isAdmin && !existingBooking.getMachine().getUser().getLogin().equals(login)) {
-                    log.warn("Unauthorized booking update attempt | bookingId={} | login={}", existingBooking.getId(), login);
-                    throw new AccessDeniedException("You are not allowed to update this booking");
+                boolean isMachineOwner = existingBooking.getMachine().getUser().getLogin().equals(login);
+
+                boolean isBookingUser = existingBooking.getUser().getLogin().equals(login);
+
+                if (!isAdmin) {
+                    // PARTNER CAN UPDATE OWN MACHINE BOOKINGS
+                    if (isMachineOwner) {
+                        log.info("Partner updating own machine booking | bookingId={} | login={}", existingBooking.getId(), login);
+                    }
+                    // USER CAN ONLY CANCEL OWN BOOKING
+                    else if (isBookingUser) {
+                        // USER CAN ONLY CANCEL OWN BOOKING
+                        if (booking.getStatus() == null || booking.getStatus() != BookingStatus.CANCELLED) {
+                            log.warn(
+                                "User attempted invalid booking update | bookingId={} | login={} | status={}",
+                                existingBooking.getId(),
+                                login,
+                                booking.getStatus()
+                            );
+                            throw new AccessDeniedException("You can only cancel your booking");
+                        }
+                        // USER CAN CANCEL ONLY WHEN STATUS IS PENDING
+                        if (existingBooking.getStatus() != BookingStatus.PENDING) {
+                            log.warn(
+                                "User attempted to cancel non-pending booking | bookingId={} | currentStatus={}",
+                                existingBooking.getId(),
+                                existingBooking.getStatus()
+                            );
+                            throw new AccessDeniedException("Only pending bookings can be cancelled");
+                        }
+                        log.info("User cancelling own pending booking | bookingId={} | login={}", existingBooking.getId(), login);
+                    }
+                    // OTHER USERS NOT ALLOWED
+                    else {
+                        log.warn("Unauthorized booking update attempt | bookingId={} | login={}", existingBooking.getId(), login);
+                        throw new AccessDeniedException("You are not allowed to update this booking");
+                    }
                 }
 
                 log.info("Existing booking found | bookingId={} | oldStatus={}", existingBooking.getId(), oldStatus);
