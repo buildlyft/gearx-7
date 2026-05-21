@@ -66,14 +66,69 @@ public class ExceptionTranslator extends ResponseEntityExceptionHandler {
 
         body.put("status", false);
 
-        body.put("statusCode", 403);
+        body.put("statusCode", HttpStatus.FORBIDDEN.value());
 
-        body.put("message", ex.getMessage());
+        HttpServletRequest httpRequest = request.getNativeRequest(HttpServletRequest.class);
 
+        String path = httpRequest.getRequestURI();
+
+        String method = httpRequest.getMethod();
+
+        String message = "You are not authorized to perform this action.";
+
+        // ================= MACHINES =================
+
+        if (path.contains("/api/machines")) {
+            if (path.contains("/by-owner")) {
+                message = "You are not allowed to access partner machines.";
+            } else if ("POST".equals(method)) {
+                message = "You are not allowed to create machines.";
+            } else if ("PUT".equals(method) || "PATCH".equals(method)) {
+                message = "You are not allowed to update machines.";
+            } else if ("DELETE".equals(method)) {
+                message = "You are not allowed to delete machines.";
+            } else {
+                message = "You are not allowed to manage machines.";
+            }
+        }
+        // ================= MACHINE OPERATORS =================
+
+        else if (path.contains("/api/machine-operators")) {
+            if ("POST".equals(method)) {
+                message = "You are not allowed to create machine operators.";
+            } else if ("PUT".equals(method) || "PATCH".equals(method)) {
+                message = "You are not allowed to update machine operators.";
+            } else if ("DELETE".equals(method)) {
+                message = "You are not allowed to delete machine operators.";
+            } else if ("GET".equals(method) && path.contains(("/partner"))) {
+                message = "You are not allowed to access partner machine operators.";
+            } else {
+                message = "You are not allowed to manage machine operators.";
+            }
+        }
+        // ================= VEHICLE DOCUMENTS =================
+
+        else if (path.contains("/api/vehicle-documents")) {
+            if ("POST".equals(method)) {
+                message = "You are not allowed to upload vehicle documents.";
+            } else if ("DELETE".equals(method)) {
+                message = "You are not allowed to delete vehicle documents.";
+            } else {
+                message = "You are not allowed to manage vehicle documents.";
+            }
+        }
+        // ================= BOOKINGS =================
+
+        else if (path.contains("/api/bookings")) {
+            if (path.contains("/by-owner")) {
+                message = "You are not allowed to access partner bookings.";
+            } else {
+                message = "You are not authorized to manage bookings.";
+            }
+        }
+        body.put("message", message);
         body.put("data", null);
-
-        body.put("path", request.getNativeRequest(HttpServletRequest.class).getRequestURI());
-
+        body.put("path", path);
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
     }
 

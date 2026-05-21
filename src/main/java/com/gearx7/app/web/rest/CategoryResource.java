@@ -73,7 +73,7 @@ public class CategoryResource {
     @PostMapping(value = "", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<CategoryDTO>> createCategory(
         @Valid @RequestPart("category") CategoryDTO categoryDTO,
-        @RequestPart("file") MultipartFile image
+        @RequestPart("image") MultipartFile image
     ) throws URISyntaxException, JsonProcessingException {
         log.debug("REST request to save Category : {}", categoryDTO);
 
