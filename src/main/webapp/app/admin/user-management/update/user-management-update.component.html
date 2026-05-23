@@ -58,6 +58,24 @@
       </div>
 
       <div class="mb-3">
+        <label class="form-label">Phone</label>
+
+        <input type="text" class="form-control" name="phone" formControlName="phone" />
+
+        @if (editForm.get('phone')!.invalid && (editForm.get('phone')!.dirty || editForm.get('phone')!.touched)) {
+          <div>
+            @if (editForm.get('phone')?.errors?.required) {
+              <small class="form-text text-danger">Phone is required.</small>
+            }
+
+            @if (editForm.get('phone')?.errors?.minlength || editForm.get('phone')?.errors?.maxlength) {
+              <small class="form-text text-danger">Phone must be 10 digits.</small>
+            }
+          </div>
+        }
+      </div>
+
+      <div class="mb-3">
         <label class="form-label">Email</label>
         <input type="email" class="form-control" name="email" formControlName="email" />
 

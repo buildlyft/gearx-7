@@ -90,7 +90,7 @@ public class MachineOperatorResource {
      */
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_PARTNER')") // Only admin and partner can delete operators
-    public ResponseEntity<ApiResponse<?>> deleteMachineOperator(@PathVariable("id") Long operatorId) {
+    public ResponseEntity<ApiResponse<Void>> deleteMachineOperator(@PathVariable("id") Long operatorId) {
         log.info("REST DELETE Operator START | operatorId={}", operatorId);
         if (operatorId == null) {
             log.error("Delete failed. Operator ID is null");
@@ -111,7 +111,7 @@ public class MachineOperatorResource {
 
     @GetMapping("/all")
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_PARTNER')")
-    public ResponseEntity<ApiResponse<?>> getAllOperators() {
+    public ResponseEntity<ApiResponse<List<MachineOperatorDetailsDTO>>> getAllOperators() {
         log.info("REST Request to get all machine operators");
 
         List<MachineOperatorDetailsDTO> operators = machineOperatorService.getAllOperators();
@@ -131,7 +131,7 @@ public class MachineOperatorResource {
      */
     @GetMapping("/partner")
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_PARTNER')")
-    public ResponseEntity<ApiResponse<?>> getOperatorsByPartner() {
+    public ResponseEntity<ApiResponse<List<MachineOperatorDetailsDTO>>> getOperatorsByPartner() {
         log.info("REST GET Operators by Partner START");
 
         List<MachineOperatorDetailsDTO> result = machineOperatorService.getAllOperatorsByPartner();
@@ -174,14 +174,14 @@ public class MachineOperatorResource {
     }
 
     @GetMapping("/machine/{machineId}")
-    public ResponseEntity<ApiResponse<?>> getOperatorByMachineId(@PathVariable Long machineId) {
+    public ResponseEntity<ApiResponse<MachineOperatorDetailsDTO>> getOperatorByMachineId(@PathVariable Long machineId) {
         log.info("REST Request to get operator by machineId={}", machineId);
 
         MachineOperatorDetailsDTO result = machineOperatorService.getOperatorByMachineId(machineId);
 
         if (result == null) {
             log.info("No operator found for machineId={}", machineId);
-            return ResponseEntity.ok(new ApiResponse<>(true, 200, "Right now machine doesn't have any operator", List.of()));
+            return ResponseEntity.ok(new ApiResponse<>(true, 200, "Right now machine doesn't have any operator", null));
         }
 
         log.info("REST GET Operator by machine SUCCESS | machineId={} | operatorId={}", machineId, result.getOperatorId());

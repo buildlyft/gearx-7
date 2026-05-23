@@ -239,7 +239,7 @@ public class BookingResource {
      * @return the {@link ResponseEntity} with status {@code 204 (NO_CONTENT)}.
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<?>> deleteBooking(@PathVariable("id") Long id) {
+    public ResponseEntity<ApiResponse<Void>> deleteBooking(@PathVariable("id") Long id) {
         log.debug("REST request to delete Booking : {}", id);
         bookingService.delete(id);
         return ResponseEntity.ok(new ApiResponse<>(true, 200, "Booking deleted successfully", null));

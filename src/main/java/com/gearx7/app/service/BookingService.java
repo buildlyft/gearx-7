@@ -392,6 +392,9 @@ public class BookingService {
      */
     public void delete(Long id) {
         log.debug("Request to delete Booking : {}", id);
+        bookingRepository
+            .findById(id)
+            .orElseThrow(() -> new NotFoundAlertException("Booking not found with id " + id, "booking", "bookingNotFound"));
         bookingRepository.deleteById(id);
     }
 

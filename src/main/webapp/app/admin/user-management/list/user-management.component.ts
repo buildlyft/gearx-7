@@ -14,7 +14,7 @@ import { Account } from 'app/core/auth/account.model';
 import { UserManagementService } from '../service/user-management.service';
 import { User } from '../user-management.model';
 import UserManagementDeleteDialogComponent from '../delete/user-management-delete-dialog.component';
-
+import { ApiResponse } from 'app/core/models/api-response.model';
 @Component({
   standalone: true,
   selector: 'jhi-user-mgmt',
@@ -72,9 +72,9 @@ export default class UserManagementComponent implements OnInit {
         sort: this.sort(),
       })
       .subscribe({
-        next: (res: HttpResponse<User[]>) => {
+        next: (res: HttpResponse<ApiResponse<User[]>>) => {
           this.isLoading = false;
-          this.onSuccess(res.body, res.headers);
+          this.onSuccess(res.body?.data ?? [], res.headers);
         },
         error: () => (this.isLoading = false),
       });

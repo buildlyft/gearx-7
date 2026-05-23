@@ -1,7 +1,7 @@
 import { inject } from '@angular/core';
 import { ActivatedRouteSnapshot, Routes, ResolveFn } from '@angular/router';
 import { of } from 'rxjs';
-
+import { map } from 'rxjs/operators';
 import { IUser } from './user-management.model';
 import { UserManagementService } from './service/user-management.service';
 import UserManagementComponent from './list/user-management.component';
@@ -11,7 +11,9 @@ import UserManagementUpdateComponent from './update/user-management-update.compo
 export const UserManagementResolve: ResolveFn<IUser | null> = (route: ActivatedRouteSnapshot) => {
   const login = route.paramMap.get('login');
   if (login) {
-    return inject(UserManagementService).find(login);
+    return inject(UserManagementService)
+      .find(login)
+      .pipe(map(res => res.data));
   }
   return of(null);
 };

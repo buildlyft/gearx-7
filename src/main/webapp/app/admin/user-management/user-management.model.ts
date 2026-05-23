@@ -3,6 +3,7 @@ export interface IUser {
   login?: string;
   firstName?: string | null;
   lastName?: string | null;
+  phone?: string | null;
   email?: string;
   activated?: boolean;
   langKey?: string;
@@ -19,6 +20,7 @@ export class User implements IUser {
     public login?: string,
     public firstName?: string | null,
     public lastName?: string | null,
+    public phone?: string | null,
     public email?: string,
     public activated?: boolean,
     public langKey?: string,

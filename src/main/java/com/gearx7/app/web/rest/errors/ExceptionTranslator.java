@@ -76,78 +76,81 @@ public class ExceptionTranslator extends ResponseEntityExceptionHandler {
 
         String message = ex.getMessage();
 
+        // Handles Spring Security default message also
+        boolean hasDefaultMessage = message == null || message.isBlank() || "Access Denied".equalsIgnoreCase(message);
+
         // ================= MACHINES =================
 
         if (path.contains("/api/machines")) {
-            if (path.contains("/by-owner")) {
+            if (path.contains("/by-owner") && hasDefaultMessage) {
                 message = "You are not allowed to access partner machines.";
-            } else if ("POST".equals(method)) {
+            } else if ("POST".equals(method) && hasDefaultMessage) {
                 message = "You are not allowed to create machines.";
-            } else if ("PUT".equals(method) || "PATCH".equals(method)) {
+            } else if (("PUT".equals(method) || "PATCH".equals(method)) && hasDefaultMessage) {
                 message = "You are not allowed to update machines.";
-            } else if ("DELETE".equals(method)) {
+            } else if ("DELETE".equals(method) && hasDefaultMessage) {
                 message = "You are not allowed to delete machines.";
             }
         }
         // ================= MACHINE OPERATORS =================
 
         else if (path.contains("/api/machine-operators")) {
-            if ("POST".equals(method)) {
+            if ("POST".equals(method) && hasDefaultMessage) {
                 message = "You are not allowed to create machine operators.";
-            } else if ("PUT".equals(method) || "PATCH".equals(method)) {
+            } else if (("PUT".equals(method) || "PATCH".equals(method)) && hasDefaultMessage) {
                 message = "You are not allowed to update machine operators.";
-            } else if ("DELETE".equals(method)) {
+            } else if ("DELETE".equals(method) && hasDefaultMessage) {
                 message = "You are not allowed to delete machine operators.";
-            } else if ("GET".equals(method) && path.contains(("/partner"))) {
+            } else if ("GET".equals(method) && path.contains(("/partner")) && hasDefaultMessage) {
                 message = "You are not allowed to access partner machine operators.";
             }
         }
         // ================= VEHICLE DOCUMENTS =================
 
         else if (path.contains("/api/vehicle-documents")) {
-            if ("POST".equals(method)) {
+            if ("POST".equals(method) && hasDefaultMessage) {
                 message = "You are not allowed to upload vehicle documents.";
-            } else if ("DELETE".equals(method)) {
+            } else if ("DELETE".equals(method) && hasDefaultMessage) {
                 message = "You are not allowed to delete vehicle documents.";
             }
         }
         // ================= BOOKINGS =================
 
         else if (path.contains("/api/bookings")) {
-            if (path.contains("/by-owner")) {
+            if (path.contains("/by-owner") && hasDefaultMessage) {
                 message = "You are not allowed to access partner bookings.";
             }
         }
         // ================= TYPES =================
 
         else if (path.contains("/api/types")) {
-            if ("POST".equals(method)) {
+            if ("POST".equals(method) && hasDefaultMessage) {
                 message = "Only admins can create types.";
-            } else if ("PUT".equals(method) || "PATCH".equals(method)) {
+            } else if (("PUT".equals(method) || "PATCH".equals(method)) && hasDefaultMessage) {
                 message = "Only admins can update types.";
-            } else if ("DELETE".equals(method)) {
+            } else if ("DELETE".equals(method) && hasDefaultMessage) {
                 message = "Only admins can delete types.";
             }
         }
         // ================= CATEGORIES =================
 
         else if (path.contains("/api/categories")) {
-            if ("POST".equals(method)) {
+            if ("POST".equals(method) && hasDefaultMessage) {
                 message = "Only admins can create categories.";
-            } else if ("PUT".equals(method) || "PATCH".equals(method)) {
+            } else if (("PUT".equals(method) || "PATCH".equals(method)) && hasDefaultMessage) {
                 message = "Only admins can update categories.";
-            } else if ("DELETE".equals(method)) {
+            } else if ("DELETE".equals(method) && hasDefaultMessage) {
                 message = "Only admins can delete categories.";
             }
         }
         // ================= SUBCATEGORIES =================
 
         else if (path.contains("/api/subcategories")) {
-            if ("POST".equals(method)) {
+            if ("POST".equals(method) && hasDefaultMessage) {
                 message = "Only admins can create subcategories.";
-            } else if ("PUT".equals(method) || "PATCH".equals(method)) {
+            } else if (("PUT".equals(method) || "PATCH".equals(method)) && hasDefaultMessage) {
                 message = "Only admins can update subcategories.";
-            } else if ("DELETE".equals(method)) {
+            } else if ("DELETE".equals(method) && hasDefaultMessage) {
                 message = "Only admins can delete subcategories.";
             }
         }

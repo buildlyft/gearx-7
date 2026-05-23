@@ -102,7 +102,7 @@ public class VehicleDocumentResource {
     // ================= DELETE DOCUMENT =================
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_PARTNER')")
-    public ResponseEntity<ApiResponse<?>> deleteDocument(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Void>> deleteDocument(@PathVariable Long id) {
         log.info("REST REQUEST | Delete document | id={}", id);
 
         vehicleDocService.deleteDocument(id);

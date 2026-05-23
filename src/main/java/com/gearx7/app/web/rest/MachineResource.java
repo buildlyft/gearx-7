@@ -221,7 +221,7 @@ public class MachineResource {
      */
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_PARTNER')") // Only admin and partner can delete machines
-    public ResponseEntity<ApiResponse<?>> deleteMachine(@PathVariable("id") Long id) {
+    public ResponseEntity<ApiResponse<Void>> deleteMachine(@PathVariable("id") Long id) {
         log.debug("REST request to delete Machine : {}", id);
         machineService.delete(id);
         return ResponseEntity.ok(new ApiResponse<>(true, 200, "Machine deleted successfully", null));
