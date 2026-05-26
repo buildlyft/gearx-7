@@ -11,10 +11,7 @@ import com.gearx7.app.service.UserService;
 import com.gearx7.app.service.dto.AdminUserDTO;
 import com.gearx7.app.service.dto.ApiResponse;
 import com.gearx7.app.service.dto.PasswordChangeDTO;
-import com.gearx7.app.web.rest.errors.AccountResourceException;
-import com.gearx7.app.web.rest.errors.EmailAlreadyUsedException;
-import com.gearx7.app.web.rest.errors.InvalidPasswordException;
-import com.gearx7.app.web.rest.errors.LoginAlreadyUsedException;
+import com.gearx7.app.web.rest.errors.*;
 import com.gearx7.app.web.rest.vm.KeyAndPasswordVM;
 import com.gearx7.app.web.rest.vm.ManagedUserVM;
 import jakarta.validation.Valid;
@@ -206,22 +203,40 @@ public class AccountResource {
     public ResponseEntity<ApiResponse<Void>> saveAccount(@Valid @RequestBody AdminUserDTO userDTO) {
         String userLogin = SecurityUtils
             .getCurrentUserLogin()
-            .orElseThrow(() -> new AccountResourceException("Current user login not found"));
+            .orElseThrow(() ->{
+                log.error("ACCOUNT UPDATE FAILED | reason=Current user login not found");
+                throw new AccountResourceException("Current user login not found");
+            });
+        log.info("ACCOUNT UPDATE REQUEST | login={} | firstName={} | lastName={} | email={} | phone={} | Authorities={}",
+                 userDTO.getLogin(), userDTO.getFirstName(), userDTO.getLastName(), userDTO.getEmail(), userDTO.getPhone(), userDTO.getAuthorities());
+        log.info("ACCOUNT UPDATE START for account = {} ",userLogin);
+
         Optional<User> existingUser = userRepository.findOneByEmailIgnoreCase(userDTO.getEmail());
         if (existingUser.isPresent() && (!existingUser.orElseThrow().getLogin().equalsIgnoreCase(userLogin))) {
+            log.info("ACCOUNT UPDATE FAILED | login={} | reason=Email already used | email={}", userLogin, userDTO.getEmail());
             throw new EmailAlreadyUsedException();
+        }
+        Optional<User> existingPhoneUser = userRepository.findOneByPhone(userDTO.getPhone());
+
+        if (existingPhoneUser.isPresent() && (!existingPhoneUser.orElseThrow() .getLogin().equalsIgnoreCase(userLogin))) {
+            log.info("ACCOUNT UPDATE FAILED | login={} | reason=Phone already used | phone={}", userLogin, userDTO.getPhone());
+            throw new PhoneNumberAlreadyUsedException();
         }
         Optional<User> user = userRepository.findOneByLogin(userLogin);
         if (!user.isPresent()) {
+            log.info("ACCOUNT UPDATE FAILED | login={} | reason=Phone already used | phone={}", userLogin, userDTO.getPhone());
             throw new AccountResourceException("User could not be found");
         }
         userService.updateUser(
+            userDTO.getLogin(),
             userDTO.getFirstName(),
             userDTO.getLastName(),
             userDTO.getEmail(),
             userDTO.getLangKey(),
-            userDTO.getImageUrl()
+            userDTO.getImageUrl(),
+            userDTO.getPhone()
         );
+        log.info("ACCOUNT UPDATE SUCCESS | login={}", userLogin);
         return ResponseEntity.ok(new ApiResponse<>(
                 true,
                 HttpStatus.OK.value(),

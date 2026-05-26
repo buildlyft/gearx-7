@@ -115,7 +115,11 @@ public class BookingService {
                 booking.getEndDateTime()
             );
             if (overlap) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Machine is already booked for the selected time period.");
+                throw new BadRequestAlertException(
+                    "Machine is already booked for the selected time range",
+                    "booking",
+                    "machineUnavailable"
+                );
             }
         }
         if (booking.getCustomerLat() != null && booking.getCustomerLong() != null) {

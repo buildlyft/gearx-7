@@ -217,6 +217,7 @@ public class UserService {
     }
 
     /**
+     * This is for only admin user, not for normal user. Normal user can update only their profile information.
      * Update all information for a specific user, and return the modified user.
      *
      * @param userDTO user to update.
@@ -233,6 +234,9 @@ public class UserService {
                 user.setLastName(userDTO.getLastName());
                 if (userDTO.getEmail() != null) {
                     user.setEmail(userDTO.getEmail().toLowerCase());
+                }
+                if (userDTO.getPhone() != null) {
+                    user.setPhone(userDTO.getPhone());
                 }
                 user.setImageUrl(userDTO.getImageUrl());
                 user.setActivated(userDTO.isActivated());
@@ -263,19 +267,23 @@ public class UserService {
     }
 
     /**
-     * Update basic information (first name, last name, email, language) for the current user.
+     * This is for normal user to update their own profile information. They can update only basic information, not authorities and activated status.
+     * Update basic information (first name, last name, email, language,phone) for the current user.
      *
      * @param firstName first name of user.
      * @param lastName  last name of user.
      * @param email     email id of user.
      * @param langKey   language key.
      * @param imageUrl  image URL of user.
+     * @param phone     phone number of user.
      */
-    public void updateUser(String firstName, String lastName, String email, String langKey, String imageUrl) {
+    public void updateUser(String login, String firstName, String lastName, String email, String langKey, String imageUrl, String phone) {
         SecurityUtils
             .getCurrentUserLogin()
             .flatMap(userRepository::findOneByLogin)
             .ifPresent(user -> {
+                log.info("USER UPDATE START | login={}", user.getLogin());
+                user.setLogin(login);
                 user.setFirstName(firstName);
                 user.setLastName(lastName);
                 if (email != null) {
@@ -283,8 +291,12 @@ public class UserService {
                 }
                 user.setLangKey(langKey);
                 user.setImageUrl(imageUrl);
+                if (phone != null) {
+                    user.setPhone(phone);
+                }
                 userRepository.save(user);
                 log.debug("Changed Information for User: {}", user);
+                log.info("USER UPDATE SUCCESS | login={} | id={}", user.getLogin(), user.getId());
             });
     }
 

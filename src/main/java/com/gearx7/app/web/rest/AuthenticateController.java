@@ -4,7 +4,11 @@ import static com.gearx7.app.security.SecurityUtils.AUTHORITIES_KEY;
 import static com.gearx7.app.security.SecurityUtils.JWT_ALGORITHM;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.gearx7.app.domain.User;
+import com.gearx7.app.repository.UserRepository;
 import com.gearx7.app.service.dto.ApiResponse;
+import com.gearx7.app.web.rest.errors.BadRequestAlertException;
+import com.gearx7.app.web.rest.errors.NotFoundAlertException;
 import com.gearx7.app.web.rest.vm.LoginVM;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -47,9 +51,16 @@ public class AuthenticateController {
 
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
 
-    public AuthenticateController(JwtEncoder jwtEncoder, AuthenticationManagerBuilder authenticationManagerBuilder) {
+    private final UserRepository userRepository;
+
+    public AuthenticateController(
+        JwtEncoder jwtEncoder,
+        AuthenticationManagerBuilder authenticationManagerBuilder,
+        UserRepository userRepository
+    ) {
         this.jwtEncoder = jwtEncoder;
         this.authenticationManagerBuilder = authenticationManagerBuilder;
+        this.userRepository = userRepository;
     }
 
     @PostMapping("/authenticate")
@@ -59,7 +70,22 @@ public class AuthenticateController {
             loginVM.getPassword()
         );
 
-        Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
+        User user = userRepository
+            .findOneByLogin(loginVM.getUsername())
+            .orElseThrow(() ->
+                new NotFoundAlertException("Invalid UserName...Could you please check it again once...", "user", "UserNotFound")
+            );
+
+        Authentication authentication;
+        try {
+            authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
+        } catch (Exception ex) {
+            throw new BadRequestAlertException(
+                "Invalid username or password...Could you please check it again once...",
+                "authentication",
+                "invalidCredentials"
+            );
+        }
         SecurityContextHolder.getContext().setAuthentication(authentication);
         String jwt = this.createToken(authentication, loginVM.isRememberMe());
         HttpHeaders httpHeaders = new HttpHeaders();

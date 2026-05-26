@@ -12,10 +12,7 @@ import com.gearx7.app.web.rest.errors.BadRequestAlertException;
 import com.gearx7.app.web.rest.errors.NotFoundAlertException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.Duration;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.ZoneId;
+import java.time.*;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -581,10 +578,8 @@ public class MachineService {
             throw new BadRequestAlertException("End date and time must be after start date and time", "machine", "invalidBookingTime");
         }
 
-        ZoneId IST = ZoneId.of("Asia/Kolkata");
-
-        LocalDate startDate = start.atZone(IST).toLocalDate();
-        LocalDate endDate = end.atZone(IST).toLocalDate();
+        LocalDate startDate = start.atZone(ZoneOffset.UTC).toLocalDate();
+        LocalDate endDate = end.atZone(ZoneOffset.UTC).toLocalDate();
         long totalSeconds = Duration.between(start, end).getSeconds();
         long totalHours = (long) Math.ceil(totalSeconds / 3600.0);
 
@@ -652,6 +647,18 @@ public class MachineService {
             }
 
             hourlyCost = machine.getRatePerHour().multiply(BigDecimal.valueOf(remainingHours));
+
+            // If hourly cost exceeds daily rate,
+            // convert remaining hours into one full day
+            if (machine.getRatePerDay() != null && hourlyCost.compareTo(machine.getRatePerDay()) > 0) {
+                log.info(
+                    "Remaining hourly cost {} is greater than daily rate {}. Converting to extra day pricing.",
+                    hourlyCost,
+                    machine.getRatePerDay()
+                );
+                dailyCost = dailyCost.add(machine.getRatePerDay());
+                hourlyCost = BigDecimal.ZERO;
+            }
         }
 
         log.info("Pricing decision: MIXED | daysCost={} | hoursCost={}", dailyCost, hourlyCost);
