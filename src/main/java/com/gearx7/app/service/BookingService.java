@@ -10,6 +10,7 @@ import com.gearx7.app.repository.UserRepository;
 import com.gearx7.app.security.AuthoritiesConstants;
 import com.gearx7.app.security.SecurityUtils;
 import com.gearx7.app.service.interfaces.SmsService;
+import com.gearx7.app.service.mapper.BookingMapper;
 import com.gearx7.app.web.rest.errors.BadRequestAlertException;
 import com.gearx7.app.web.rest.errors.NotFoundAlertException;
 import java.time.Instant;
@@ -46,6 +47,8 @@ public class BookingService {
 
     private final LocationIQService locationIQService;
 
+    private final BookingMapper bookingMapper;
+
     //    private final MachineOperatorRepository machineOperatorRepository;
     //
     //    private final VehicleDocumentRepository vehicleDocumentRepository;
@@ -55,7 +58,8 @@ public class BookingService {
         MachineRepository machineRepository,
         UserRepository userRepository,
         SmsService smsService,
-        LocationIQService locationIQService
+        LocationIQService locationIQService,
+        BookingMapper bookingMapper
         //  MachineOperatorRepository machineOperatorRepository,
         // VehicleDocumentRepository vehicleDocumentRepository
     ) {
@@ -64,6 +68,7 @@ public class BookingService {
         this.userRepository = userRepository;
         this.smsService = smsService;
         this.locationIQService = locationIQService;
+        this.bookingMapper = bookingMapper;
         //this.machineOperatorRepository=machineOperatorRepository;
         // this.vehicleDocumentRepository=vehicleDocumentRepository;
     }
@@ -265,6 +270,15 @@ public class BookingService {
                     );
 
                     existingBooking.setStatus(booking.getStatus());
+                    // SET CANCELLED DATE
+                    if (booking.getStatus() == BookingStatus.CANCELLED) {
+                        existingBooking.setCancelledDate(Instant.now());
+                        log.info(
+                            "Booking cancelled date updated | bookingId={} | cancelledDate={}",
+                            existingBooking.getId(),
+                            existingBooking.getCancelledDate()
+                        );
+                    }
                 }
 
                 if (booking.getAdditionalDetails() != null) {

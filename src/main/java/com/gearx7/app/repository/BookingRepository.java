@@ -17,10 +17,22 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface BookingRepository extends JpaRepository<Booking, Long> {
     @Query(
-        value = "select booking from Booking booking " +
-        "left join fetch booking.machine " +
-        "where booking.user.login = ?#{authentication.name}",
-        countQuery = "select count(booking) from Booking booking where booking.user.login = ?#{authentication.name}"
+        value = """
+            select distinct booking
+            from Booking booking
+            left join fetch booking.user
+            left join fetch booking.machine machine
+            left join fetch machine.user
+            left join fetch machine.category
+            left join fetch machine.subcategory
+            left join fetch machine.operator
+            where booking.user.login = ?#{authentication.name}
+        """,
+        countQuery = """
+            select count(booking)
+            from Booking booking
+            where booking.user.login = ?#{authentication.name}
+        """
     )
     Page<Booking> findByUserIsCurrentUser(Pageable pageable);
 
@@ -37,38 +49,74 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     }
 
     @Query(
-        value = "select distinct booking from Booking booking " + "left join fetch booking.machine",
+        value = """
+            select distinct booking
+            from Booking booking
+            left join fetch booking.user
+            left join fetch booking.machine machine
+            left join fetch machine.user
+            left join fetch machine.category
+            left join fetch machine.subcategory
+            left join fetch machine.operator
+        """,
         countQuery = "select count(booking) from Booking booking"
     )
     Page<Booking> findAllWithToOneRelationships(Pageable pageable);
 
-    @Query("select booking from Booking booking " + "left join fetch booking.machine")
+    @Query(
+        """
+         select distinct booking
+         from Booking booking
+         left join fetch booking.user
+         left join fetch booking.machine machine
+         left join fetch machine.user
+         left join fetch machine.category
+         left join fetch machine.subcategory
+         left join fetch machine.operator
+        """
+    )
     List<Booking> findAllWithToOneRelationships();
 
     @Query(
-        "select booking from Booking booking " +
-        "left join fetch booking.machine " +
-        "left join fetch booking.user " +
-        "where booking.id = :id"
+        """
+        select distinct booking
+        from Booking booking
+        left join fetch booking.user
+        left join fetch booking.machine machine
+        left join fetch machine.user
+        left join fetch machine.category
+        left join fetch machine.subcategory
+        left join fetch machine.operator
+        where booking.id = :id
+        """
     )
     Optional<Booking> findOneWithToOneRelationships(@Param("id") Long id);
 
     @Query(
         """
-        select b
+        select distinct b
         from Booking b
+        join fetch b.user
         join fetch b.machine m
-        join m.user u
-        where u.id = :ownerId
+        join fetch m.user
+        left join fetch m.category
+        left join fetch m.subcategory
+        left join fetch m.operator
+        where m.user.id = :ownerId
         """
     )
     Page<Booking> findByMachineOwnerId(@Param("ownerId") Long ownerId, Pageable pageable);
 
     @Query(
         """
-        select b
+        select distinct b
         from Booking b
+        join fetch b.user
         join fetch b.machine m
+        join fetch m.user
+        left join fetch m.category
+        left join fetch m.subcategory
+        left join fetch m.operator
         where m.user.login = :login
         """
     )

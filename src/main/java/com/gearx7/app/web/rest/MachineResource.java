@@ -336,7 +336,7 @@ public class MachineResource {
                 DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
                 LocalDateTime localDateTime = LocalDateTime.parse(dateString, formatter);
                 // Convert to Instant assuming UTC timezone
-                return localDateTime.toInstant(ZoneOffset.UTC);
+                return localDateTime.atZone(ZoneId.of("Asia/Kolkata")).toInstant();
             } catch (DateTimeParseException e2) {
                 log.error("Invalid date format: {}", dateString);
                 // If all parsing fails, throw a more descriptive error

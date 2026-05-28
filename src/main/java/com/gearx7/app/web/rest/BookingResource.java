@@ -7,6 +7,8 @@ import com.gearx7.app.security.AuthoritiesConstants;
 import com.gearx7.app.security.SecurityUtils;
 import com.gearx7.app.service.BookingService;
 import com.gearx7.app.service.dto.ApiResponse;
+import com.gearx7.app.service.dto.BookingDTO;
+import com.gearx7.app.service.mapper.BookingMapper;
 import com.gearx7.app.web.rest.errors.BadRequestAlertException;
 import com.gearx7.app.web.rest.errors.FailedValidator;
 import com.gearx7.app.web.rest.errors.NotFoundAlertException;
@@ -55,10 +57,18 @@ public class BookingResource {
 
     private final UserRepository userRepository;
 
-    public BookingResource(BookingService bookingService, BookingRepository bookingRepository, UserRepository userRepository) {
+    private final BookingMapper bookingMapper;
+
+    public BookingResource(
+        BookingService bookingService,
+        BookingRepository bookingRepository,
+        UserRepository userRepository,
+        BookingMapper bookingMapper
+    ) {
         this.bookingService = bookingService;
         this.bookingRepository = bookingRepository;
         this.userRepository = userRepository;
+        this.bookingMapper = bookingMapper;
     }
 
     /**
@@ -69,7 +79,7 @@ public class BookingResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PostMapping("")
-    public ResponseEntity<ApiResponse<Booking>> createBooking(@Valid @RequestBody Booking booking) throws URISyntaxException {
+    public ResponseEntity<ApiResponse<BookingDTO>> createBooking(@Valid @RequestBody Booking booking) throws URISyntaxException {
         log.info(
             "REST REQUEST for Creating booking | machineId={}, userId={}, startDateTime={}, endDateTime={}",
             booking.getMachine() != null ? booking.getMachine().getId() : null,
@@ -117,8 +127,9 @@ public class BookingResource {
         Optional<Booking> bookingWithRelations = bookingRepository.findOneWithToOneRelationships(result.getId());
 
         Booking finalResult = bookingWithRelations.orElse(result);
+        BookingDTO dto = bookingMapper.toDto(finalResult);
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(new ApiResponse<>(true, 201, "Booking created successfully", finalResult));
+        return ResponseEntity.status(HttpStatus.CREATED).body(new ApiResponse<>(true, 201, "Booking created successfully", dto));
     }
 
     /**
@@ -132,7 +143,7 @@ public class BookingResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<Booking>> updateBooking(
+    public ResponseEntity<ApiResponse<BookingDTO>> updateBooking(
         @PathVariable(value = "id", required = false) final Long id,
         @Valid @RequestBody Booking booking
     ) throws URISyntaxException {
@@ -145,7 +156,9 @@ public class BookingResource {
         }
 
         Booking result = bookingService.update(booking);
-        return ResponseEntity.ok(new ApiResponse<>(true, 200, "Booking updated successfully", result));
+        Booking finalResult = bookingRepository.findOneWithToOneRelationships(result.getId()).orElse(result);
+        BookingDTO dto = bookingMapper.toDto(finalResult);
+        return ResponseEntity.ok(new ApiResponse<>(true, 200, "Booking updated successfully", dto));
     }
 
     /**
@@ -160,7 +173,7 @@ public class BookingResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PatchMapping(value = "/{id}", consumes = { "application/json", "application/merge-patch+json" })
-    public ResponseEntity<ApiResponse<Booking>> partialUpdateBooking(
+    public ResponseEntity<ApiResponse<BookingDTO>> partialUpdateBooking(
         @PathVariable(value = "id", required = false) final Long id,
         @NotNull @RequestBody Booking booking
     ) throws URISyntaxException {
@@ -179,8 +192,9 @@ public class BookingResource {
         Optional<Booking> result = bookingService.partialUpdate(booking);
 
         Booking updatedBooking = result.orElseThrow(() -> new NotFoundAlertException("Booking not found", ENTITY_NAME, "bookingNotFound"));
-
-        return ResponseEntity.ok(new ApiResponse<>(true, 200, "Booking updated successfully", updatedBooking));
+        Booking finalResult = bookingRepository.findOneWithToOneRelationships(updatedBooking.getId()).orElse(updatedBooking);
+        BookingDTO dto = bookingMapper.toDto(finalResult);
+        return ResponseEntity.ok(new ApiResponse<>(true, 200, "Booking updated successfully", dto));
     }
 
     /**
@@ -191,20 +205,20 @@ public class BookingResource {
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of bookings in body.
      */
     @GetMapping("")
-    public ResponseEntity<ApiResponse<List<Booking>>> getAllBookings(
+    public ResponseEntity<ApiResponse<List<BookingDTO>>> getAllBookings(
         @PageableDefault(sort = "id", direction = Sort.Direction.DESC) Pageable pageable,
         @RequestParam(name = "eagerload", required = false, defaultValue = "true") boolean eagerload
     ) {
         log.debug("REST request to get a page of Bookings");
-        Page<Booking> page;
+        Page<BookingDTO> page;
         if (SecurityUtils.hasCurrentUserThisAuthority(AuthoritiesConstants.ADMIN)) {
             if (eagerload) {
-                page = bookingService.findAllWithEagerRelationships(pageable);
+                page = bookingService.findAllWithEagerRelationships(pageable).map(bookingMapper::toDto);
             } else {
-                page = bookingService.findAll(pageable);
+                page = bookingService.findAll(pageable).map(bookingMapper::toDto);
             }
         } else {
-            page = bookingRepository.findByUserIsCurrentUser(pageable);
+            page = bookingRepository.findByUserIsCurrentUser(pageable).map(bookingMapper::toDto);
         }
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
 
@@ -223,13 +237,13 @@ public class BookingResource {
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the booking, or with status {@code 404 (Not Found)}.
      */
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<Booking>> getBooking(@PathVariable("id") Long id) {
+    public ResponseEntity<ApiResponse<BookingDTO>> getBooking(@PathVariable("id") Long id) {
         log.debug("REST request to get Booking : {}", id);
         Booking booking = bookingService
             .findOne(id)
             .orElseThrow(() -> new NotFoundAlertException("Booking not found with id " + id, ENTITY_NAME, "bookingNotFound"));
-
-        return ResponseEntity.ok(new ApiResponse<>(true, 200, "Booking fetched successfully", booking));
+        BookingDTO dto = bookingMapper.toDto(booking);
+        return ResponseEntity.ok(new ApiResponse<>(true, 200, "Booking fetched successfully", dto));
     }
 
     /**
@@ -255,7 +269,7 @@ public class BookingResource {
      */
     @GetMapping("/by-owner")
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_PARTNER')")
-    public ResponseEntity<ApiResponse<List<Booking>>> getBookingsByOwner(
+    public ResponseEntity<ApiResponse<List<BookingDTO>>> getBookingsByOwner(
         @RequestParam(required = false) Long ownerId,
         @PageableDefault(sort = "id", direction = Sort.Direction.DESC) Pageable pageable
     ) {
@@ -266,7 +280,7 @@ public class BookingResource {
             pageable.getPageSize()
         );
 
-        Page<Booking> page = bookingService.getBookingsByOwner(ownerId, pageable);
+        Page<BookingDTO> page = bookingService.getBookingsByOwner(ownerId, pageable).map(bookingMapper::toDto);
 
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
 
