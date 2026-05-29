@@ -191,6 +191,12 @@ public class VehicleDocServiceImpl implements VehicleDocService {
             throw new AccessDeniedException("You are not allowed to delete this document");
         }
 
+        // DELETE FILE FROM CLOUDINARY
+        fileStorageService.deleteByUrl(doc.getFileKey());
+
+        log.info("Cloudinary file deleted successfully | documentId={} | url={}", id, doc.getFileKey());
+
+        // DELETE DATABASE RECORD
         vehicleDocumentRepository.delete(doc);
 
         log.info("SERVICE SUCCESS | Document deleted | id={}", id);

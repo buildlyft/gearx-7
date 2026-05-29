@@ -2,6 +2,7 @@ package com.gearx7.app.service.interfacesImpl;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
+import com.gearx7.app.config.CloudinaryFolderProperties;
 import com.gearx7.app.service.interfaces.DocumentStorageService;
 import com.gearx7.app.web.rest.errors.BadRequestAlertException;
 import java.io.IOException;
@@ -20,23 +21,25 @@ public class CloudinaryDocumentStorageServiceImpl implements DocumentStorageServ
 
     private final Cloudinary cloudinary;
 
+    private final CloudinaryFolderProperties folderProperties;
+
     // Allowed file extensions
     private static final Set<String> ALLOWED_EXTENSIONS = Set.of("png", "jpg", "jpeg", "webp", "pdf", "doc", "docx");
 
     // Image extensions
     private static final Set<String> IMAGE_EXTENSIONS = Set.of("png", "jpg", "jpeg", "webp");
 
-    public CloudinaryDocumentStorageServiceImpl(Cloudinary cloudinary) {
+    public CloudinaryDocumentStorageServiceImpl(Cloudinary cloudinary, CloudinaryFolderProperties folderProperties) {
         log.info("STORAGE initialized: CloudinaryDocumentStorageService");
         this.cloudinary = cloudinary;
+        this.folderProperties = folderProperties;
     }
 
     /* ================= MACHINE DOCUMENTS ================= */
 
     @Override
     public String uploadMachineDocument(MultipartFile file, Long machineId) {
-        String folder = "gearx-7/machines/machine-" + machineId + "/documents";
-
+        String folder = String.format(folderProperties.getMachineDocuments(), "gearx-7", machineId);
         return upload(file, folder, "MACHINE", machineId);
     }
 
@@ -44,8 +47,7 @@ public class CloudinaryDocumentStorageServiceImpl implements DocumentStorageServ
     public String uploadCategoryImage(MultipartFile file, Long categoryId) {
         validateImage(file);
 
-        String folder = "gearx-7/categories/category-" + categoryId + "/image";
-
+        String folder = String.format(folderProperties.getCategoryImage(), "gearx-7", categoryId);
         try {
             log.debug("Uploading category image | categoryId={}", categoryId);
 
@@ -68,8 +70,7 @@ public class CloudinaryDocumentStorageServiceImpl implements DocumentStorageServ
     @Override
     public String uploadSubcategoryImage(MultipartFile file, Long subcategoryId) {
         validateImage(file);
-        String folder = "gearx-7/subcategories/subcategory-" + subcategoryId + "/image";
-
+        String folder = String.format(folderProperties.getSubcategoryImage(), "gearx-7", subcategoryId);
         try {
             log.debug("Uploading subcategory image");
 
@@ -95,8 +96,7 @@ public class CloudinaryDocumentStorageServiceImpl implements DocumentStorageServ
     public String uploadOperatorLicense(MultipartFile file, Long operatorId) {
         validateImage(file);
 
-        String folder = "gearx-7/operators/operator-" + operatorId + "/license";
-
+        String folder = String.format(folderProperties.getOperatorLicense(), "gearx-7", operatorId);
         try {
             Map<?, ?> result = cloudinary
                 .uploader()
@@ -112,8 +112,7 @@ public class CloudinaryDocumentStorageServiceImpl implements DocumentStorageServ
     public String uploadTypeImage(MultipartFile file, Long typeId) {
         validateImage(file);
 
-        String folder = "gearx-7/types/type-" + typeId + "/image";
-
+        String folder = String.format(folderProperties.getTypeImage(), "gearx-7", typeId);
         try {
             log.debug("Uploading type image | typeId={}", typeId);
 
@@ -150,13 +149,16 @@ public class CloudinaryDocumentStorageServiceImpl implements DocumentStorageServ
         String resourceType = IMAGE_EXTENSIONS.contains(extension) ? "image" : "raw";
 
         try {
-            String publicId = folder + "/" + UUID.randomUUID();
+            String publicId = UUID.randomUUID().toString();
 
             log.debug("Uploading file | type={} ownerId={} extension={} resourceType={}", type, ownerId, extension, resourceType);
 
             Map<?, ?> uploadResult = cloudinary
                 .uploader()
-                .upload(file.getBytes(), ObjectUtils.asMap("public_id", publicId, "resource_type", resourceType, "overwrite", true));
+                .upload(
+                    file.getBytes(),
+                    ObjectUtils.asMap("folder", folder, "public_id", publicId, "resource_type", resourceType, "overwrite", true)
+                );
 
             String secureUrl = uploadResult.get("secure_url").toString();
 
@@ -173,8 +175,7 @@ public class CloudinaryDocumentStorageServiceImpl implements DocumentStorageServ
     public String uploadOperatorPhoto(MultipartFile file, Long operatorId) {
         validateImage(file);
 
-        String folder = "gearx-7/operators/operator-" + operatorId + "/photo";
-
+        String folder = String.format(folderProperties.getOperatorPhoto(), "gearx-7", operatorId);
         try {
             log.debug("Uploading operator photo | operatorId={}", operatorId);
 
@@ -255,8 +256,7 @@ public class CloudinaryDocumentStorageServiceImpl implements DocumentStorageServ
             return;
         }
 
-        final String baseFolder = "gearx-7/operators/operator-" + operatorId;
-
+        final String baseFolder = String.format(folderProperties.getOperatorBaseFolder(), "gearx-7", operatorId);
         final String photoFolder = baseFolder + "/photo";
 
         final String licenseFolder = baseFolder + "/license";

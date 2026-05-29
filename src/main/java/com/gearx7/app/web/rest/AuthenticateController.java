@@ -7,9 +7,11 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.gearx7.app.domain.User;
 import com.gearx7.app.repository.UserRepository;
 import com.gearx7.app.service.dto.ApiResponse;
+import com.gearx7.app.service.interfaces.LoginCacheService;
+import com.gearx7.app.service.interfaces.OtpService;
 import com.gearx7.app.web.rest.errors.BadRequestAlertException;
-import com.gearx7.app.web.rest.errors.NotFoundAlertException;
 import com.gearx7.app.web.rest.vm.LoginVM;
+import com.gearx7.app.web.rest.vm.OtpVM;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import java.time.Instant;
@@ -18,13 +20,13 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.JwsHeader;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
@@ -43,6 +45,12 @@ public class AuthenticateController {
 
     private final JwtEncoder jwtEncoder;
 
+    private final OtpService otpService;
+
+    private final LoginCacheService loginCacheService;
+
+    private final UserRepository userRepository;
+
     @Value("${jhipster.security.authentication.jwt.token-validity-in-seconds:0}")
     private long tokenValidityInSeconds;
 
@@ -51,49 +59,94 @@ public class AuthenticateController {
 
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
 
-    private final UserRepository userRepository;
-
     public AuthenticateController(
         JwtEncoder jwtEncoder,
         AuthenticationManagerBuilder authenticationManagerBuilder,
+        OtpService otpService,
+        LoginCacheService loginCacheService,
         UserRepository userRepository
     ) {
         this.jwtEncoder = jwtEncoder;
         this.authenticationManagerBuilder = authenticationManagerBuilder;
+        this.otpService = otpService;
+        this.loginCacheService = loginCacheService;
         this.userRepository = userRepository;
     }
 
     @PostMapping("/authenticate")
-    public ResponseEntity<ApiResponse<JWTToken>> authorize(@Valid @RequestBody LoginVM loginVM) {
-        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
-            loginVM.getUsername(),
-            loginVM.getPassword()
-        );
+    public ResponseEntity<ApiResponse<Void>> authorize(@Valid @RequestBody LoginVM loginVM) {
+        log.info("LOGIN_ATTEMPT | mobile={}", loginVM.getUsername());
 
         User user = userRepository
             .findOneByLogin(loginVM.getUsername())
             .orElseThrow(() ->
-                new NotFoundAlertException("Invalid UserName...Could you please check it again once...", "user", "UserNotFound")
+                new BadRequestAlertException(
+                    "You don't have an account with this mobile number. Please create a new account and try again.",
+                    "authentication",
+                    "userNotFound"
+                )
             );
 
-        Authentication authentication;
-        try {
-            authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
-        } catch (Exception ex) {
-            throw new BadRequestAlertException(
-                "Invalid username or password...Could you please check it again once...",
-                "authentication",
-                "invalidCredentials"
-            );
+        if (!loginCacheService.canSendOtp(loginVM.getUsername())) {
+            throw new BadRequestAlertException("OTP already sent. Please wait 60 seconds.", "authentication", "otpAlreadySent");
         }
+
+        otpService.sendOtpToUserWhileLogin(user.getPhone());
+
+        loginCacheService.store(loginVM.getUsername(), loginVM.getUsername());
+
+        log.info("OTP_SENT | mobile={}", loginVM.getUsername());
+
+        return ResponseEntity.ok(
+            new ApiResponse<>(true, HttpStatus.OK.value(), "OTP sent successfully. Please verify to complete login.", null)
+        );
+    }
+
+    @PostMapping("/verify-otp")
+    public ResponseEntity<ApiResponse<JWTToken>> verifyOtp(@RequestBody OtpVM otpVM) {
+        log.info("OTP_VERIFY_REQUEST | phone={}", otpVM.getPhoneNumber());
+
+        // Step 1: Check OTP expiry
+        String login = loginCacheService.get(otpVM.getPhoneNumber());
+
+        if (login == null) {
+            log.error("OTP_EXPIRED | phone={}", otpVM.getPhoneNumber());
+
+            throw new BadRequestAlertException("OTP expired. Please login again.", "authentication", "otpExpired");
+        }
+
+        // Step 2: Verify OTP via MSG91
+        boolean isValid = otpService.verifyOtpToLogin(otpVM.getPhoneNumber(), otpVM.getOtp());
+
+        if (!isValid) {
+            log.warn("OTP_INVALID | phone={}", otpVM.getPhoneNumber());
+
+            throw new BadRequestAlertException("Invalid OTP. Please try again.", "authentication", "invalidOtp");
+        }
+
+        // Step 3: Load user
+        User user = userRepository
+            .findOneWithAuthoritiesByLogin(login)
+            .orElseThrow(() -> new BadRequestAlertException("User not found", "authentication", "userNotFound"));
+
+        // Step 4: Create Authentication
+        Authentication authentication = new UsernamePasswordAuthenticationToken(
+            user.getLogin(),
+            null,
+            user.getAuthorities().stream().map(authority -> new SimpleGrantedAuthority(authority.getName())).collect(Collectors.toList())
+        );
+
+        // Step 5: Remove cache entry
+        loginCacheService.remove(otpVM.getPhoneNumber());
+
         SecurityContextHolder.getContext().setAuthentication(authentication);
-        String jwt = this.createToken(authentication, loginVM.isRememberMe());
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.setBearerAuth(jwt);
-        return ResponseEntity
-            .ok()
-            .headers(httpHeaders)
-            .body(new ApiResponse<>(true, HttpStatus.OK.value(), "Login successful", new JWTToken(jwt)));
+
+        // Step 6: Generate JWT
+        String jwt = createToken(authentication, false);
+
+        log.info("LOGIN_SUCCESS | phone={}", otpVM.getPhoneNumber());
+
+        return ResponseEntity.ok(new ApiResponse<>(true, HttpStatus.OK.value(), "Login successful.", new JWTToken(jwt)));
     }
 
     /**
@@ -103,11 +156,9 @@ public class AuthenticateController {
      * @return the login if the user is authenticated.
      */
     @GetMapping("/authenticate")
-    public ResponseEntity<ApiResponse<String>> isAuthenticated(HttpServletRequest request) {
+    public String isAuthenticated(HttpServletRequest request) {
         log.debug("REST request to check if the current user is authenticated");
-        return ResponseEntity.ok(
-            new ApiResponse<>(true, HttpStatus.OK.value(), "User authenticated successfully", request.getRemoteUser())
-        );
+        return request.getRemoteUser();
     }
 
     public String createToken(Authentication authentication, boolean rememberMe) {

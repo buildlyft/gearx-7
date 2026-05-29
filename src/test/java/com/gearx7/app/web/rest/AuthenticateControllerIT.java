@@ -50,7 +50,6 @@ class AuthenticateControllerIT {
 
         LoginVM login = new LoginVM();
         login.setUsername("user-jwt-controller");
-        login.setPassword("test");
         mockMvc
             .perform(post("/api/authenticate").contentType(MediaType.APPLICATION_JSON).content(TestUtil.convertObjectToJsonBytes(login)))
             .andExpect(status().isOk())
@@ -73,7 +72,6 @@ class AuthenticateControllerIT {
 
         LoginVM login = new LoginVM();
         login.setUsername("user-jwt-controller-remember-me");
-        login.setPassword("test");
         login.setRememberMe(true);
         mockMvc
             .perform(post("/api/authenticate").contentType(MediaType.APPLICATION_JSON).content(TestUtil.convertObjectToJsonBytes(login)))
@@ -88,7 +86,6 @@ class AuthenticateControllerIT {
     void testAuthorizeFails() throws Exception {
         LoginVM login = new LoginVM();
         login.setUsername("wrong-user");
-        login.setPassword("wrong password");
         mockMvc
             .perform(post("/api/authenticate").contentType(MediaType.APPLICATION_JSON).content(TestUtil.convertObjectToJsonBytes(login)))
             .andExpect(status().isUnauthorized())

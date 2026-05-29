@@ -1,6 +1,7 @@
 package com.gearx7.app.web.rest.vm;
 
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 /**
@@ -9,12 +10,8 @@ import jakarta.validation.constraints.Size;
 public class LoginVM {
 
     @NotNull
-    @Size(min = 1, max = 50)
+    @Pattern(regexp = "^[0-9]{10}$", message = "Please enter a valid 10-digit mobile number")
     private String username;
-
-    @NotNull
-    @Size(min = 4, max = 100)
-    private String password;
 
     private boolean rememberMe;
 
@@ -24,14 +21,6 @@ public class LoginVM {
 
     public void setUsername(String username) {
         this.username = username;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
     }
 
     public boolean isRememberMe() {

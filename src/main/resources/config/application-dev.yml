@@ -108,6 +108,14 @@ cloudinary:
   cloud_name: dlszistcj
   api_key: 698842318943615
   api_secret: 2P88Es8NTsHiWWUMqN-hoY7RnnY
+  folders:
+    machine-documents: '%s/machines/machine-%d/documents'
+    operator-photo: '%s/operators/operator-%d/photo'
+    operator-license: '%s/operators/operator-%d/license'
+    category-image: '%s/categories/category-%d/image'
+    subcategory-image: '%s/subcategories/subcategory-%d/image'
+    type-image: '%s/types/type-%d/image'
+    operator-base-folder: '%s/operators/operator-%d'
 
 # this is SMS service congiguration
 sms:

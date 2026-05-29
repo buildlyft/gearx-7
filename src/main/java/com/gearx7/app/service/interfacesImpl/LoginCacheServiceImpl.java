@@ -4,7 +4,6 @@ import com.gearx7.app.service.interfaces.LoginCacheService;
 import java.time.Instant;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -12,7 +11,7 @@ public class LoginCacheServiceImpl implements LoginCacheService {
 
     private static class CacheEntry {
 
-        Authentication auth;
+        String login;
         Instant expiry;
         Instant lastOtpSentTime;
     }
@@ -20,16 +19,16 @@ public class LoginCacheServiceImpl implements LoginCacheService {
     private final Map<String, CacheEntry> cache = new ConcurrentHashMap<>();
 
     @Override
-    public void store(String phone, Authentication auth) {
+    public void store(String phone, String login) {
         CacheEntry entry = new CacheEntry();
-        entry.auth = auth;
+        entry.login = login;
         entry.expiry = Instant.now().plusSeconds(300); // 5 min
         entry.lastOtpSentTime = Instant.now();
         cache.put(phone, entry);
     }
 
     @Override
-    public Authentication get(String phone) {
+    public String get(String phone) {
         CacheEntry entry = cache.get(phone);
 
         if (entry == null || entry.expiry.isBefore(Instant.now())) {
@@ -37,7 +36,7 @@ public class LoginCacheServiceImpl implements LoginCacheService {
             return null;
         }
 
-        return entry.auth;
+        return entry.login;
     }
 
     @Override

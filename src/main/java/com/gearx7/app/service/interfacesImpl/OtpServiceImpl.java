@@ -102,6 +102,10 @@ public class OtpServiceImpl implements OtpService {
     }
 
     private String mask(String phone) {
+        if (phone == null || phone.length() < 4) {
+            return "INVALID";
+        }
+
         return phone.substring(0, 2) + "******" + phone.substring(phone.length() - 2);
     }
 }
