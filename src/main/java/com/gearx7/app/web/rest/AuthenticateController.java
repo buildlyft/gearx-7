@@ -10,12 +10,14 @@ import com.gearx7.app.service.dto.ApiResponse;
 import com.gearx7.app.service.interfaces.LoginCacheService;
 import com.gearx7.app.service.interfaces.OtpService;
 import com.gearx7.app.web.rest.errors.BadRequestAlertException;
+import com.gearx7.app.web.rest.errors.NotFoundAlertException;
 import com.gearx7.app.web.rest.vm.LoginVM;
 import com.gearx7.app.web.rest.vm.OtpVM;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -77,18 +79,16 @@ public class AuthenticateController {
     public ResponseEntity<ApiResponse<Void>> authorize(@Valid @RequestBody LoginVM loginVM) {
         log.info("LOGIN_ATTEMPT | mobile={}", loginVM.getUsername());
 
-        User user = userRepository
-            .findOneByLogin(loginVM.getUsername())
-            .orElseThrow(() ->
-                new BadRequestAlertException(
-                    "You don't have an account with this mobile number. Please create a new account and try again.",
-                    "authentication",
-                    "userNotFound"
-                )
-            );
+        Optional<User> userOpt = userRepository.findOneByLogin(loginVM.getUsername());
+
+        if (userOpt.isEmpty()) {
+            return ResponseEntity.ok(new ApiResponse<>(false, HttpStatus.OK.value(), "REGISTER_REQUIRED", null));
+        }
+
+        User user = userOpt.orElseThrow(() -> new NotFoundAlertException("User not found", "authentication", "userNotFound"));
 
         if (!loginCacheService.canSendOtp(loginVM.getUsername())) {
-            throw new BadRequestAlertException("OTP already sent. Please wait 60 seconds.", "authentication", "otpAlreadySent");
+            return ResponseEntity.ok(new ApiResponse<>(false, HttpStatus.OK.value(), "OTP_ALREADY_SENT", null));
         }
 
         otpService.sendOtpToUserWhileLogin(user.getPhone());
@@ -112,7 +112,7 @@ public class AuthenticateController {
         if (login == null) {
             log.error("OTP_EXPIRED | phone={}", otpVM.getPhoneNumber());
 
-            throw new BadRequestAlertException("OTP expired. Please login again.", "authentication", "otpExpired");
+            return ResponseEntity.ok(new ApiResponse<>(false, HttpStatus.OK.value(), "OTP expired. Please login again.", null));
         }
 
         // Step 2: Verify OTP via MSG91
@@ -121,7 +121,7 @@ public class AuthenticateController {
         if (!isValid) {
             log.warn("OTP_INVALID | phone={}", otpVM.getPhoneNumber());
 
-            throw new BadRequestAlertException("Invalid OTP. Please try again.", "authentication", "invalidOtp");
+            return ResponseEntity.ok(new ApiResponse<>(false, HttpStatus.OK.value(), "Invalid_OTP.", null));
         }
 
         // Step 3: Load user

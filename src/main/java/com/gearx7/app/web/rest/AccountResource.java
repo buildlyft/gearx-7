@@ -11,6 +11,8 @@ import com.gearx7.app.service.UserService;
 import com.gearx7.app.service.dto.AdminUserDTO;
 import com.gearx7.app.service.dto.ApiResponse;
 import com.gearx7.app.service.dto.PasswordChangeDTO;
+import com.gearx7.app.service.interfaces.LoginCacheService;
+import com.gearx7.app.service.interfaces.OtpService;
 import com.gearx7.app.web.rest.errors.*;
 import com.gearx7.app.web.rest.vm.KeyAndPasswordVM;
 import com.gearx7.app.web.rest.vm.ManagedUserVM;
@@ -60,19 +62,25 @@ public class AccountResource {
 
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
     private final JwtEncoder jwtEncoder;
+    private final OtpService otpService;
+    private final LoginCacheService loginCacheService;
 
     public AccountResource(
         UserRepository userRepository,
         UserService userService,
         MailService mailService,
         AuthenticationManagerBuilder authenticationManagerBuilder,
-        JwtEncoder jwtEncoder
+        JwtEncoder jwtEncoder,
+        OtpService otpService,
+        LoginCacheService loginCacheService
     ) {
         this.userRepository = userRepository;
         this.userService = userService;
         this.mailService = mailService;
         this.authenticationManagerBuilder = authenticationManagerBuilder;
         this.jwtEncoder = jwtEncoder;
+        this.otpService = otpService;
+        this.loginCacheService = loginCacheService;
     }
 
     /**
@@ -84,7 +92,7 @@ public class AccountResource {
      * @throws LoginAlreadyUsedException {@code 400 (Bad Request)} if the login is already used.
      */
     @PostMapping("/register")
-    public ResponseEntity<ApiResponse<AuthenticateController.JWTToken>> registerAccount(@Valid @RequestBody ManagedUserVM managedUserVM) {
+    public ResponseEntity<ApiResponse<Void>> registerAccount(@Valid @RequestBody ManagedUserVM managedUserVM) {
         log.info("REGISTER START | login={} | phone={}", managedUserVM.getLogin(), managedUserVM.getPhone());
 
         if (isPasswordLengthInvalid(managedUserVM.getPassword())) {
@@ -93,31 +101,12 @@ public class AccountResource {
         }
         userService.registerUser(managedUserVM, managedUserVM.getPassword());
         log.info("USER REGISTERED SUCCESSFULLY | login={}", managedUserVM.getLogin());
+        otpService.sendOtpToUserWhileLogin(managedUserVM.getPhone());
+
+        loginCacheService.store(managedUserVM.getPhone(), managedUserVM.getLogin());
         //        mailService.sendActivationEmail(user);
         // Direct login after registration
-        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
-            managedUserVM.getLogin(),
-            managedUserVM.getPassword()
-        );
-        Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-        log.debug("AUTHENTICATION SUCCESS | login={}", managedUserVM.getLogin());
-        String jwt = this.createToken(authentication, false);
-        log.info("JWT GENERATED | login={}", managedUserVM.getLogin());
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.setBearerAuth(jwt);
-        log.info("REGISTER END | login={}", managedUserVM.getLogin());
-        return ResponseEntity
-            .status(HttpStatus.CREATED)
-            .headers(httpHeaders)
-            .body(
-                new ApiResponse<>(
-                    true,
-                    HttpStatus.CREATED.value(),
-                    "User registered successfully",
-                    new AuthenticateController.JWTToken(jwt)
-                )
-            );
+        return ResponseEntity.ok(new ApiResponse<>(true, HttpStatus.OK.value(), "User registered successfully. OTP sent.", null));
     }
 
     public String createToken(Authentication authentication, boolean rememberMe) {
