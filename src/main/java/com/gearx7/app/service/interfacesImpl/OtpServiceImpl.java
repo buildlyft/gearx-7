@@ -19,14 +19,17 @@ public class OtpServiceImpl implements OtpService {
 
     private final RestTemplate restTemplate;
 
-    @Value("${otp.msg91.authkey}")
+    @Value("${otp.msg91.auth-key}")
     private String authKey;
 
     @Value("${otp.msg91.otp-template-id}")
     private String templateId;
 
-    private static final String SEND_OTP_URL = "https://control.msg91.com/api/v5/otp";
-    private static final String VERIFY_OTP_URL = "https://control.msg91.com/api/v5/otp/verify";
+    @Value("${otp.msg91.send-url}")
+    private String sendOtpUrl;
+
+    @Value("${otp.msg91.verify-url}")
+    private String verifyOtpUrl;
 
     public OtpServiceImpl(RestTemplateBuilder builder) {
         this.restTemplate = builder.setConnectTimeout(Duration.ofSeconds(5)).setReadTimeout(Duration.ofSeconds(5)).build();
@@ -47,8 +50,9 @@ public class OtpServiceImpl implements OtpService {
 
             HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
 
-            ResponseEntity<String> response = restTemplate.postForEntity(SEND_OTP_URL, request, String.class);
+            ResponseEntity<String> response = restTemplate.postForEntity(sendOtpUrl, request, String.class);
             String responseBody = response.getBody();
+            log.info("MSG91_RESPONSE={}", responseBody);
 
             log.info("OTP_SENT | phoneNumber={} | status={}", mask(phoneNumber), response.getStatusCode());
 
@@ -78,7 +82,7 @@ public class OtpServiceImpl implements OtpService {
 
             HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
 
-            ResponseEntity<String> response = restTemplate.postForEntity(VERIFY_OTP_URL, request, String.class);
+            ResponseEntity<String> response = restTemplate.postForEntity(verifyOtpUrl, request, String.class);
 
             log.info("OTP_VERIFICATION_RESPONSE | phoneNumber={} | status={}", mask(phoneNumber), response.getStatusCode());
 

@@ -133,15 +133,17 @@ sms:
     booking-cancelled-partner: 'Hello %s %s, booking %s has been cancelled by the customer. Machine: %s. Thank you for choosing Gearx7.'
 
   msg91:
-    auth-key: 165660AijPO1tt8riE596c8eb4
+    auth-key: 484982Ao2rqg36m3694fc4feP1
     sender-id: VEHTRK
     booking-user-template-id: 695e081b268710369224fc79
 
 otp:
   msg91:
-    auth-key: 165660AijPO1tt8riE596c8eb4
+    send-url: https://control.msg91.com/api/v5/otp
+    verify-url: https://control.msg91.com/api/v5/otp/verify
+    auth-key: 484982Ao2rqg36m3694fc4feP1
     sender-id: VEHTRK
-    otp-template-id: 695e081b268710369224fc79
+    otp-template-id: 6a21303edf034dcf6a045fa4
 
 locationiq:
   api-key: pk.185919f9a8d1c5539f39a4da2b58b488
