@@ -2,55 +2,59 @@
   <div class="d-flex justify-content-center">
     <div class="col-lg-6 col-md-8 col-sm-10">
       <h1 data-cy="loginTitle">Sign in</h1>
+
       @if (authenticationError) {
         <div class="alert alert-danger" data-cy="loginError">
           <strong>Failed to sign in!</strong> Please check your credentials and try again.
         </div>
       }
+
       <form class="form" role="form" (ngSubmit)="login()" [formGroup]="loginForm">
         <div class="mb-3">
-          <label class="username-label" for="username">Phone Number</label>
-          <input
-            type="text"
-            class="form-control"
-            name="username"
-            id="username"
-            placeholder="Enter your PhoneNumber"
-            formControlName="username"
-            #username
-            data-cy="username"
-          />
+          <label class="form-label" for="username"> Phone Number </label>
+
+          <div class="input-group">
+            <input
+              type="text"
+              class="form-control"
+              id="username"
+              placeholder="Enter Phone Number"
+              formControlName="username"
+              #username
+              required
+            />
+
+            <button type="button" class="btn btn-secondary" [disabled]="otpSent || !loginForm.get('username')?.value" (click)="sendOtp()">
+              {{ otpSent ? 'OTP Sent' : 'Send OTP' }}
+            </button>
+          </div>
         </div>
 
-        <div class="mb-3">
-          <label for="password">Password</label>
-          <input
-            type="password"
-            class="form-control"
-            name="password"
-            id="password"
-            placeholder="Your password"
-            formControlName="password"
-            data-cy="password"
-          />
-        </div>
+        @if (otpSent) {
+          <div class="mb-3">
+            <label class="form-label"> OTP </label>
 
-        <div class="form-check">
+            <input type="text" class="form-control" formControlName="otp" placeholder="Enter OTP" />
+          </div>
+        }
+
+        <div class="form-check mb-3">
           <label class="form-check-label" for="rememberMe">
-            <input class="form-check-input" type="checkbox" name="rememberMe" id="rememberMe" formControlName="rememberMe" />
+            <input class="form-check-input" type="checkbox" id="rememberMe" formControlName="rememberMe" />
             <span>Remember me</span>
           </label>
         </div>
 
-        <button type="submit" class="btn btn-primary" data-cy="submit">Sign in</button>
+        <button type="submit" class="btn btn-primary" [disabled]="!otpSent">Login</button>
       </form>
+
       <div class="mt-3 alert alert-warning">
-        <a class="alert-link" routerLink="/account/reset/request" data-cy="forgetYourPasswordSelector">Did you forget your password?</a>
+        <a class="alert-link" routerLink="/account/reset/request" data-cy="forgetYourPasswordSelector"> Did you forget your password? </a>
       </div>
 
       <div class="alert alert-warning">
-        <span>You don&apos;t have an account yet?</span>
-        <a class="alert-link" routerLink="/account/register">Register a new account</a>
+        <span>You don't have an account yet?</span>
+        <a class="alert-link" routerLink="/account/register"> Register a new account </a>
       </div>
     </div>
   </div>

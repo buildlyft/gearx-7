@@ -1,8 +1,9 @@
 import { Component, AfterViewInit, ElementRef, ViewChild } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { FormGroup, FormControl, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-
+import { AccountService } from 'app/core/auth/account.service';
+import { AuthServerProvider } from 'app/core/auth/auth-jwt.service';
 import { EMAIL_ALREADY_USED_TYPE, LOGIN_ALREADY_USED_TYPE } from 'app/config/error.constants';
 import SharedModule from 'app/shared/shared.module';
 import PasswordStrengthBarComponent from '../password/password-strength-bar/password-strength-bar.component';
@@ -23,6 +24,10 @@ export default class RegisterComponent implements AfterViewInit {
   errorEmailExists = false;
   errorUserExists = false;
   success = false;
+
+  otpSent = false;
+  otp = '';
+  phoneNumber = '';
 
   registerForm = new FormGroup({
     login: new FormControl('', {
@@ -61,7 +66,12 @@ export default class RegisterComponent implements AfterViewInit {
     }),
   });
 
-  constructor(private registerService: RegisterService) {}
+  constructor(
+    private registerService: RegisterService,
+    private authServerProvider: AuthServerProvider,
+    private accountService: AccountService,
+    private router: Router,
+  ) {}
 
   ngAfterViewInit(): void {
     if (this.login) {
@@ -80,10 +90,28 @@ export default class RegisterComponent implements AfterViewInit {
       this.doNotMatch = true;
     } else {
       const { login, firstName, lastName, phone, email } = this.registerForm.getRawValue();
-      this.registerService
-        .save({ login, firstName, lastName, phone, email, password, langKey: 'en' })
-        .subscribe({ next: () => (this.success = true), error: response => this.processError(response) });
+      this.registerService.save({ login, firstName, lastName, phone, email, password, langKey: 'en' }).subscribe({
+        next: () => {
+          this.phoneNumber = this.registerForm.get('phone')?.value ?? '';
+
+          this.otpSent = true;
+        },
+        error: response => this.processError(response),
+      });
     }
+  }
+
+  verifyOtp(): void {
+    this.authServerProvider.verifyOtp(this.phoneNumber, this.otp, true).subscribe({
+      next: () => {
+        this.accountService.identity(true).subscribe(() => {
+          this.router.navigate(['/']);
+        });
+      },
+      error: () => {
+        this.error = true;
+      },
+    });
   }
 
   private processError(response: HttpErrorResponse): void {

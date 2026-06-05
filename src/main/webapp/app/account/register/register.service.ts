@@ -15,4 +15,11 @@ export class RegisterService {
   save(registration: Registration): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(this.applicationConfigService.getEndpointFor('api/register'), registration);
   }
+
+  verifyOtp(phoneNumber: string, otp: string) {
+    return this.http.post(this.applicationConfigService.getEndpointFor('api/verify-otp'), {
+      phoneNumber,
+      otp,
+    });
+  }
 }

@@ -16,12 +16,15 @@ export default class LoginComponent implements OnInit, AfterViewInit {
   @ViewChild('username', { static: false })
   username!: ElementRef;
 
+  otpSent = false;
+  otpSending = false;
+
   authenticationError = false;
 
   loginForm = new FormGroup({
     username: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
-    password: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
-    rememberMe: new FormControl(false, { nonNullable: true, validators: [Validators.required] }),
+    otp: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    rememberMe: new FormControl(false, { nonNullable: true }),
   });
 
   constructor(
@@ -44,15 +47,38 @@ export default class LoginComponent implements OnInit, AfterViewInit {
   }
 
   login(): void {
-    this.loginService.login(this.loginForm.getRawValue()).subscribe({
+    const form = this.loginForm.getRawValue();
+
+    this.loginService.verifyOtp(form.username, form.otp, form.rememberMe).subscribe({
       next: () => {
         this.authenticationError = false;
-        if (!this.router.getCurrentNavigation()) {
-          // There were no routing during login (eg from navigationToStoredUrl)
-          this.router.navigate(['']);
+        this.router.navigate(['']);
+      },
+      error: () => {
+        this.authenticationError = true;
+      },
+    });
+  }
+
+  sendOtp(): void {
+    const username = this.loginForm.get('username')?.value;
+
+    if (!username) {
+      return;
+    }
+
+    this.loginService.sendOtp(username).subscribe({
+      next: response => {
+        if (response.status) {
+          this.otpSent = true;
+          this.authenticationError = false;
+        } else {
+          this.authenticationError = true;
         }
       },
-      error: () => (this.authenticationError = true),
+      error: () => {
+        this.authenticationError = true;
+      },
     });
   }
 }

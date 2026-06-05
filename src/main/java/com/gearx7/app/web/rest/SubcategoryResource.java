@@ -159,14 +159,17 @@ public class SubcategoryResource {
         log.debug("REST request to get a page of Subcategories");
         Page<SubCategoryDTO> page = subcategoryService.findAll(pageable);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
-        return ResponseEntity.ok(
-            new ApiResponse<>(
-                true,
-                HttpStatus.OK.value(),
-                page.getContent().isEmpty() ? "Subcategories data not available" : "Subcategories data fetched successfully",
-                page.getContent()
-            )
-        );
+        return ResponseEntity
+            .ok()
+            .headers(headers)
+            .body(
+                new ApiResponse<>(
+                    true,
+                    HttpStatus.OK.value(),
+                    page.getContent().isEmpty() ? "Subcategories data not available" : "Subcategories data fetched successfully",
+                    page.getContent()
+                )
+            );
     }
 
     /**

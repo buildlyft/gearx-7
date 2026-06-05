@@ -189,14 +189,17 @@ public class CategoryResource {
         log.debug("REST request to get a page of Categories");
         Page<CategoryDTO> page = categoryService.findAll(pageable);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
-        return ResponseEntity.ok(
-            new ApiResponse<>(
-                true,
-                HttpStatus.OK.value(),
-                page.getContent().isEmpty() ? "Categories data not available" : "Categories data fetched successfully",
-                page.getContent()
-            )
-        );
+        return ResponseEntity
+            .ok()
+            .headers(headers)
+            .body(
+                new ApiResponse<>(
+                    true,
+                    HttpStatus.OK.value(),
+                    page.getContent().isEmpty() ? "Categories data not available" : "Categories data fetched successfully",
+                    page.getContent()
+                )
+            );
     }
 
     /**

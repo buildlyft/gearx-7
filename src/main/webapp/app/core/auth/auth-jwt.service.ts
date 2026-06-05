@@ -29,6 +29,15 @@ export class AuthServerProvider {
       .pipe(map(response => this.authenticateSuccess(response, credentials.rememberMe)));
   }
 
+  verifyOtp(phoneNumber: string, otp: string, rememberMe: boolean): Observable<void> {
+    return this.http
+      .post<ApiResponse<JwtToken>>(this.applicationConfigService.getEndpointFor('api/verify-otp'), {
+        phoneNumber,
+        otp,
+      })
+      .pipe(map(response => this.authenticateSuccess(response, rememberMe)));
+  }
+
   logout(): Observable<void> {
     return new Observable(observer => {
       this.stateStorageService.clearAuthenticationToken();

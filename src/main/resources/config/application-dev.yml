@@ -102,7 +102,7 @@ jhipster:
 
 gearx7:
   machine:
-    search-radius-km: 15.0
+    search-radius-km: 100.0
 
 cloudinary:
   cloud_name: dlszistcj

@@ -188,6 +188,20 @@
 
           <button type="submit" [disabled]="registerForm.invalid" class="btn btn-primary" data-cy="submit">Register</button>
         </form>
+        @if (otpSent) {
+          <div class="card mt-3">
+            <div class="card-body">
+              <h5>OTP Verification</h5>
+              <div class="mb-3">
+                <label class="form-label">Enter OTP</label>
+
+                <input type="text" class="form-control" [(ngModel)]="otp" />
+              </div>
+
+              <button type="button" class="btn btn-success" (click)="verifyOtp()">Verify OTP</button>
+            </div>
+          </div>
+        }
       }
 
       <div class="mt-3 alert alert-warning">
