@@ -172,11 +172,13 @@ public class UserService {
                 throw new UsernameAlreadyUsedException();
             });
 
-        userRepository
-            .findOneByEmailIgnoreCase(userDTO.getEmail())
-            .ifPresent(existingUser -> {
-                throw new EmailAlreadyUsedException();
-            });
+        if (userDTO.getEmail() != null) {
+            userRepository
+                .findOneByEmailIgnoreCase(userDTO.getEmail())
+                .ifPresent(existingUser -> {
+                    throw new EmailAlreadyUsedException();
+                });
+        }
 
         userRepository
             .findOneByPhone(userDTO.getPhone())

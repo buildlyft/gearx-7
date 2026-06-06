@@ -4,12 +4,15 @@ import static com.gearx7.app.security.SecurityUtils.AUTHORITIES_KEY;
 import static com.gearx7.app.security.SecurityUtils.JWT_ALGORITHM;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.gearx7.app.config.AppConstants;
 import com.gearx7.app.domain.User;
 import com.gearx7.app.repository.UserRepository;
+import com.gearx7.app.security.AuthoritiesConstants;
+import com.gearx7.app.service.UserService;
+import com.gearx7.app.service.dto.AdminUserDTO;
 import com.gearx7.app.service.dto.ApiResponse;
 import com.gearx7.app.service.interfaces.LoginCacheService;
 import com.gearx7.app.service.interfaces.OtpService;
-import com.gearx7.app.web.rest.errors.BadRequestAlertException;
 import com.gearx7.app.web.rest.errors.NotFoundAlertException;
 import com.gearx7.app.web.rest.vm.LoginVM;
 import com.gearx7.app.web.rest.vm.OtpVM;
@@ -18,6 +21,7 @@ import jakarta.validation.Valid;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,6 +57,8 @@ public class AuthenticateController {
 
     private final UserRepository userRepository;
 
+    private final UserService userService;
+
     @Value("${jhipster.security.authentication.jwt.token-validity-in-seconds:0}")
     private long tokenValidityInSeconds;
 
@@ -66,36 +72,32 @@ public class AuthenticateController {
         AuthenticationManagerBuilder authenticationManagerBuilder,
         OtpService otpService,
         LoginCacheService loginCacheService,
-        UserRepository userRepository
+        UserRepository userRepository,
+        UserService userService
     ) {
         this.jwtEncoder = jwtEncoder;
         this.authenticationManagerBuilder = authenticationManagerBuilder;
         this.otpService = otpService;
         this.loginCacheService = loginCacheService;
         this.userRepository = userRepository;
+        this.userService = userService;
     }
 
     @PostMapping("/authenticate")
     public ResponseEntity<ApiResponse<Void>> authorize(@Valid @RequestBody LoginVM loginVM) {
-        log.info("LOGIN_ATTEMPT | mobile={}", loginVM.getUsername());
+        log.info("LOGIN_ATTEMPT | mobile={}", mask(loginVM.getUsername()));
 
-        Optional<User> userOpt = userRepository.findOneByLogin(loginVM.getUsername());
+        String phoneNumber = loginVM.getUsername();
 
-        if (userOpt.isEmpty()) {
-            return ResponseEntity.ok(new ApiResponse<>(false, HttpStatus.OK.value(), "REGISTER_REQUIRED", null));
-        }
-
-        User user = userOpt.orElseThrow(() -> new NotFoundAlertException("User not found", "authentication", "userNotFound"));
-
-        if (!loginCacheService.canSendOtp(loginVM.getUsername())) {
+        if (!loginCacheService.canSendOtp(phoneNumber)) {
+            log.warn("OTP_ALREADY_SENT | phone={}", mask(phoneNumber));
             return ResponseEntity.ok(new ApiResponse<>(false, HttpStatus.OK.value(), "OTP_ALREADY_SENT", null));
         }
 
-        otpService.sendOtpToUserWhileLogin(user.getPhone());
+        otpService.sendOtpToUserWhileLogin(phoneNumber);
+        log.info("OTP_SENT | phone={}", mask(phoneNumber));
 
-        loginCacheService.store(loginVM.getUsername(), loginVM.getUsername());
-
-        log.info("OTP_SENT | mobile={}", loginVM.getUsername());
+        loginCacheService.store(phoneNumber, phoneNumber);
 
         return ResponseEntity.ok(
             new ApiResponse<>(true, HttpStatus.OK.value(), "OTP sent successfully. Please verify to complete login.", null)
@@ -103,14 +105,14 @@ public class AuthenticateController {
     }
 
     @PostMapping("/verify-otp")
-    public ResponseEntity<ApiResponse<JWTToken>> verifyOtp(@RequestBody OtpVM otpVM) {
-        log.info("OTP_VERIFY_REQUEST | phone={}", otpVM.getPhoneNumber());
+    public ResponseEntity<ApiResponse<JWTToken>> verifyOtp(@Valid @RequestBody OtpVM otpVM) {
+        log.info("OTP_VERIFY_REQUEST | phone={}", mask(otpVM.getPhoneNumber()));
 
         // Step 1: Check OTP expiry
         String login = loginCacheService.get(otpVM.getPhoneNumber());
 
         if (login == null) {
-            log.error("OTP_EXPIRED | phone={}", otpVM.getPhoneNumber());
+            log.info("OTP_EXPIRED | phone={}", mask(otpVM.getPhoneNumber()));
 
             return ResponseEntity.ok(new ApiResponse<>(false, HttpStatus.OK.value(), "OTP expired. Please login again.", null));
         }
@@ -119,16 +121,54 @@ public class AuthenticateController {
         boolean isValid = otpService.verifyOtpToLogin(otpVM.getPhoneNumber(), otpVM.getOtp());
 
         if (!isValid) {
-            log.warn("OTP_INVALID | phone={}", otpVM.getPhoneNumber());
-
+            log.info("OTP_INVALID | phone={}", mask(otpVM.getPhoneNumber()));
+            loginCacheService.remove(otpVM.getPhoneNumber());
             return ResponseEntity.ok(new ApiResponse<>(false, HttpStatus.OK.value(), "Invalid_OTP.", null));
         }
 
-        // Step 3: Load user
-        User user = userRepository
-            .findOneWithAuthoritiesByLogin(login)
-            .orElseThrow(() -> new BadRequestAlertException("User not found", "authentication", "userNotFound"));
+        if (
+            otpVM.getAppType() == null ||
+            (!AppConstants.CUSTOMER.equalsIgnoreCase(otpVM.getAppType()) && !AppConstants.PARTNER.equalsIgnoreCase(otpVM.getAppType()))
+        ) {
+            log.warn("INVALID_APP_TYPE | phone={} | appType={}", mask(otpVM.getPhoneNumber()), otpVM.getAppType());
+            loginCacheService.remove(otpVM.getPhoneNumber());
+            return ResponseEntity.ok(new ApiResponse<>(false, HttpStatus.OK.value(), "Invalid app type specified.", null));
+        }
 
+        // Step 3: Load user
+        Optional<User> userOpt = userRepository.findOneWithAuthoritiesByPhone(otpVM.getPhoneNumber());
+
+        User user;
+        if (userOpt.isPresent()) {
+            user = userOpt.orElseThrow(() -> new NotFoundAlertException("User Not Found ", "verify OTP", "userNotFound"));
+            log.info("EXISTING_USER_LOGIN | phone={}", mask(otpVM.getPhoneNumber()));
+
+            boolean isPartner = user.getAuthorities().stream().anyMatch(a -> AuthoritiesConstants.PARTNER.equals(a.getName()));
+
+            // Partner App Login
+            if (AppConstants.PARTNER.equalsIgnoreCase(otpVM.getAppType()) && !isPartner) {
+                log.warn("PARTNER_ACCESS_DENIED | phone={}", mask(otpVM.getPhoneNumber()));
+                loginCacheService.remove(otpVM.getPhoneNumber());
+                return ResponseEntity
+                    .status(HttpStatus.FORBIDDEN)
+                    .body(new ApiResponse<>(false, HttpStatus.FORBIDDEN.value(), "Your not eligible to login to partner app.", null));
+            }
+        } else {
+            AdminUserDTO userDTO = new AdminUserDTO();
+
+            userDTO.setLogin(otpVM.getPhoneNumber());
+            userDTO.setPhone(otpVM.getPhoneNumber());
+
+            String authority = AppConstants.PARTNER.equalsIgnoreCase(otpVM.getAppType())
+                ? AuthoritiesConstants.PARTNER
+                : AuthoritiesConstants.USER;
+
+            userDTO.setAuthorities(Set.of(authority));
+
+            log.info("AUTO_USER_REGISTRATION | phone={} | role={}", mask(otpVM.getPhoneNumber()), authority);
+
+            user = userService.createUser(userDTO);
+        }
         // Step 4: Create Authentication
         Authentication authentication = new UsernamePasswordAuthenticationToken(
             user.getLogin(),
@@ -143,8 +183,9 @@ public class AuthenticateController {
 
         // Step 6: Generate JWT
         String jwt = createToken(authentication, false);
+        log.info("JWT_GENERATED | phone={}", mask(otpVM.getPhoneNumber()));
 
-        log.info("LOGIN_SUCCESS | phone={}", otpVM.getPhoneNumber());
+        log.info("LOGIN_SUCCESS | phone={}", mask(otpVM.getPhoneNumber()));
 
         return ResponseEntity.ok(new ApiResponse<>(true, HttpStatus.OK.value(), "Login successful.", new JWTToken(jwt)));
     }
@@ -203,5 +244,15 @@ public class AuthenticateController {
         void setIdToken(String idToken) {
             this.idToken = idToken;
         }
+    }
+
+    private String mask(String phone) {
+        if (phone == null || phone.length() != 10) {
+            return "INVALID GIVEN PHONE NUMBER";
+        }
+
+        return phone.substring(0, 2)
+            + "******"
+            + phone.substring(8);
     }
 }
