@@ -21,6 +21,8 @@ export default class LoginComponent implements OnInit, AfterViewInit {
 
   authenticationError = false;
 
+  selectedAppType: 'CUSTOMER' | 'PARTNER' | null = null;
+
   loginForm = new FormGroup({
     username: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     otp: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
@@ -49,7 +51,7 @@ export default class LoginComponent implements OnInit, AfterViewInit {
   login(): void {
     const form = this.loginForm.getRawValue();
 
-    this.loginService.verifyOtp(form.username, form.otp, form.rememberMe).subscribe({
+    this.loginService.verifyOtp(form.username, form.otp, this.selectedAppType!, form.rememberMe).subscribe({
       next: () => {
         this.authenticationError = false;
         this.router.navigate(['']);
@@ -80,5 +82,15 @@ export default class LoginComponent implements OnInit, AfterViewInit {
         this.authenticationError = true;
       },
     });
+  }
+
+  customerLogin(): void {
+    this.selectedAppType = 'CUSTOMER';
+    this.sendOtp();
+  }
+
+  partnerLogin(): void {
+    this.selectedAppType = 'PARTNER';
+    this.sendOtp();
   }
 }

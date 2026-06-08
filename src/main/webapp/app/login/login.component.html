@@ -23,9 +23,25 @@
               #username
               required
             />
+          </div>
 
-            <button type="button" class="btn btn-secondary" [disabled]="otpSent || !loginForm.get('username')?.value" (click)="sendOtp()">
-              {{ otpSent ? 'OTP Sent' : 'Send OTP' }}
+          <div class="mt-2">
+            <button
+              type="button"
+              class="btn btn-primary me-2"
+              [disabled]="otpSent || !loginForm.get('username')?.value"
+              (click)="customerLogin()"
+            >
+              Customer Login
+            </button>
+
+            <button
+              type="button"
+              class="btn btn-success"
+              [disabled]="otpSent || !loginForm.get('username')?.value"
+              (click)="partnerLogin()"
+            >
+              Partner Login
             </button>
           </div>
         </div>

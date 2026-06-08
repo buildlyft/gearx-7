@@ -29,7 +29,9 @@ export class LoginService {
     });
   }
 
-  verifyOtp(phoneNumber: string, otp: string, rememberMe: boolean): Observable<Account | null> {
-    return this.authServerProvider.verifyOtp(phoneNumber, otp, rememberMe).pipe(mergeMap(() => this.accountService.identity(true)));
+  verifyOtp(phoneNumber: string, otp: string, appType: string, rememberMe: boolean): Observable<Account | null> {
+    return this.authServerProvider
+      .verifyOtp(phoneNumber, otp, appType, rememberMe)
+      .pipe(mergeMap(() => this.accountService.identity(true)));
   }
 }

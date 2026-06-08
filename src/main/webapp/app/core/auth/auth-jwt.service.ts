@@ -29,11 +29,12 @@ export class AuthServerProvider {
       .pipe(map(response => this.authenticateSuccess(response, credentials.rememberMe)));
   }
 
-  verifyOtp(phoneNumber: string, otp: string, rememberMe: boolean): Observable<void> {
+  verifyOtp(phoneNumber: string, otp: string, appType: string, rememberMe: boolean): Observable<void> {
     return this.http
       .post<ApiResponse<JwtToken>>(this.applicationConfigService.getEndpointFor('api/verify-otp'), {
         phoneNumber,
         otp,
+        appType,
       })
       .pipe(map(response => this.authenticateSuccess(response, rememberMe)));
   }

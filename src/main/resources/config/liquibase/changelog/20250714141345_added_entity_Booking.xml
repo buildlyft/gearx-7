@@ -115,5 +115,34 @@
         </addColumn>
     </changeSet>
 
+    <changeSet id="202606061700" author="Ganesh">
+        <addColumn tableName="booking">
+            <column name="origin_price" type="double"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="202606061701" author="Ganesh">
+        <renameColumn
+            tableName="booking"
+            oldColumnName="origin_price"
+            newColumnName="original_price"
+            columnDataType="double"/>
+    </changeSet>
+
+    <changeSet id="202606071247" author="Ganesh">
+        <renameColumn
+            tableName="booking"
+            oldColumnName="expected_price"
+            newColumnName="expected_rate"
+            columnDataType="double"/>
+    </changeSet>
+
+    <changeSet id="202606071250" author="Ganesh">
+        <addColumn tableName="booking">
+            <column name="expected_driver_batta" type="double"/>
+            <column name="expected_transport" type="double"/>
+        </addColumn>
+    </changeSet>
+
 
 </databaseChangeLog>

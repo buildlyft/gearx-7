@@ -25,13 +25,19 @@ public class BookingDTO implements Serializable {
 
     private Instant createdDate;
 
-    private Double expectedPrice;
+    private Double expectedRate;
 
     private String notes;
 
     private Instant cancelledDate;
 
     private String customerAddress;
+
+    private Double originalPrice;
+
+    private Double expectedDriverBatta;
+
+    private Double expectedTransport;
 
     //    // customer info
     //    private Long userId;
@@ -46,6 +52,30 @@ public class BookingDTO implements Serializable {
     private MachineDTO machine;
 
     // getters setters
+
+    public Double getExpectedDriverBatta() {
+        return expectedDriverBatta;
+    }
+
+    public void setExpectedDriverBatta(Double expectedDriverBatta) {
+        this.expectedDriverBatta = expectedDriverBatta;
+    }
+
+    public Double getExpectedTransport() {
+        return expectedTransport;
+    }
+
+    public void setExpectedTransport(Double expectedTransport) {
+        this.expectedTransport = expectedTransport;
+    }
+
+    public Double getOriginalPrice() {
+        return originalPrice;
+    }
+
+    public void setOriginalPrice(Double originalPrice) {
+        this.originalPrice = originalPrice;
+    }
 
     public User getUser() {
         return user;
@@ -127,12 +157,12 @@ public class BookingDTO implements Serializable {
         this.createdDate = createdDate;
     }
 
-    public Double getExpectedPrice() {
-        return expectedPrice;
+    public Double getExpectedRate() {
+        return expectedRate;
     }
 
-    public void setExpectedPrice(Double expectedPrice) {
-        this.expectedPrice = expectedPrice;
+    public void setExpectedRate(Double expectedRate) {
+        this.expectedRate = expectedRate;
     }
 
     public String getNotes() {
@@ -215,21 +245,24 @@ public class BookingDTO implements Serializable {
             customerLong +
             ", createdDate=" +
             createdDate +
-            ", expectedPrice=" +
-            expectedPrice +
+            ", expectedRate=" +
+            expectedRate +
+            ", expectedDriverBatta=" +
+            expectedDriverBatta +
+            ", expectedTransport=" +
+            expectedTransport +
             ", notes='" +
             notes +
             '\'' +
             ", cancelledDate=" +
             cancelledDate +
-            ", user = " +
-            user +
             ", customerAddress='" +
             customerAddress +
             '\'' +
-            //            ", userId=" + userId +
-            //            ", customerName='" + customerName + '\'' +
-            //            ", customerPhone='" + customerPhone + '\'' +
+            ", originalPrice=" +
+            originalPrice +
+            ", user=" +
+            user +
             ", machine=" +
             machine +
             '}'

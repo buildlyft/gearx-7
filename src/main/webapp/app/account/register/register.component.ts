@@ -102,7 +102,7 @@ export default class RegisterComponent implements AfterViewInit {
   }
 
   verifyOtp(): void {
-    this.authServerProvider.verifyOtp(this.phoneNumber, this.otp, true).subscribe({
+    this.authServerProvider.verifyOtp(this.phoneNumber, this.otp, 'CUSTOMER', true).subscribe({
       next: () => {
         this.accountService.identity(true).subscribe(() => {
           this.router.navigate(['/']);

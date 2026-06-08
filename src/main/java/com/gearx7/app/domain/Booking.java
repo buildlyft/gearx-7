@@ -62,8 +62,8 @@ public class Booking implements Serializable {
     @JsonIgnoreProperties(value = { "user", "bookings", "operators", "documents" }, allowSetters = true)
     private Machine machine;
 
-    @Column(name = "expected_price")
-    private Double expectedPrice;
+    @Column(name = "expected_rate")
+    private Double expectedRate;
 
     @Column(name = "notes")
     private String notes;
@@ -73,6 +73,39 @@ public class Booking implements Serializable {
 
     @Column(name = "customer_address")
     private String customerAddress;
+
+    @Column(name = "original_price")
+    private Double originalPrice;
+
+    @Column(name = "expected_driver_batta")
+    private Double expectedDriverBatta;
+
+    @Column(name = "expected_transport")
+    private Double expectedTransport;
+
+    public Double getExpectedDriverBatta() {
+        return expectedDriverBatta;
+    }
+
+    public void setExpectedDriverBatta(Double expectedDriverBatta) {
+        this.expectedDriverBatta = expectedDriverBatta;
+    }
+
+    public Double getExpectedTransport() {
+        return expectedTransport;
+    }
+
+    public void setExpectedTransport(Double expectedTransport) {
+        this.expectedTransport = expectedTransport;
+    }
+
+    public Double getOriginalPrice() {
+        return originalPrice;
+    }
+
+    public void setOriginalPrice(Double originalPrice) {
+        this.originalPrice = originalPrice;
+    }
 
     public String getCustomerAddress() {
         return customerAddress;
@@ -90,12 +123,12 @@ public class Booking implements Serializable {
         this.cancelledDate = cancelledDate;
     }
 
-    public Double getExpectedPrice() {
-        return expectedPrice;
+    public Double getExpectedRate() {
+        return expectedRate;
     }
 
-    public void setExpectedPrice(Double expectedPrice) {
-        this.expectedPrice = expectedPrice;
+    public void setExpectedRate(Double expectedRate) {
+        this.expectedRate = expectedRate;
     }
 
     public String getNotes() {
@@ -284,6 +317,10 @@ public class Booking implements Serializable {
             ", customerLong=" + getCustomerLong() +
             ", createdDate='" + getCreatedDate() + "'" +
             ", customerAddress='" + getCustomerAddress() + "'" +
+            ", expectedRate=" + getExpectedRate() +
+            ", expectedDriverBatta=" + getExpectedDriverBatta() +
+            ", expectedTransport=" + getExpectedTransport() +
+            ", originalPrice=" + getOriginalPrice() +
             "}";
     }
 }
