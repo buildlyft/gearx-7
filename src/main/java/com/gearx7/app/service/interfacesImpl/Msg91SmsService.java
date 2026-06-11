@@ -46,6 +46,24 @@ public class Msg91SmsService implements SmsService {
     @Value("${sms.templates.booking-cancelled-partner}")
     private String bookingCancelledPartnerTemplate;
 
+    @Value("${sms.msg91.booking-created-user-template-id}")
+    private String bookingCreatedUserTemplateId;
+
+    @Value("${sms.msg91.booking-created-partner-template-id}")
+    private String bookingCreatedPartnerTemplateId;
+
+    @Value("${sms.msg91.booking-accepted-template-id}")
+    private String bookingAcceptedTemplateId;
+
+    @Value("${sms.msg91.booking-rejected-template-id}")
+    private String bookingRejectedTemplateId;
+
+    @Value("${sms.msg91.booking-cancelled-user-template-id}")
+    private String bookingCancelledUserTemplateId;
+
+    @Value("${sms.msg91.booking-cancelled-partner-template-id}")
+    private String bookingCancelledPartnerTemplateId;
+
     private final RestTemplate restTemplate = new RestTemplate();
 
     // =========================================================
@@ -73,18 +91,24 @@ public class Msg91SmsService implements SmsService {
 
         String endDate = DateTimeUtil.formatInstantForSms(booking.getEndDateTime());
 
-        String message = String.format(
-            bookingCreatedUserTemplate,
-            user.getFirstName(),
-            user.getLastName(),
-            booking.getId(),
-            booking.getMachine().getBrand(),
-            startDate,
-            endDate,
-            booking.getStatus()
-        );
+        String firstName = user.getFirstName() != null ? user.getFirstName() : "Customer";
+        String lastName = user.getLastName() != null ? user.getLastName() : "";
 
-        sendSms(user.getPhone(), message, "BOOKING_CREATED_USER", booking.getId());
+        String machineName = booking.getMachine() != null && booking.getMachine().getName() != null
+            ? booking.getMachine().getName()
+            : "Equipment";
+
+        Map<String, String> vars = new HashMap<>();
+
+        vars.put("VAR1", firstName);
+        vars.put("VAR2", lastName);
+        vars.put("VAR3", booking.getId().toString());
+        vars.put("VAR4", machineName);
+        vars.put("VAR5", startDate);
+        vars.put("VAR6", endDate);
+        vars.put("VAR7", booking.getStatus().toString());
+
+        sendTemplateSms(bookingCreatedUserTemplateId, user.getPhone(), vars, "BOOKING_CREATED_USER", booking.getId());
     }
 
     // =========================================================
@@ -112,19 +136,35 @@ public class Msg91SmsService implements SmsService {
 
         String endDate = DateTimeUtil.formatInstantForSms(booking.getEndDateTime());
 
-        String message = String.format(
-            bookingCreatedPartnerTemplate,
-            partner.getFirstName(),
-            partner.getLastName(),
-            booking.getId(),
-            booking.getUser().getFirstName(),
-            booking.getMachine().getBrand(),
-            startDate,
-            endDate,
-            booking.getStatus()
-        );
+        String partnerFirstName = partner.getFirstName() != null ? partner.getFirstName() : "Partner";
+        String partnerLastName = partner.getLastName() != null ? partner.getLastName() : "";
 
-        sendSms(partner.getPhone(), message, "BOOKING_CREATED_PARTNER", booking.getId());
+        String customerFirstName = booking.getUser() != null && booking.getUser().getFirstName() != null
+            ? booking.getUser().getFirstName()
+            : "Customer";
+
+        String customerLastName = booking.getUser() != null && booking.getUser().getLastName() != null
+            ? booking.getUser().getLastName()
+            : "";
+
+        String customerName = (customerFirstName + " " + customerLastName).trim();
+
+        String machineName = booking.getMachine() != null && booking.getMachine().getName() != null
+            ? booking.getMachine().getName()
+            : "Equipment";
+
+        Map<String, String> vars = new HashMap<>();
+
+        vars.put("VAR1", partnerFirstName);
+        vars.put("VAR2", partnerLastName);
+        vars.put("VAR3", booking.getId().toString());
+        vars.put("VAR4", customerName);
+        vars.put("VAR5", machineName);
+        vars.put("VAR6", startDate);
+        vars.put("VAR7", endDate);
+        vars.put("VAR8", booking.getStatus().toString());
+
+        sendTemplateSms(bookingCreatedPartnerTemplateId, partner.getPhone(), vars, "BOOKING_CREATED_PARTNER", booking.getId());
     }
 
     // =========================================================
@@ -147,9 +187,17 @@ public class Msg91SmsService implements SmsService {
             user.getId(),
             maskPhone(user.getPhone())
         );
-        String message = String.format(bookingAcceptedTemplate, user.getFirstName(), user.getLastName(), booking.getId());
 
-        sendSms(user.getPhone(), message, "BOOKING_ACCEPTED", booking.getId());
+        String firstName = user.getFirstName() != null ? user.getFirstName() : "Customer";
+        String lastName = user.getLastName() != null ? user.getLastName() : "";
+
+        Map<String, String> vars = new HashMap<>();
+
+        vars.put("VAR1", firstName);
+        vars.put("VAR2", lastName);
+        vars.put("VAR3", booking.getId().toString());
+
+        sendTemplateSms(bookingAcceptedTemplateId, user.getPhone(), vars, "BOOKING_ACCEPTED", booking.getId());
     }
 
     // =========================================================
@@ -173,9 +221,16 @@ public class Msg91SmsService implements SmsService {
             maskPhone(user.getPhone())
         );
 
-        String message = String.format(bookingRejectedTemplate, user.getFirstName(), user.getLastName(), booking.getId());
+        String firstName = user.getFirstName() != null ? user.getFirstName() : "Customer";
+        String lastName = user.getLastName() != null ? user.getLastName() : "";
 
-        sendSms(user.getPhone(), message, "BOOKING_REJECTED", booking.getId());
+        Map<String, String> vars = new HashMap<>();
+
+        vars.put("VAR1", firstName);
+        vars.put("VAR2", lastName);
+        vars.put("VAR3", booking.getId().toString());
+
+        sendTemplateSms(bookingRejectedTemplateId, user.getPhone(), vars, "BOOKING_REJECTED", booking.getId());
     }
 
     // =========================================================
@@ -199,9 +254,16 @@ public class Msg91SmsService implements SmsService {
             maskPhone(user.getPhone())
         );
 
-        String message = String.format(bookingCancelledUserTemplate, user.getFirstName(), user.getLastName(), booking.getId());
+        String firstName = user.getFirstName() != null ? user.getFirstName() : "Customer";
+        String lastName = user.getLastName() != null ? user.getLastName() : "";
 
-        sendSms(user.getPhone(), message, "BOOKING_CANCELLED_USER", booking.getId());
+        Map<String, String> vars = new HashMap<>();
+
+        vars.put("VAR1", firstName);
+        vars.put("VAR2", lastName);
+        vars.put("VAR3", booking.getId().toString());
+
+        sendTemplateSms(bookingCancelledUserTemplateId, user.getPhone(), vars, "BOOKING_CANCELLED_USER", booking.getId());
     }
 
     // =========================================================
@@ -225,54 +287,51 @@ public class Msg91SmsService implements SmsService {
             maskPhone(partner.getPhone())
         );
 
-        String message = String.format(
-            bookingCancelledPartnerTemplate,
-            partner.getFirstName(),
-            partner.getLastName(),
-            booking.getId(),
-            booking.getMachine().getBrand()
-        );
+        String firstName = partner.getFirstName() != null ? partner.getFirstName() : "Partner";
+        String lastName = partner.getLastName() != null ? partner.getLastName() : "";
 
-        sendSms(partner.getPhone(), message, "BOOKING_CANCELLED_PARTNER", booking.getId());
+        String machineName = booking.getMachine() != null && booking.getMachine().getName() != null
+            ? booking.getMachine().getName()
+            : "Equipment";
+
+        Map<String, String> vars = new HashMap<>();
+
+        vars.put("VAR1", firstName);
+        vars.put("VAR2", lastName);
+        vars.put("VAR3", booking.getId().toString());
+        vars.put("VAR4", machineName);
+
+        sendTemplateSms(bookingCancelledPartnerTemplateId, partner.getPhone(), vars, "BOOKING_CANCELLED_PARTNER", booking.getId());
     }
 
     // =========================================================
     // COMMON SMS METHOD
     // =========================================================
 
-    private void sendSms(String phone, String message, String smsType, Long bookingId) {
+    private void sendTemplateSms(String templateId, String phone, Map<String, String> variables, String smsType, Long bookingId) {
         try {
-            log.info("Sending SMS | type={} | bookingId={} | phone={}", smsType, bookingId, maskPhone(phone));
-
             HttpHeaders headers = new HttpHeaders();
-
             headers.setContentType(MediaType.APPLICATION_JSON);
-
             headers.set("authkey", authKey);
 
-            Map<String, Object> sms = new HashMap<>();
+            Map<String, Object> recipient = new HashMap<>();
+            recipient.put("mobiles", "91" + phone);
 
-            sms.put("message", message);
-
-            sms.put("to", List.of("91" + phone));
+            recipient.putAll(variables);
 
             Map<String, Object> body = new HashMap<>();
-
-            body.put("sender", senderId);
-
-            body.put("route", "4");
-
-            body.put("country", "91");
-
-            body.put("sms", List.of(sms));
+            body.put("template_id", templateId);
+            body.put("recipients", List.of(recipient));
 
             HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
 
-            ResponseEntity<String> response = restTemplate.postForEntity("https://api.msg91.com/api/v2/sendsms", request, String.class);
-
-            log.info("SMS sent successfully | type={} | bookingId={} | response={}", smsType, bookingId, response.getBody());
+            ResponseEntity<String> response = restTemplate.postForEntity("https://control.msg91.com/api/v5/flow", request, String.class);
+            log.info("TemplateId={}", templateId);
+            log.info("Phone={}", phone);
+            log.info("Variables={}", variables);
+            log.info("MSG91 SMS SUCCESS | type={} | bookingId={} | response={}", smsType, bookingId, response.getBody());
         } catch (Exception ex) {
-            log.error("SMS sending failed | type={} | bookingId={} | reason={}", smsType, bookingId, ex.getMessage(), ex);
+            log.error("MSG91 SMS FAILED | type={} | bookingId={} | reason={}", smsType, bookingId, ex.getMessage(), ex);
         }
     }
 

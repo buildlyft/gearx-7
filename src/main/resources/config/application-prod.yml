@@ -140,22 +140,27 @@ cloudinary:
 # this is SMS service congiguration
 sms:
   templates:
-    booking-created-user: 'Hello %s %s, your booking %s has been created successfully. Machine: %s. From: %s. To: %s. Status: %s. Thanks for choosing Gearx7.'
+    booking-created-user: 'Hello %s %s, your GearX7(VEHTRK) booking ID %s has been created successfully. Machine: %s. From: %s. To: %s. Status: %s. Thank you for choosing GearX7.'
 
-    booking-created-partner: 'Hello %s %s, your machine has been booked successfully. Booking ID: %s. Customer: %s. Machine: %s. From: %s. To: %s. Status: %s. Thanks for choosing Gearx7.'
+    booking-created-partner: 'Hello %s %s, your machine has been booked successfully through GearX7(VEHTRK). Booking ID: %s. Customer: %s. Machine: %s. From: %s. To: %s. Status: %s. Thank you for choosing GearX7.'
 
-    booking-accepted: 'Hello %s %s, your booking %s has been ACCEPTED. Thank you for choosing Gearx7.'
+    booking-accepted: 'Hello %s %s, your GearX7(VEHTRK) booking %s has been ACCEPTED. Thank you for choosing GearX7.'
 
-    booking-rejected: 'Hello %s %s, your booking %s has been REJECTED. Please try another machine. Thank you for choosing Gearx7.'
+    booking-rejected: 'Hello %s %s, your GearX7(VEHTRK) booking %s has been REJECTED. Please try another machine. Thank you for choosing GearX7.'
 
-    booking-cancelled-user: 'Hello %s %s, your booking %s has been cancelled successfully. Thank you for choosing Gearx7.'
+    booking-cancelled-user: 'Hello %s %s, your GearX7(VEHTRK) booking %s has been cancelled successfully. Thank you for choosing GearX7.'
 
-    booking-cancelled-partner: 'Hello %s %s, booking %s has been cancelled by the customer. Machine: %s. Thank you for choosing Gearx7.'
+    booking-cancelled-partner: 'Hello %s %s, GearX7(VEHTRK) booking %s has been cancelled by the customer. Machine: %s. Thank you for choosing GearX7.'
 
   msg91:
     auth-key: 484982Ao2rqg36m3694fc4feP1
     sender-id: VEHTRK
-    booking-user-template-id: 695e081b268710369224fc79
+    booking-created-user-template-id: 6a2819c4eb333c3a070b8d84
+    booking-created-partner-template-id: 6a28f593abccb1028c0baf52
+    booking-accepted-template-id: 6a294e83f7fd90fb930febf3
+    booking-rejected-template-id: 6a294ea8a01ba8088b0f5703
+    booking-cancelled-user-template-id: 6a294ec7139f13664805bb53
+    booking-cancelled-partner-template-id: 6a294ee496d33c898709f164
 
 otp:
   msg91:
@@ -166,5 +171,5 @@ otp:
     otp-template-id: 6a21303edf034dcf6a045fa4
 
 locationiq:
-  api-key: pk.185919f9a8d1c5539f39a4da2b58b488
+  api-key: pk.b1b16ccf32ab39d827c57552bea86e94
   url: https://us1.locationiq.com/v1/reverse
