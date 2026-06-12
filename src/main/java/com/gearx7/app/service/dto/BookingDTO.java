@@ -23,21 +23,25 @@ public class BookingDTO implements Serializable {
 
     private Double customerLong;
 
-    private Instant createdDate;
+    private Double rateContractRate;
 
-    private Double expectedRate;
+    private Double rateContractDriverBatta;
+
+    private Double rateContractTransport;
+
+    private Double listedRate;
+
+    private Double listedDriverBatta;
+
+    private Double listedTransport;
+
+    private Instant createdDate;
 
     private String notes;
 
     private Instant cancelledDate;
 
     private String customerAddress;
-
-    private Double originalPrice;
-
-    private Double expectedDriverBatta;
-
-    private Double expectedTransport;
 
     //    // customer info
     //    private Long userId;
@@ -53,28 +57,52 @@ public class BookingDTO implements Serializable {
 
     // getters setters
 
-    public Double getExpectedDriverBatta() {
-        return expectedDriverBatta;
+    public Double getRateContractRate() {
+        return rateContractRate;
     }
 
-    public void setExpectedDriverBatta(Double expectedDriverBatta) {
-        this.expectedDriverBatta = expectedDriverBatta;
+    public void setRateContractRate(Double rateContractRate) {
+        this.rateContractRate = rateContractRate;
     }
 
-    public Double getExpectedTransport() {
-        return expectedTransport;
+    public Double getRateContractDriverBatta() {
+        return rateContractDriverBatta;
     }
 
-    public void setExpectedTransport(Double expectedTransport) {
-        this.expectedTransport = expectedTransport;
+    public void setRateContractDriverBatta(Double rateContractDriverBatta) {
+        this.rateContractDriverBatta = rateContractDriverBatta;
     }
 
-    public Double getOriginalPrice() {
-        return originalPrice;
+    public Double getRateContractTransport() {
+        return rateContractTransport;
     }
 
-    public void setOriginalPrice(Double originalPrice) {
-        this.originalPrice = originalPrice;
+    public void setRateContractTransport(Double rateContractTransport) {
+        this.rateContractTransport = rateContractTransport;
+    }
+
+    public Double getListedRate() {
+        return listedRate;
+    }
+
+    public void setListedRate(Double listedRate) {
+        this.listedRate = listedRate;
+    }
+
+    public Double getListedDriverBatta() {
+        return listedDriverBatta;
+    }
+
+    public void setListedDriverBatta(Double listedDriverBatta) {
+        this.listedDriverBatta = listedDriverBatta;
+    }
+
+    public Double getListedTransport() {
+        return listedTransport;
+    }
+
+    public void setListedTransport(Double listedTransport) {
+        this.listedTransport = listedTransport;
     }
 
     public User getUser() {
@@ -157,14 +185,6 @@ public class BookingDTO implements Serializable {
         this.createdDate = createdDate;
     }
 
-    public Double getExpectedRate() {
-        return expectedRate;
-    }
-
-    public void setExpectedRate(Double expectedRate) {
-        this.expectedRate = expectedRate;
-    }
-
     public String getNotes() {
         return notes;
     }
@@ -243,14 +263,20 @@ public class BookingDTO implements Serializable {
             customerLat +
             ", customerLong=" +
             customerLong +
+            ", rateContractRate=" +
+            rateContractRate +
+            ", rateContractDriverBatta=" +
+            rateContractDriverBatta +
+            ", rateContractTransport=" +
+            rateContractTransport +
+            ", listedRate=" +
+            listedRate +
+            ", listedDriverBatta=" +
+            listedDriverBatta +
+            ", listedTransport=" +
+            listedTransport +
             ", createdDate=" +
             createdDate +
-            ", expectedRate=" +
-            expectedRate +
-            ", expectedDriverBatta=" +
-            expectedDriverBatta +
-            ", expectedTransport=" +
-            expectedTransport +
             ", notes='" +
             notes +
             '\'' +
@@ -259,8 +285,6 @@ public class BookingDTO implements Serializable {
             ", customerAddress='" +
             customerAddress +
             '\'' +
-            ", originalPrice=" +
-            originalPrice +
             ", user=" +
             user +
             ", machine=" +

@@ -62,9 +62,6 @@ public class Booking implements Serializable {
     @JsonIgnoreProperties(value = { "user", "bookings", "operators", "documents" }, allowSetters = true)
     private Machine machine;
 
-    @Column(name = "expected_rate")
-    private Double expectedRate;
-
     @Column(name = "notes")
     private String notes;
 
@@ -74,37 +71,70 @@ public class Booking implements Serializable {
     @Column(name = "customer_address")
     private String customerAddress;
 
-    @Column(name = "original_price")
-    private Double originalPrice;
+    @Column(name = "listed_rate")
+    private Double listedRate;
 
-    @Column(name = "expected_driver_batta")
-    private Double expectedDriverBatta;
+    @Column(name = "listed_driver_batta")
+    private Double listedDriverBatta;
 
-    @Column(name = "expected_transport")
-    private Double expectedTransport;
+    @Column(name = "listed_transport")
+    private Double listedTransport;
 
-    public Double getExpectedDriverBatta() {
-        return expectedDriverBatta;
+    @Column(name = "rate_contract_rate")
+    private Double rateContractRate;
+
+    @Column(name = "rate_contract_driver_batta")
+    private Double rateContractDriverBatta;
+
+    @Column(name = "rate_contract_transport")
+    private Double rateContractTransport;
+
+    public Double getListedRate() {
+        return listedRate;
     }
 
-    public void setExpectedDriverBatta(Double expectedDriverBatta) {
-        this.expectedDriverBatta = expectedDriverBatta;
+    public void setListedRate(Double listedRate) {
+        this.listedRate = listedRate;
     }
 
-    public Double getExpectedTransport() {
-        return expectedTransport;
+    public Double getListedDriverBatta() {
+        return listedDriverBatta;
     }
 
-    public void setExpectedTransport(Double expectedTransport) {
-        this.expectedTransport = expectedTransport;
+    public void setListedDriverBatta(Double listedDriverBatta) {
+        this.listedDriverBatta = listedDriverBatta;
     }
 
-    public Double getOriginalPrice() {
-        return originalPrice;
+    public Double getListedTransport() {
+        return listedTransport;
     }
 
-    public void setOriginalPrice(Double originalPrice) {
-        this.originalPrice = originalPrice;
+    public void setListedTransport(Double listedTransport) {
+        this.listedTransport = listedTransport;
+    }
+
+    public Double getRateContractRate() {
+        return rateContractRate;
+    }
+
+    public void setRateContractRate(Double rateContractRate) {
+        this.rateContractRate = rateContractRate;
+    }
+
+    public Double getRateContractDriverBatta() {
+        return rateContractDriverBatta;
+    }
+
+    public void setRateContractDriverBatta(Double rateContractDriverBatta) {
+        this.rateContractDriverBatta = rateContractDriverBatta;
+    }
+
+    public Double getRateContractTransport() {
+        return rateContractTransport;
+    }
+
+    public void setRateContractTransport(Double rateContractTransport) {
+        this.rateContractTransport = rateContractTransport;
     }
 
     public String getCustomerAddress() {
@@ -121,14 +151,6 @@ public class Booking implements Serializable {
 
     public void setCancelledDate(Instant cancelledDate) {
         this.cancelledDate = cancelledDate;
-    }
-
-    public Double getExpectedRate() {
-        return expectedRate;
-    }
-
-    public void setExpectedRate(Double expectedRate) {
-        this.expectedRate = expectedRate;
     }
 
     public String getNotes() {
@@ -303,24 +325,55 @@ public class Booking implements Serializable {
         return getClass().hashCode();
     }
 
-    // prettier-ignore
     @Override
     public String toString() {
-        return "Booking{" +
-            "id=" + getId() +
-            ", startDateTime='" + getStartDateTime() + "'" +
-            ", endDateTime='" + getEndDateTime() + "'" +
-            ", status='" + getStatus() + "'" +
-            ", additionalDetails='" + getAdditionalDetails() + "'" +
-            ", worksiteImageUrl='" + getWorksiteImageUrl() + "'" +
-            ", customerLat=" + getCustomerLat() +
-            ", customerLong=" + getCustomerLong() +
-            ", createdDate='" + getCreatedDate() + "'" +
-            ", customerAddress='" + getCustomerAddress() + "'" +
-            ", expectedRate=" + getExpectedRate() +
-            ", expectedDriverBatta=" + getExpectedDriverBatta() +
-            ", expectedTransport=" + getExpectedTransport() +
-            ", originalPrice=" + getOriginalPrice() +
-            "}";
+        return (
+            "Booking{" +
+            "id=" +
+            id +
+            ", startDateTime=" +
+            startDateTime +
+            ", endDateTime=" +
+            endDateTime +
+            ", status=" +
+            status +
+            ", additionalDetails='" +
+            additionalDetails +
+            '\'' +
+            ", worksiteImageUrl='" +
+            worksiteImageUrl +
+            '\'' +
+            ", customerLat=" +
+            customerLat +
+            ", customerLong=" +
+            customerLong +
+            ", createdDate=" +
+            createdDate +
+            ", user=" +
+            user +
+            ", machine=" +
+            machine +
+            ", notes='" +
+            notes +
+            '\'' +
+            ", cancelledDate=" +
+            cancelledDate +
+            ", customerAddress='" +
+            customerAddress +
+            '\'' +
+            ", listedRate=" +
+            listedRate +
+            ", listedDriverBatta=" +
+            listedDriverBatta +
+            ", listedTransport=" +
+            listedTransport +
+            ", rateContractRate=" +
+            rateContractRate +
+            ", rateContractDriverBatta=" +
+            rateContractDriverBatta +
+            ", rateContractTransport=" +
+            rateContractTransport +
+            '}'
+        );
     }
 }

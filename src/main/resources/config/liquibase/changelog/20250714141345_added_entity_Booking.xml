@@ -144,5 +144,49 @@
         </addColumn>
     </changeSet>
 
+    <changeSet id="202606111240" author="Ganesh">
+
+        <renameColumn
+            tableName="booking"
+            oldColumnName="expected_rate"
+            newColumnName="rate_contract_rate"
+            columnDataType="double"/>
+
+        <renameColumn
+            tableName="booking"
+            oldColumnName="expected_driver_batta"
+            newColumnName="rate_contract_driver_batta"
+            columnDataType="double"/>
+
+        <renameColumn
+            tableName="booking"
+            oldColumnName="expected_transport"
+            newColumnName="rate_contract_transport"
+            columnDataType="double"/>
+
+    </changeSet>
+
+    <!-- Add new listed columns -->
+    <changeSet id="202606111230" author="Ganesh">
+
+        <addColumn tableName="booking">
+            <column name="listed_rate" type="double"/>
+        </addColumn>
+
+        <addColumn tableName="booking">
+            <column name="listed_driver_batta" type="double"/>
+        </addColumn>
+
+        <addColumn tableName="booking">
+            <column name="listed_transport" type="double"/>
+        </addColumn>
+
+    </changeSet>
+
+    <changeSet id="202606121200" author="Ganesh">
+        <dropColumn
+            tableName="booking"
+            columnName="original_price"/>
+    </changeSet>
 
 </databaseChangeLog>
