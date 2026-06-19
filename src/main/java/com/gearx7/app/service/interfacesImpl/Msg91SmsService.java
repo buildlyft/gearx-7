@@ -4,6 +4,7 @@ import com.gearx7.app.domain.Booking;
 import com.gearx7.app.domain.User;
 import com.gearx7.app.service.dto.DateTimeUtil;
 import com.gearx7.app.service.interfaces.SmsService;
+import java.time.ZoneOffset;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -133,9 +134,7 @@ public class Msg91SmsService implements SmsService {
         );
 
         String startDate = DateTimeUtil.formatInstantForSms(booking.getStartDateTime());
-
         String endDate = DateTimeUtil.formatInstantForSms(booking.getEndDateTime());
-
         String partnerFirstName = partner.getFirstName() != null ? partner.getFirstName() : "Partner";
         String partnerLastName = partner.getLastName() != null ? partner.getLastName() : "";
 

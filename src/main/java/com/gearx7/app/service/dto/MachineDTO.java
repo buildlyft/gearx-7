@@ -81,6 +81,8 @@ public class MachineDTO implements Serializable {
     @NotNull(message = "Please Select  Type")
     private Long typeId;
 
+    private String type;
+
     @NotNull(message = "Please Select Category")
     private Long categoryId;
 
@@ -105,6 +107,14 @@ public class MachineDTO implements Serializable {
     private Long mfgDate;
 
     private String machineAddress;
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
 
     public String getMachineAddress() {
         return machineAddress;

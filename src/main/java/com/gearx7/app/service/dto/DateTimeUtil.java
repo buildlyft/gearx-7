@@ -1,12 +1,10 @@
 package com.gearx7.app.service.dto;
 
 import java.time.Instant;
-import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 
 public final class DateTimeUtil {
-
-    private static final ZoneId IST_ZONE = ZoneId.of("Asia/Kolkata");
 
     private static final DateTimeFormatter SMS_DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
@@ -23,6 +21,7 @@ public final class DateTimeUtil {
         if (instant == null) {
             return "N/A";
         }
-        return instant.atZone(IST_ZONE).format(SMS_DATE_FORMATTER);
+
+        return instant.atZone(ZoneOffset.UTC).format(SMS_DATE_FORMATTER);
     }
 }

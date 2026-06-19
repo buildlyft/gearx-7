@@ -13,6 +13,7 @@ public interface MachineMapper extends EntityMapper<MachineDTO, Machine> {
     // ENTITY → DTO
     @Mapping(target = "user", source = "user", qualifiedByName = "userLogin")
     @Mapping(target = "typeId", source = "typeEntity.id")
+    @Mapping(target = "type", source = "typeEntity.typeName")
     @Mapping(target = "categoryId", source = "category.id")
     @Mapping(target = "subcategoryId", source = "subcategory.id")
     @Mapping(target = "operatorId", source = "operator.id")

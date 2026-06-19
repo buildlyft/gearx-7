@@ -23,6 +23,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             left join fetch booking.user
             left join fetch booking.machine machine
             left join fetch machine.user
+            left join fetch machine.typeEntity
             left join fetch machine.category
             left join fetch machine.subcategory
             left join fetch machine.operator
@@ -55,6 +56,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             left join fetch booking.user
             left join fetch booking.machine machine
             left join fetch machine.user
+            left join fetch machine.typeEntity
             left join fetch machine.category
             left join fetch machine.subcategory
             left join fetch machine.operator
@@ -70,6 +72,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
          left join fetch booking.user
          left join fetch booking.machine machine
          left join fetch machine.user
+         left join fetch machine.typeEntity
          left join fetch machine.category
          left join fetch machine.subcategory
          left join fetch machine.operator
@@ -84,6 +87,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
         left join fetch booking.user
         left join fetch booking.machine machine
         left join fetch machine.user
+        left join fetch machine.typeEntity
         left join fetch machine.category
         left join fetch machine.subcategory
         left join fetch machine.operator
@@ -99,6 +103,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
         join fetch b.user
         join fetch b.machine m
         join fetch m.user
+        left join fetch m.typeEntity
         left join fetch m.category
         left join fetch m.subcategory
         left join fetch m.operator
@@ -114,6 +119,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
         join fetch b.user
         join fetch b.machine m
         join fetch m.user
+        left join fetch m.typeEntity
         left join fetch m.category
         left join fetch m.subcategory
         left join fetch m.operator
